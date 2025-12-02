@@ -20,143 +20,141 @@ export class MockOneWallet {
   static install(wallet) {
     console.log('🔧 Installing mock OneWallet...');
     
-    // OneWallet injects as window.onechain with aptos compatibility
+    // OneWallet injects as window.onechain directly (no aptos nesting)
     window.onechain = {
-      aptos: {
-        /**
-         * Connect wallet
-         * @returns {Promise<Object>}
-         */
-        connect: async () => {
-          console.log('🔗 Mock OneWallet: connect() called');
+      /**
+       * Connect wallet
+       * @returns {Promise<Object>}
+       */
+      connect: async () => {
+        console.log('🔗 Mock OneWallet: connect() called');
+        
+        // Simulate user approval delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        return {
+          address: wallet.address,
+          publicKey: wallet.publicKey,
+          status: "Approved"
+        };
+      },
+      
+      /**
+       * Get account information
+       * @returns {Promise<Object>}
+       */
+      account: async () => {
+        console.log('👤 Mock OneWallet: account() called');
+        return {
+          address: wallet.address,
+          publicKey: wallet.publicKey
+        };
+      },
+      
+      /**
+       * Get current network
+       * @returns {Promise<Object>}
+       */
+      network: async () => {
+        console.log('🌐 Mock OneWallet: network() called');
+        return {
+          name: "testnet",
+          chainId: 2,
+          url: ONECHAIN_RPC
+        };
+      },
+      
+      /**
+       * Sign and submit transaction
+       * @param {Object} payload - Transaction payload
+       * @returns {Promise<Object>}
+       */
+      signAndSubmitTransaction: async (payload) => {
+        console.log('📝 Mock OneWallet: signAndSubmitTransaction() called');
+        console.log('   Payload:', JSON.stringify(payload, null, 2));
+        
+        try {
+          // Use OneChain API to submit transaction
+          const signature = await signTransaction(wallet.privateKey, payload);
           
-          // Simulate user approval delay
-          await new Promise(resolve => setTimeout(resolve, 500));
+          const response = await axios.post(`${ONECHAIN_RPC}/v1/transactions/submit`, {
+            sender: wallet.address,
+            payload: payload,
+            signature: signature
+          });
           
-          return {
-            address: wallet.address,
-            publicKey: wallet.publicKey,
-            status: "Approved"
-          };
-        },
-        
-        /**
-         * Get account information
-         * @returns {Promise<Object>}
-         */
-        account: async () => {
-          console.log('👤 Mock OneWallet: account() called');
-          return {
-            address: wallet.address,
-            publicKey: wallet.publicKey
-          };
-        },
-        
-        /**
-         * Get current network
-         * @returns {Promise<Object>}
-         */
-        network: async () => {
-          console.log('🌐 Mock OneWallet: network() called');
-          return {
-            name: "testnet",
-            chainId: 2,
-            url: ONECHAIN_RPC
-          };
-        },
-        
-        /**
-         * Sign and submit transaction
-         * @param {Object} payload - Transaction payload
-         * @returns {Promise<Object>}
-         */
-        signAndSubmitTransaction: async (payload) => {
-          console.log('📝 Mock OneWallet: signAndSubmitTransaction() called');
-          console.log('   Payload:', JSON.stringify(payload, null, 2));
+          console.log('✅ Transaction submitted:', response.data.hash);
+          return { hash: response.data.hash };
+        } catch (error) {
+          console.error('❌ Transaction failed:', error.message);
           
-          try {
-            // Use OneChain API to submit transaction
-            const signature = await signTransaction(wallet.privateKey, payload);
-            
-            const response = await axios.post(`${ONECHAIN_RPC}/v1/transactions/submit`, {
-              sender: wallet.address,
-              payload: payload,
-              signature: signature
-            });
-            
-            console.log('✅ Transaction submitted:', response.data.hash);
-            return { hash: response.data.hash };
-          } catch (error) {
-            console.error('❌ Transaction failed:', error.message);
-            
-            // Return mock hash if API fails
-            const mockHash = '0x' + Array(64).fill(0).map(() => 
-              Math.floor(Math.random() * 16).toString(16)
-            ).join('');
-            
-            return { hash: mockHash };
-          }
-        },
-        
-        /**
-         * Sign message
-         * @param {Object} options - Message options
-         * @returns {Promise<Object>}
-         */
-        signMessage: async ({ message, nonce }) => {
-          console.log('✍️  Mock OneWallet: signMessage() called');
-          console.log('   Message:', message);
+          // Return mock hash if API fails
+          const mockHash = '0x' + Array(64).fill(0).map(() => 
+            Math.floor(Math.random() * 16).toString(16)
+          ).join('');
           
-          try {
-            const signature = await signMessage(wallet.privateKey, message, nonce);
-            return {
-              signature,
-              fullMessage: message,
-              nonce: nonce || Date.now()
-            };
-          } catch (error) {
-            console.error('❌ Message signing failed:', error.message);
-            return {
-              signature: '0xmock_signature_' + Date.now(),
-              fullMessage: message,
-              nonce: nonce || Date.now()
-            };
-          }
-        },
-        
-        /**
-         * Get account resources
-         * @returns {Promise<Array>}
-         */
-        getAccountResources: async () => {
-          console.log('📦 Mock OneWallet: getAccountResources() called');
-          
-          try {
-            const response = await axios.get(`${ONECHAIN_RPC}/v1/accounts/${wallet.address}/resources`);
-            return response.data;
-          } catch (error) {
-            console.error('❌ Failed to get resources:', error.message);
-            return [];
-          }
-        },
-        
-        /**
-         * Disconnect wallet
-         * @returns {Promise<Object>}
-         */
-        disconnect: async () => {
-          console.log('🔌 Mock OneWallet: disconnect() called');
-          return { status: "Disconnected" };
-        },
-        
-        /**
-         * Check if wallet is connected
-         * @returns {Promise<boolean>}
-         */
-        isConnected: async () => {
-          console.log('🔍 Mock OneWallet: isConnected() called');
-          return true;
+          return { hash: mockHash };
         }
+      },
+      
+      /**
+       * Sign message
+       * @param {Object} options - Message options
+       * @returns {Promise<Object>}
+       */
+      signMessage: async ({ message, nonce }) => {
+        console.log('✍️  Mock OneWallet: signMessage() called');
+        console.log('   Message:', message);
+        
+        try {
+          const signature = await signMessage(wallet.privateKey, message, nonce);
+          return {
+            signature,
+            fullMessage: message,
+            nonce: nonce || Date.now()
+          };
+        } catch (error) {
+          console.error('❌ Message signing failed:', error.message);
+          return {
+            signature: '0xmock_signature_' + Date.now(),
+            fullMessage: message,
+            nonce: nonce || Date.now()
+          };
+        }
+      },
+      
+      /**
+       * Get account resources
+       * @returns {Promise<Array>}
+       */
+      getAccountResources: async () => {
+        console.log('📦 Mock OneWallet: getAccountResources() called');
+        
+        try {
+          const response = await axios.get(`${ONECHAIN_RPC}/v1/accounts/${wallet.address}/resources`);
+          return response.data;
+        } catch (error) {
+          console.error('❌ Failed to get resources:', error.message);
+          return [];
+        }
+      },
+      
+      /**
+       * Disconnect wallet
+       * @returns {Promise<Object>}
+       */
+      disconnect: async () => {
+        console.log('🔌 Mock OneWallet: disconnect() called');
+        return { status: "Disconnected" };
+      },
+        
+      /**
+       * Check if wallet is connected
+       * @returns {Promise<boolean>}
+       */
+      isConnected: async () => {
+        console.log('🔍 Mock OneWallet: isConnected() called');
+        return true;
       }
     };
     
@@ -179,23 +177,21 @@ export class MockOneWallet {
     console.log('🔧 Installing mock OneWallet (rejection mode)...');
     
     window.onechain = {
-      aptos: {
-        connect: async () => {
-          console.log('❌ Mock OneWallet: User rejected connection');
-          await new Promise(resolve => setTimeout(resolve, 500));
-          return {
-            status: "Rejected"
-          };
-        },
-        
-        account: async () => {
-          throw new Error('Wallet not connected');
-        },
-        
-        network: async () => ({ name: "testnet", chainId: 2 }),
-        
-        disconnect: async () => ({ status: "Disconnected" })
-      }
+      connect: async () => {
+        console.log('❌ Mock OneWallet: User rejected connection');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return {
+          status: "Rejected"
+        };
+      },
+      
+      account: async () => {
+        throw new Error('Wallet not connected');
+      },
+      
+      network: async () => ({ name: "testnet", chainId: 2 }),
+      
+      disconnect: async () => ({ status: "Disconnected" })
     };
   }
 }

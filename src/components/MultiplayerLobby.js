@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import multiplayerService from '../services/multiplayerService';
 import './MultiplayerLobby.css';
 import { GiCrossedSwords, GiTwoCoins, GiTrophyCup, GiLightningBow, GiDiamondHard, GiGamepad, GiCrossedSabres, GiTargetArrows } from 'react-icons/gi';
-import { FaCrown, FaChartLine } from 'react-icons/fa';
+import { FaChartLine } from 'react-icons/fa';
 import { IoMdRefresh } from 'react-icons/io';
 
 // Use environment variable or fallback to localhost
@@ -21,6 +21,14 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
 
+  const fetchPlayerStats = React.useCallback(async () => {
+    if (!walletAddress) return;
+    const result = await multiplayerService.getPlayerStats(walletAddress);
+    if (result.success) {
+      setPlayerStats(result.stats);
+    }
+  }, [walletAddress]);
+
   useEffect(() => {
     if (walletAddress) {
       fetchPlayerStats();
@@ -35,7 +43,7 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
       
       return () => clearInterval(interval);
     }
-  }, [walletAddress, activeTab]);
+  }, [walletAddress, activeTab, fetchPlayerStats]);
 
   // Force initial fetch on component mount
   useEffect(() => {
@@ -100,11 +108,6 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
       socket.disconnect();
     };
   }, [walletAddress, onStartGame]);
-
-  const fetchPlayerStats = async () => {
-    const stats = await multiplayerService.getPlayerStats(walletAddress);
-    setPlayerStats(stats);
-  };
 
   const fetchAvailableGames = async () => {
     const games = await multiplayerService.getAvailableGames();

@@ -29,9 +29,9 @@ async function quickTest() {
       console.log('   ✅ window.onechain detected');
       console.log('   Available methods:', Object.keys(window.onechain));
       
-      if (window.onechain.aptos) {
-        console.log('   ✅ window.onechain.aptos available');
-        console.log('   Provider methods:', Object.keys(window.onechain.aptos));
+      if (window.onechain) {
+        console.log('   ✅ window.onechain available');
+        console.log('   Provider methods:', Object.keys(window.onechain));
       }
     } else {
       console.log('   ❌ window.onechain NOT detected');
@@ -40,7 +40,7 @@ async function quickTest() {
 
     // 4. Test connection
     console.log('4️⃣  Testing connection...');
-    const connectResult = await window.onechain.aptos.connect();
+    const connectResult = await window.onechain.connect();
     console.log('   Connect result:', connectResult);
     
     if (connectResult.address === wallet.address) {
@@ -52,7 +52,7 @@ async function quickTest() {
 
     // 5. Test account method
     console.log('5️⃣  Testing account() method...');
-    const account = await window.onechain.aptos.account();
+    const account = await window.onechain.account();
     console.log('   Account:', account);
     
     if (account.address === wallet.address) {
@@ -62,26 +62,26 @@ async function quickTest() {
 
     // 6. Test network
     console.log('6️⃣  Testing network() method...');
-    const network = await window.onechain.aptos.network();
+    const network = await window.onechain.network();
     console.log('   Network:', network);
     console.log('   ✅ Network info retrieved\n');
 
     // 7. Test message signing
     console.log('7️⃣  Testing signMessage()...');
     const message = 'Test message for OneChain';
-    const signResult = await window.onechain.aptos.signMessage({ message, nonce: Date.now() });
+    const signResult = await window.onechain.signMessage({ message, nonce: Date.now() });
     console.log('   Signature:', signResult.signature.substring(0, 20) + '...');
     console.log('   ✅ Message signed\n');
 
     // 8. Test isConnected
     console.log('8️⃣  Testing isConnected()...');
-    const isConnected = await window.onechain.aptos.isConnected();
+    const isConnected = await window.onechain.isConnected();
     console.log('   Connected:', isConnected);
     console.log('   ✅ Connection status retrieved\n');
 
     // 9. Test disconnect
     console.log('9️⃣  Testing disconnect()...');
-    const disconnectResult = await window.onechain.aptos.disconnect();
+    const disconnectResult = await window.onechain.disconnect();
     console.log('   Disconnect result:', disconnectResult);
     console.log('   ✅ Disconnected\n');
 

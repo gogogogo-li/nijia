@@ -152,7 +152,7 @@ describe('OneChain Basic Interaction Flow', () => {
     const message = 'Test message for OneChain authentication';
     const nonce = Date.now();
     
-    const result = await window.onechain.aptos.signMessage({ message, nonce });
+    const result = await window.onechain.signMessage({ message, nonce });
     
     expect(result.signature).toBeDefined();
     expect(result.fullMessage).toBe(message);
@@ -164,7 +164,7 @@ describe('OneChain Basic Interaction Flow', () => {
   test('8. Check connection status', async () => {
     console.log('\n🔍 Test 8: Check connection status');
     
-    const isConnected = await window.onechain.aptos.isConnected();
+    const isConnected = await window.onechain.isConnected();
     
     expect(isConnected).toBe(true);
     console.log('✅ Wallet is connected');
@@ -173,7 +173,7 @@ describe('OneChain Basic Interaction Flow', () => {
   test('9. Disconnect wallet', async () => {
     console.log('\n🔌 Test 9: Disconnect wallet');
     
-    const result = await window.onechain.aptos.disconnect();
+    const result = await window.onechain.disconnect();
     
     expect(result.status).toBe("Disconnected");
     console.log('✅ Wallet disconnected successfully');
@@ -192,7 +192,7 @@ describe('OneChain Error Handling', () => {
     
     MockOneWallet.installWithRejection(mockWallet);
     
-    const result = await window.onechain.aptos.connect();
+    const result = await window.onechain.connect();
     
     expect(result.status).toBe("Rejected");
     console.log('✅ User rejection handled correctly');

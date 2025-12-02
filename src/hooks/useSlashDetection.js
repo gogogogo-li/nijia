@@ -257,7 +257,7 @@ export const useSlashDetection = (
         }
       }
     });
-  }, [items, isSlashing, onUpdateScore, onLoseLife, onCreateParticles, onCreateScreenFlash, addPopup, canvasRef, createSliceEffect, createExplosionEffect, onSlashRecorded, gameState.combo]);
+  }, [items, isSlashing, onUpdateScore, onLoseLife, onCreateParticles, onCreateScreenFlash, addPopup, canvasRef, createSliceEffect, createExplosionEffect, onSlashRecorded, gameState.combo, showComboMessage]);
 
   const startSlash = useCallback((e) => {
     if (gameState.screen !== 'game' || !gameState.isGameRunning || gameState.isPaused) return;

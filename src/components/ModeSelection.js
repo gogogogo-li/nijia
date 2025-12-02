@@ -15,7 +15,7 @@ import {
   GiWatermelon,
   GiLemon,
 } from "react-icons/gi";
-import { FaTrophy, FaPlay, FaArrowLeft, FaAppleAlt } from "react-icons/fa";
+import { FaTrophy, FaPlay, FaArrowLeft } from "react-icons/fa";
 import { IoIosFlash } from "react-icons/io";
 
 const ModeSelection = ({ onSelectMode, onBack, bestScores = {} }) => {

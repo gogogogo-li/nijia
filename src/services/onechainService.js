@@ -56,7 +56,7 @@ class OneChainService {
     const wallet = this.getWalletProvider();
     if (!wallet) return;
 
-    const provider = wallet.provider.aptos || wallet.provider;
+    const provider = wallet.provider;
 
     // Listen for account changes
     if (typeof provider.onAccountChange === 'function') {
@@ -118,10 +118,18 @@ class OneChainService {
     if (this.walletAddress) {
       const session = {
         address: this.walletAddress,
+        provider: this.walletProvider,
+        signature: this.sessionToken,
         timestamp: Date.now(),
-        network: this.ONECHAIN_CONFIG.network
+        network: this.ONECHAIN_CONFIG.network,
+        profile: this.userProfile
       };
       localStorage.setItem('onechain_session', JSON.stringify(session));
+      console.log('💾 Session saved:', {
+        address: session.address.substring(0, 10) + '...',
+        authenticated: !!session.signature,
+        timestamp: new Date(session.timestamp).toLocaleString()
+      });
     }
   }
 
@@ -133,53 +141,89 @@ class OneChainService {
   // Restore session from localStorage
   async restoreSession() {
     try {
+      console.log('🔄 Attempting to restore session...');
+      
       const sessionData = localStorage.getItem('onechain_session');
-      if (!sessionData) return false;
+      if (!sessionData) {
+        console.log('   No saved session found');
+        return false;
+      }
 
       const session = JSON.parse(sessionData);
+      console.log('   Found session:', {
+        address: session.address ? session.address.substring(0, 10) + '...' : 'none',
+        age: Math.round((Date.now() - session.timestamp) / 1000 / 60) + ' minutes',
+        authenticated: !!session.signature
+      });
       
       // Check if session is less than 24 hours old
       const hoursSinceSession = (Date.now() - session.timestamp) / (1000 * 60 * 60);
       if (hoursSinceSession > 24) {
+        console.log('   ❌ Session expired (>24 hours)');
         this.clearSession();
         return false;
       }
 
+      // Wait for wallet
+      await this.waitForWallet();
+
       // Verify with current wallet provider
       const wallet = this.getWalletProvider();
-      if (wallet) {
-        try {
-          const provider = wallet.provider.aptos || wallet.provider;
-          
-          // Try to get current account
-          let account = null;
-          if (typeof provider.account === 'function') {
-            account = await provider.account();
-          } else if (typeof provider.getAccount === 'function') {
-            account = await provider.getAccount();
-          } else if (provider.accounts && provider.accounts.length > 0) {
-            account = { address: provider.accounts[0] };
-          }
-          
-          if (account && account.address === session.address) {
-            this.walletAddress = session.address;
-            this.walletConnected = true;
-            this.walletProvider = wallet.name;
-            console.log('✅ Session restored:', this.walletAddress);
-            
-            // Setup event listeners
-            this.setupWalletListeners();
-            
-            // Load user profile if OneID enabled
-            if (this.ONECHAIN_CONFIG.oneIdEnabled) {
-              await this.fetchUserProfile();
-            }
-            
-            return true;
-          }
-        } catch (err) {
-          console.log('Session verification failed:', err);
+      if (!wallet) {
+        console.log('   ❌ Wallet not available');
+        this.clearSession();
+        return false;
+      }
+
+      try {
+        const provider = wallet.provider;
+        
+        // Try to get current account
+        let account = null;
+        if (typeof provider.account === 'function') {
+          account = await provider.account();
+        } else if (typeof provider.getAccount === 'function') {
+          account = await provider.getAccount();
+        } else if (provider.accounts && provider.accounts.length > 0) {
+          account = { address: provider.accounts[0] };
         }
+        
+        if (account && account.address === session.address) {
+          // Restore session state
+          this.walletAddress = session.address;
+          this.walletConnected = true;
+          this.walletProvider = session.provider || wallet.name;
+          this.sessionToken = session.signature;
+          this.userProfile = session.profile;
+          
+          console.log('   ✅ Session restored successfully');
+          console.log(`      Address: ${this.walletAddress}`);
+          console.log(`      Authenticated: ${!!this.sessionToken ? 'YES' : 'NO'}`);
+          
+          // Setup event listeners
+          this.setupWalletListeners();
+          
+          // Refresh profile if OneID enabled
+          if (this.ONECHAIN_CONFIG.oneIdEnabled && !this.userProfile) {
+            try {
+              await this.fetchUserProfile();
+            } catch (err) {
+              console.warn('   ⚠️  Could not refresh profile:', err.message);
+            }
+          }
+          
+          // Notify listeners
+          this.notifyListeners('sessionRestored', {
+            address: this.walletAddress,
+            profile: this.userProfile
+          });
+          
+          return true;
+        } else {
+          console.log('   ❌ Address mismatch or account not found');
+        }
+      } catch (err) {
+        console.log('   ❌ Session verification failed:', err.message);
       }
       
       this.clearSession();
@@ -207,10 +251,42 @@ class OneChainService {
 
   // Get OneWallet provider
   getWalletProvider() {
-    // OneWallet injects as window.onechain
+    // OneWallet injects as window.onechain with multi-chain support
     if (window.onechain && typeof window.onechain === 'object') {
       console.log('✅ OneWallet detected, available methods:', Object.keys(window.onechain));
-      return { provider: window.onechain, name: 'OneWallet' };
+      
+      // Check if there's a providers object with OneChain
+      if (window.onechain.providers && typeof window.onechain.providers === 'object') {
+        console.log('   Available providers:', Object.keys(window.onechain.providers));
+        
+        // Look for OneChain provider
+        if (window.onechain.providers.onechain && typeof window.onechain.providers.onechain.connect === 'function') {
+          console.log('   Using OneChain provider from providers object');
+          return { provider: window.onechain.providers.onechain, name: 'OneWallet' };
+        }
+      }
+      
+      // Fallback: check if window.onechain has connect directly
+      if (typeof window.onechain.connect === 'function') {
+        console.log('   Using direct OneWallet provider');
+        return { provider: window.onechain, name: 'OneWallet' };
+      }
+      
+      // Last resort: check common chain providers that might support OneChain
+      const chainOrder = ['ethereum', 'cosmos', 'sui', 'bitcoin'];
+      for (const chain of chainOrder) {
+        if (window.onechain[chain] && typeof window.onechain[chain].connect === 'function') {
+          console.log(`   Using ${chain} provider as fallback`);
+          return { provider: window.onechain[chain], name: 'OneWallet' };
+        }
+      }
+      
+      console.log('❌ No compatible provider found in OneWallet');
+      console.log('   Available top-level keys:', Object.keys(window.onechain));
+      if (window.onechain.providers) {
+        console.log('   Available providers:', Object.keys(window.onechain.providers));
+      }
+      return null;
     }
     
     console.log('❌ OneWallet not found');
@@ -220,163 +296,236 @@ class OneChainService {
   // Connect OneWallet
   async connectWallet() {
     try {
-      console.log('🔵 Starting OneWallet connection...');
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('🔵 OneWallet Connection Flow Started');
+      console.log('═══════════════════════════════════════════════════════\n');
       
-      // Wait for wallet to load
+      // STEP 1: Wait for wallet injection
+      console.log('Step 1: Waiting for OneWallet...');
       await this.waitForWallet();
       
-      // Check for OneWallet
+      // STEP 2: Get wallet provider
+      console.log('\nStep 2: Getting wallet provider...');
       const wallet = this.getWalletProvider();
       if (!wallet) {
-        console.error('❌ OneWallet not found');
-        throw new Error('OneWallet extension not detected. Please install OneWallet and refresh the page.');
+        throw new Error('OneWallet not detected. Please install the OneWallet extension and refresh the page.');
+      }
+      console.log(`✅ ${wallet.name} detected`);
+
+      // STEP 3: Get provider instance
+      console.log('\nStep 3: Accessing provider...');
+      const provider = wallet.provider;
+      if (!provider) {
+        throw new Error('OneWallet provider not available');
+      }
+      console.log('✅ Provider ready:', Object.keys(provider).join(', '));
+
+      // STEP 4: Request wallet connection
+      console.log('\nStep 4: Requesting wallet connection...');
+      if (typeof provider.connect !== 'function') {
+        throw new Error('Provider does not support connect()');
+      }
+      
+      const connectResult = await provider.connect();
+      console.log('Connection result:', connectResult);
+
+      // STEP 5: Handle connection response
+      console.log('\nStep 5: Processing connection response...');
+      if (connectResult && connectResult.status === 'Rejected') {
+        throw new Error('Connection rejected by user');
       }
 
-      console.log(`✅ ${wallet.name} detected`);
-      console.log('Available wallet methods:', Object.keys(wallet.provider));
-
-      // OneWallet provides window.onechain with aptos compatibility layer
-      let account;
+      // STEP 6: Retrieve account information
+      console.log('\nStep 6: Retrieving account information...');
+      let account = null;
+      let address = null;
       
-      try {
-        // OneWallet exposes an aptos-compatible provider
-        const provider = wallet.provider.aptos || wallet.provider;
-        
-        if (!provider) {
-          throw new Error('OneWallet provider not available');
-        }
-        
-        console.log('📞 Connecting to OneWallet...');
-        console.log('Available methods:', Object.keys(provider));
-        
-        // Connect using the standard connect method
-        if (typeof provider.connect === 'function') {
-          const result = await provider.connect();
-          console.log('Connect result:', result);
+      // Try multiple methods to get account
+      if (connectResult && connectResult.address) {
+        account = connectResult;
+        address = connectResult.address;
+        console.log('✅ Got account from connect result');
+      } else if (connectResult && connectResult.status === 'Approved') {
+        if (typeof provider.account === 'function') {
+          account = await provider.account();
+          console.log('✅ Got account from provider.account()');
+          console.log('   Account object:', account);
           
-          // Handle user rejection
-          if (result && result.status === 'Rejected') {
-            throw new Error('User rejected the connection request');
-          }
-          
-          // Try to get account from various sources
-          if (result && result.address) {
-            account = result;
-          } else if (result && result.status === 'Approved') {
-            // Get account info after approval
+          // Handle different account formats
+          if (typeof account === 'string') {
+            address = account;
+          } else if (account && account.address) {
+            address = account.address;
+          } else if (account && account.publicKey) {
+            // Some wallets return publicKey, try to get address from accounts array
             if (provider.accounts && provider.accounts.length > 0) {
-              account = { address: provider.accounts[0] };
-            } else if (typeof provider.account === 'function') {
-              account = await provider.account();
-            } else if (result.args && result.args.address) {
-              account = result.args;
+              address = provider.accounts[0];
             }
           }
+        } else if (provider.accounts && provider.accounts.length > 0) {
+          address = provider.accounts[0];
+          account = { address };
+          console.log('✅ Got account from provider.accounts');
         }
+      } else if (typeof provider.account === 'function') {
+        account = await provider.account();
+        console.log('✅ Got account from fallback provider.account()');
+        console.log('   Account object:', account);
         
-        // Fallback: try account() method directly
-        if (!account && typeof provider.account === 'function') {
-          console.log('Trying account() method...');
-          account = await provider.account();
+        // Handle different account formats
+        if (typeof account === 'string') {
+          address = account;
+        } else if (account && account.address) {
+          address = account.address;
+        } else if (account && account.publicKey) {
+          // Some wallets return publicKey, try to get address from accounts array
+          if (provider.accounts && provider.accounts.length > 0) {
+            address = provider.accounts[0];
+          }
         }
-        
-        // Fallback: try getAccount()
-        if (!account && typeof provider.getAccount === 'function') {
-          console.log('Trying getAccount() method...');
-          account = await provider.getAccount();
-        }
-        
-        if (!account) {
-          throw new Error('Could not retrieve account information');
-        }
-        
-      } catch (connectError) {
-        console.error('❌ Connection failed:', connectError);
-        throw new Error(`Failed to connect: ${connectError.message}`);
       }
       
-      // Extract address from response
-      let address;
-      if (typeof account === 'string') {
-        address = account;
-      } else if (account && account.address) {
-        address = account.address;
-      } else if (account && account.publicKey) {
-        // Sometimes only publicKey is returned
-        address = account.publicKey;
-      } else if (Array.isArray(account) && account.length > 0) {
-        address = typeof account[0] === 'string' ? account[0] : account[0].address;
-      }
-      
-      if (!address) {
-        console.error('Could not extract address from:', account);
-        console.log('Full account object:', JSON.stringify(account, null, 2));
-        throw new Error('No address returned from wallet.');
+      // Final fallback: try accounts array directly
+      if (!address && provider.accounts && provider.accounts.length > 0) {
+        address = provider.accounts[0];
+        account = { address };
+        console.log('✅ Got address from provider.accounts array');
       }
 
+      if (!address) {
+        console.error('❌ Account retrieval details:');
+        console.error('   connectResult:', connectResult);
+        console.error('   account:', account);
+        console.error('   provider.accounts:', provider.accounts);
+        throw new Error('Failed to retrieve account information');
+      }
+
+      console.log(`✅ Account address: ${address}`);
+
+      // STEP 7: Create authentication signature
+      console.log('\nStep 7: Creating authentication signature...');
+      let signature = null;
+      let authMessage = null;
+      
+      try {
+        const timestamp = Date.now();
+        authMessage = `Welcome to OneNinja!
+
+Please sign this message to authenticate your wallet.
+
+Wallet Address: ${address}
+Timestamp: ${timestamp}
+Network: ${this.ONECHAIN_CONFIG.network || 'testnet'}
+
+This signature will be used to verify your identity.`;
+
+        if (typeof provider.signMessage === 'function') {
+          const signResult = await provider.signMessage({
+            message: authMessage,
+            nonce: timestamp.toString()
+          });
+          
+          signature = signResult.signature || signResult;
+          console.log('✅ Authentication signature created');
+          console.log(`   Signature: ${signature.substring(0, 20)}...${signature.substring(signature.length - 20)}`);
+        } else {
+          console.log('⚠️  Provider does not support signMessage()');
+        }
+      } catch (sigError) {
+        console.warn('⚠️  Signature creation failed:', sigError.message);
+        console.log('   Continuing without authentication signature');
+      }
+
+      // STEP 8: Get network information
+      console.log('\nStep 8: Getting network information...');
+      let network = null;
+      try {
+        if (typeof provider.network === 'function') {
+          network = await provider.network();
+        } else if (provider.network) {
+          network = provider.network;
+        }
+        if (network) {
+          console.log(`✅ Network: ${network.name || 'unknown'} (Chain ID: ${network.chainId || 'unknown'})`);
+        }
+      } catch (err) {
+        console.warn('⚠️  Could not get network:', err.message);
+      }
+
+      // STEP 9: Initialize session
+      console.log('\nStep 9: Initializing session...');
       this.walletAddress = address;
       this.walletProvider = wallet.name;
       this.walletConnected = true;
-
-      // Save session
-      this.saveSession();
-
-      // Create authentication signature for session (optional)
-      console.log('🔐 Creating authentication session...');
-      try {
-        const message = `OneNinja Login\nTimestamp: ${Date.now()}\nNetwork: ${this.ONECHAIN_CONFIG.network}`;
-        const nonce = Math.random().toString(36).substring(7);
-        
-        // Use OneChain signMessage
-        const walletProvider = this.getWalletProvider();
-        if (walletProvider && walletProvider.provider.signMessage) {
-          const payload = {
-            message,
-            nonce
-          };
-          const signResponse = await walletProvider.provider.signMessage(payload);
-          this.sessionToken = signResponse.signature;
-          console.log('✅ Authentication signature created');
-        } else {
-          console.log('ℹ️ Wallet does not support message signing, skipping auth token');
-        }
-      } catch (sigError) {
-        console.warn('⚠️ Signature creation failed, continuing without auth token:', sigError);
-      }
-
-      // Fetch user profile via OneID if enabled
-      if (this.ONECHAIN_CONFIG.oneIdEnabled) {
-        console.log('👤 Fetching OneID profile...');
-        await this.fetchUserProfile();
-      }
-
-      console.log(`✅ ${this.walletProvider} connected successfully:`, this.walletAddress);
+      this.sessionToken = signature;
       
-      // Setup event listeners after successful connection
+      // Save to localStorage with signature
+      this.saveSession();
+      console.log('✅ Session saved to localStorage');
+
+      // STEP 10: Fetch user profile (optional)
+      if (this.ONECHAIN_CONFIG.oneIdEnabled) {
+        console.log('\nStep 10: Fetching OneID profile...');
+        try {
+          await this.fetchUserProfile();
+          console.log('✅ Profile fetched');
+        } catch (err) {
+          console.warn('⚠️  Profile fetch failed:', err.message);
+        }
+      }
+
+      // STEP 11: Setup event listeners
+      console.log('\nStep 11: Setting up event listeners...');
       this.setupWalletListeners();
+      console.log('✅ Event listeners registered');
+
+      // STEP 12: Notify success
+      console.log('\n═══════════════════════════════════════════════════════');
+      console.log('✅ WALLET CONNECTED SUCCESSFULLY!');
+      console.log('═══════════════════════════════════════════════════════');
+      console.log(`   Address: ${address}`);
+      console.log(`   Provider: ${this.walletProvider}`);
+      console.log(`   Network: ${network ? network.name : 'unknown'}`);
+      console.log(`   Authenticated: ${!!signature ? 'YES ✓' : 'NO ✗'}`);
+      console.log(`   Profile: ${this.userProfile ? 'Loaded' : 'Not loaded'}`);
+      console.log('═══════════════════════════════════════════════════════\n');
       
       this.notifyListeners('connected', { 
         address: this.walletAddress,
-        profile: this.userProfile 
+        profile: this.userProfile,
+        signature: signature,
+        authMessage: authMessage,
+        network: network,
+        timestamp: Date.now()
       });
 
       return {
         success: true,
         address: this.walletAddress,
-        profile: this.userProfile
+        profile: this.userProfile,
+        signature: signature,
+        network: network,
+        authenticated: !!signature
       };
+
     } catch (error) {
-      console.error('❌ Failed to connect OneWallet:', error);
+      console.error('\n═══════════════════════════════════════════════════════');
+      console.error('❌ WALLET CONNECTION FAILED');
+      console.error('═══════════════════════════════════════════════════════');
+      console.error('Error:', error.message);
+      console.error('Stack:', error.stack);
+      console.error('═══════════════════════════════════════════════════════\n');
       
-      // Clear any partial state
+      // Clean up any partial state
       this.walletConnected = false;
       this.walletAddress = null;
       this.sessionToken = null;
+      this.userProfile = null;
       this.clearSession();
       
       return {
         success: false,
-        error: error.message || 'Failed to connect OneWallet'
+        error: error.message || 'Failed to connect wallet'
       };
     }
   }
@@ -389,7 +538,7 @@ class OneChainService {
       // Try to disconnect using the wallet provider
       const wallet = this.getWalletProvider();
       if (wallet) {
-        const provider = wallet.provider.aptos || wallet.provider;
+        const provider = wallet.provider;
         if (typeof provider.disconnect === 'function') {
           await provider.disconnect();
         }
@@ -724,33 +873,98 @@ class OneChainService {
     }
 
     try {
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('📝 Transaction Signing Flow');
+      console.log('═══════════════════════════════════════════════════════\n');
+      
       const wallet = this.getWalletProvider();
       if (!wallet) {
         throw new Error('OneWallet not available');
       }
 
-      const provider = wallet.provider.aptos || wallet.provider;
+      const provider = wallet.provider;
       
       if (typeof provider.signAndSubmitTransaction !== 'function') {
         throw new Error('signAndSubmitTransaction method not available');
       }
 
-      console.log('📝 Signing transaction:', transaction);
+      console.log('Transaction payload:', {
+        type: transaction.type,
+        function: transaction.function,
+        arguments: transaction.arguments
+      });
+      
+      console.log('\nRequesting signature from wallet...');
+      const startTime = Date.now();
       
       const result = await provider.signAndSubmitTransaction(transaction);
       
-      console.log('✅ Transaction submitted:', result);
+      const duration = Date.now() - startTime;
+      console.log(`\n✅ Transaction signed and submitted (${duration}ms)`);
+      console.log('Transaction hash:', result.hash || result);
+      console.log('═══════════════════════════════════════════════════════\n');
+      
+      // Store transaction reference
+      this.lastTransaction = {
+        hash: result.hash || result,
+        timestamp: Date.now(),
+        type: transaction.function || transaction.type
+      };
       
       return {
         success: true,
         hash: result.hash || result,
-        result
+        result,
+        duration
       };
       
     } catch (error) {
-      console.error('❌ Transaction failed:', error);
+      console.error('\n❌ Transaction failed:', error.message);
+      console.error('═══════════════════════════════════════════════════════\n');
       throw error;
     }
+  }
+
+  // Wait for transaction confirmation
+  async waitForTransaction(txHash, timeout = 30000) {
+    console.log(`⏳ Waiting for transaction confirmation: ${txHash}`);
+    
+    const startTime = Date.now();
+    const checkInterval = 1000; // Check every second
+    
+    while (Date.now() - startTime < timeout) {
+      try {
+        // Try to get transaction status from OneChain API
+        const response = await fetch(
+          `${this.ONECHAIN_CONFIG.apiEndpoint}/transactions/${txHash}`,
+          {
+            headers: {
+              'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
+            }
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success || data.confirmed) {
+            const duration = Date.now() - startTime;
+            console.log(`✅ Transaction confirmed (${duration}ms)`);
+            return {
+              success: true,
+              confirmed: true,
+              data,
+              duration
+            };
+          }
+        }
+      } catch (err) {
+        // Continue waiting
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
+    }
+    
+    throw new Error('Transaction confirmation timeout');
   }
 
   // Sign message with OneWallet
@@ -760,37 +974,87 @@ class OneChainService {
     }
 
     try {
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('✍️  Message Signing Flow');
+      console.log('═══════════════════════════════════════════════════════\n');
+      
       const wallet = this.getWalletProvider();
       if (!wallet) {
         throw new Error('OneWallet not available');
       }
 
-      const provider = wallet.provider.aptos || wallet.provider;
+      const provider = wallet.provider;
       
       if (typeof provider.signMessage !== 'function') {
         throw new Error('signMessage method not available');
       }
 
+      const timestamp = nonce || Date.now();
       const payload = {
         message,
-        nonce: nonce || Date.now()
+        nonce: timestamp.toString()
       };
 
-      console.log('✍️  Signing message:', payload);
+      console.log('Message to sign:', message.substring(0, 100) + '...');
+      console.log('Nonce:', payload.nonce);
+      console.log('\nRequesting signature from wallet...');
       
+      const startTime = Date.now();
       const result = await provider.signMessage(payload);
+      const duration = Date.now() - startTime;
       
-      console.log('✅ Message signed');
+      const signature = result.signature || result;
+      console.log(`\n✅ Message signed (${duration}ms)`);
+      console.log('Signature:', signature.substring(0, 20) + '...' + signature.substring(signature.length - 20));
+      console.log('═══════════════════════════════════════════════════════\n');
       
       return {
-        signature: result.signature || result,
+        signature,
         fullMessage: message,
-        nonce: payload.nonce
+        nonce: payload.nonce,
+        address: this.walletAddress,
+        timestamp
       };
       
     } catch (error) {
-      console.error('❌ Message signing failed:', error);
+      console.error('\n❌ Message signing failed:', error.message);
+      console.error('═══════════════════════════════════════════════════════\n');
       throw error;
+    }
+  }
+
+  // Verify signature (for authentication)
+  async verifySignature(message, signature, address) {
+    try {
+      console.log('🔍 Verifying signature...');
+      
+      // Call OneChain API to verify signature
+      const response = await fetch(
+        `${this.ONECHAIN_CONFIG.apiEndpoint}/auth/verify`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
+          },
+          body: JSON.stringify({
+            message,
+            signature,
+            address
+          })
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Signature verification:', result.valid ? 'VALID' : 'INVALID');
+        return result.valid;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('❌ Signature verification failed:', error);
+      return false;
     }
   }
 
@@ -802,7 +1066,7 @@ class OneChainService {
         return null;
       }
 
-      const provider = wallet.provider.aptos || wallet.provider;
+      const provider = wallet.provider;
       
       if (typeof provider.network === 'function') {
         return await provider.network();

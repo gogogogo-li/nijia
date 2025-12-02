@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  getTierByScore, 
-  getProgressToNextTier, 
-  canMintNFTAtTier,
-  calculatePlayerStats 
-} from '../utils/tierSystem';
+import { calculatePlayerStats } from '../utils/tierSystem';
 import './TierDisplay.css';
 
 const TierDisplay = ({ totalScore, gamesPlayed, bestScore, compact = false }) => {

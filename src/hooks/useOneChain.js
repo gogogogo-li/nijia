@@ -210,13 +210,8 @@ export const useOneChain = () => {
     mintGameNFT,
     
     // Game actions
-    connectWallet,
-    disconnectWallet,
     startGameSession,
     recordSlash,
-    getBalance,
-    mintGameNFT,
-    isMinting,
-    mintedNFT
+    getBalance
   };
 };

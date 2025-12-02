@@ -23,28 +23,14 @@ const OneWallet = ({ onechain }) => {
   useEffect(() => {
     const checkWallet = () => {
       console.log('OneWallet component mounted');
-      console.log('🔍 Searching for wallet...');
+      console.log('🔍 Searching for OneWallet...');
       
-      // Check all possible wallet object names
-      const walletChecks = {
-        'window.onechain': window.onechain,
-        'window.octopus': window.octopus,
-        'window.oct': window.oct,
-        'window.onewallet': window.onewallet,
-        'window.one': window.one,
-      };
-      
-      let found = false;
-      Object.entries(walletChecks).forEach(([name, obj]) => {
-        if (obj) {
-          console.log(`✅ Found ${name}:`, obj);
-          console.log(`  Methods:`, Object.keys(obj));
-          found = true;
-        }
-      });
-      
-      if (!found) {
-        console.log('⚠️ No wallet found, waiting...');
+      // Check ONLY for window.onechain (official OneWallet injection point)
+      if (window.onechain) {
+        console.log('✅ Found OneWallet (window.onechain):', window.onechain);
+        console.log('  Available methods:', Object.keys(window.onechain));
+      } else {
+        console.log('⚠️ OneWallet not found, waiting...');
       }
       
       console.log('📊 onechain hook state:', {
@@ -64,14 +50,14 @@ const OneWallet = ({ onechain }) => {
 
   useEffect(() => {
     const checkForWallet = () => {
-      const wallet = window.octopus || window.oct || window.onechain || window.onewallet || window.one;
-      if (wallet) {
+      // Check ONLY for window.onechain (official OneWallet injection point)
+      if (window.onechain) {
         setHasOneWallet(true);
         setIsCheckingWallet(false);
       }
     };
     
-    // Check multiple times as wallet takes time to inject
+    // Check multiple times as OneWallet takes time to inject
     checkForWallet();
     const timer1 = setTimeout(checkForWallet, 500);
     const timer2 = setTimeout(checkForWallet, 1000);
