@@ -56,28 +56,36 @@ class OneChainService {
     const wallet = this.getWalletProvider();
     if (!wallet) return;
 
-    // Listen for account changes (Aptos standard)
-    if (wallet.provider.onAccountChange) {
-      wallet.provider.onAccountChange((newAccount) => {
+    const provider = wallet.provider.aptos || wallet.provider;
+
+    // Listen for account changes
+    if (typeof provider.onAccountChange === 'function') {
+      provider.onAccountChange((newAccount) => {
         console.log('🔄 Account changed:', newAccount);
         if (newAccount) {
-          this.walletAddress = newAccount.address;
-          this.saveSession();
-          this.notifyListeners('accountChanged', { address: this.walletAddress });
+          const address = typeof newAccount === 'string' ? newAccount : newAccount.address;
+          if (address) {
+            this.walletAddress = address;
+            this.saveSession();
+            this.notifyListeners('accountChanged', { address: this.walletAddress });
+          }
+        } else {
+          this.handleDisconnect();
         }
       });
     }
 
     // Listen for network changes
-    if (wallet.provider.onNetworkChange) {
-      wallet.provider.onNetworkChange((newNetwork) => {
+    if (typeof provider.onNetworkChange === 'function') {
+      provider.onNetworkChange((newNetwork) => {
         console.log('🌐 Network changed:', newNetwork);
+        this.notifyListeners('networkChanged', { network: newNetwork });
       });
     }
 
     // Listen for disconnect
-    if (wallet.provider.onDisconnect) {
-      wallet.provider.onDisconnect(() => {
+    if (typeof provider.onDisconnect === 'function') {
+      provider.onDisconnect(() => {
         console.log('🔌 Wallet disconnected');
         this.handleDisconnect();
       });
@@ -141,7 +149,18 @@ class OneChainService {
       const wallet = this.getWalletProvider();
       if (wallet) {
         try {
-          const account = await wallet.provider.account();
+          const provider = wallet.provider.aptos || wallet.provider;
+          
+          // Try to get current account
+          let account = null;
+          if (typeof provider.account === 'function') {
+            account = await provider.account();
+          } else if (typeof provider.getAccount === 'function') {
+            account = await provider.getAccount();
+          } else if (provider.accounts && provider.accounts.length > 0) {
+            account = { address: provider.accounts[0] };
+          }
+          
           if (account && account.address === session.address) {
             this.walletAddress = session.address;
             this.walletConnected = true;
@@ -176,35 +195,25 @@ class OneChainService {
   async waitForWallet(timeout = 3000) {
     const startTime = Date.now();
     while (Date.now() - startTime < timeout) {
-      if (window.onechain || window.octopus || window.oct) {
-        console.log('✅ Wallet detected after', Date.now() - startTime, 'ms');
+      if (window.onechain) {
+        console.log('✅ OneWallet detected after', Date.now() - startTime, 'ms');
         return true;
       }
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-    console.log('⚠️ Wallet not detected after', timeout, 'ms');
+    console.log('⚠️ OneWallet not detected after', timeout, 'ms');
     return false;
   }
 
-  // Get OneWallet provider - check multiple possible names
+  // Get OneWallet provider
   getWalletProvider() {
-    // Try different possible global names for OneWallet
-    const providers = [
-      { obj: window.octopus, name: 'OneWallet (octopus)' },
-      { obj: window.oct, name: 'OneWallet (oct)' },
-      { obj: window.onechain, name: 'OneWallet (onechain)' },
-      { obj: window.onewallet, name: 'OneWallet (onewallet)' },
-      { obj: window.one, name: 'OneWallet (one)' },
-    ];
-    
-    for (const { obj, name } of providers) {
-      if (obj && typeof obj === 'object') {
-        console.log(`✅ ${name} detected, available methods:`, Object.keys(obj));
-        return { provider: obj, name };
-      }
+    // OneWallet injects as window.onechain
+    if (window.onechain && typeof window.onechain === 'object') {
+      console.log('✅ OneWallet detected, available methods:', Object.keys(window.onechain));
+      return { provider: window.onechain, name: 'OneWallet' };
     }
     
-    console.log('❌ No OneWallet provider found');
+    console.log('❌ OneWallet not found');
     return null;
   }
 
@@ -226,93 +235,59 @@ class OneChainService {
       console.log(`✅ ${wallet.name} detected`);
       console.log('Available wallet methods:', Object.keys(wallet.provider));
 
-      // OneWallet structure: window.onechain.aptos is the Aptos provider
+      // OneWallet provides window.onechain with aptos compatibility layer
       let account;
       
       try {
-        // OneWallet uses a chain-specific structure
-        if (wallet.provider.aptos) {
-          console.log('📞 Using OneWallet Aptos provider...');
-          const aptosProvider = wallet.provider.aptos;
-          console.log('Aptos provider methods:', Object.keys(aptosProvider));
+        // OneWallet exposes an aptos-compatible provider
+        const provider = wallet.provider.aptos || wallet.provider;
+        
+        if (!provider) {
+          throw new Error('OneWallet provider not available');
+        }
+        
+        console.log('📞 Connecting to OneWallet...');
+        console.log('Available methods:', Object.keys(provider));
+        
+        // Connect using the standard connect method
+        if (typeof provider.connect === 'function') {
+          const result = await provider.connect();
+          console.log('Connect result:', result);
           
-          // Try connect method
-          if (typeof aptosProvider.connect === 'function') {
-            console.log('Calling aptos.connect()...');
-            
-            // Check current network
-            console.log('Current network:', aptosProvider.network);
-            
-            // Connect with network specification
-            const result = await aptosProvider.connect();
-            console.log('Connect result:', result);
-            
-            // Check network and log instructions for OneChain
-            const currentNetwork = aptosProvider.network;
-            console.log('Current network:', currentNetwork);
-            
-            // Check available chains
-            if (aptosProvider.chains) {
-              console.log('Available chains:', aptosProvider.chains);
-            }
-            
-            // OneChain runs on Aptos protocol but uses custom RPC
-            // User needs to add OneChain network manually in wallet settings
-            if (currentNetwork && currentNetwork.name === 'Aptos') {
-              console.log('⚠️ Connected to standard Aptos network');
-              console.log('💡 To use OneChain:');
-              console.log('   1. Open OneWallet extension');
-              console.log('   2. Click on network dropdown (currently shows "APTOS")');
-              console.log('   3. Add custom network with these details:');
-              console.log('      Name: OneChain Testnet');
-              console.log('      RPC URL: https://fullnode.testnet.onelabs.cc/v1');
-              console.log('      Chain ID: 2 (or as specified by OneChain)');
-              console.log('   4. Switch to OneChain network');
-              console.log('   5. Reconnect the wallet');
-            }
-            
-            // Check if connection was approved
-            if (result.status === 'Approved') {
-              // Try different ways to get account info
-              
-              // Method 1: Check accounts property
-              if (aptosProvider.accounts && aptosProvider.accounts.length > 0) {
-                console.log('Using aptosProvider.accounts:', aptosProvider.accounts);
-                account = aptosProvider.accounts[0];
-              }
-              // Method 2: Call account() function
-              else if (typeof aptosProvider.account === 'function') {
-                const accountInfo = await aptosProvider.account();
-                console.log('Account info after connect:', accountInfo);
-                account = accountInfo;
-              }
-              // Method 3: Use result.args
-              else if (result.args) {
-                console.log('Using result.args:', result.args);
-                account = result.args;
-              }
-            } else {
-              account = result;
-            }
+          // Handle user rejection
+          if (result && result.status === 'Rejected') {
+            throw new Error('User rejected the connection request');
           }
-          // Try account method
-          else if (typeof aptosProvider.account === 'function') {
-            console.log('Calling aptos.account()...');
-            account = await aptosProvider.account();
-            console.log('Account result:', account);
-          }
-          // Try getAccount
-          else if (typeof aptosProvider.getAccount === 'function') {
-            console.log('Calling aptos.getAccount()...');
-            account = await aptosProvider.getAccount();
-            console.log('Account result:', account);
-          }
-          else {
-            throw new Error('Aptos provider methods not found. Available: ' + Object.keys(aptosProvider).join(', '));
+          
+          // Try to get account from various sources
+          if (result && result.address) {
+            account = result;
+          } else if (result && result.status === 'Approved') {
+            // Get account info after approval
+            if (provider.accounts && provider.accounts.length > 0) {
+              account = { address: provider.accounts[0] };
+            } else if (typeof provider.account === 'function') {
+              account = await provider.account();
+            } else if (result.args && result.args.address) {
+              account = result.args;
+            }
           }
         }
-        else {
-          throw new Error('OneWallet aptos provider not found. Available methods: ' + Object.keys(wallet.provider).join(', '));
+        
+        // Fallback: try account() method directly
+        if (!account && typeof provider.account === 'function') {
+          console.log('Trying account() method...');
+          account = await provider.account();
+        }
+        
+        // Fallback: try getAccount()
+        if (!account && typeof provider.getAccount === 'function') {
+          console.log('Trying getAccount() method...');
+          account = await provider.getAccount();
+        }
+        
+        if (!account) {
+          throw new Error('Could not retrieve account information');
         }
         
       } catch (connectError) {
@@ -352,7 +327,7 @@ class OneChainService {
         const message = `OneNinja Login\nTimestamp: ${Date.now()}\nNetwork: ${this.ONECHAIN_CONFIG.network}`;
         const nonce = Math.random().toString(36).substring(7);
         
-        // Use Aptos standard signMessage
+        // Use OneChain signMessage
         const walletProvider = this.getWalletProvider();
         if (walletProvider && walletProvider.provider.signMessage) {
           const payload = {
@@ -407,14 +382,17 @@ class OneChainService {
   }
 
   // Disconnect wallet with full cleanup
-  disconnectWallet() {
+  async disconnectWallet() {
     try {
       console.log('👋 Disconnecting wallet...');
       
       // Try to disconnect using the wallet provider
       const wallet = this.getWalletProvider();
-      if (wallet && wallet.provider.disconnect) {
-        wallet.provider.disconnect();
+      if (wallet) {
+        const provider = wallet.provider.aptos || wallet.provider;
+        if (typeof provider.disconnect === 'function') {
+          await provider.disconnect();
+        }
       }
       
       this.walletConnected = false;
@@ -737,6 +715,122 @@ class OneChainService {
       console.error('Error rewarding player:', error);
     }
     return { success: false, error: 'Failed to reward player' };
+  }
+
+  // Sign and submit transaction to OneChain
+  async signAndSubmitTransaction(transaction) {
+    if (!this.isWalletConnected()) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const wallet = this.getWalletProvider();
+      if (!wallet) {
+        throw new Error('OneWallet not available');
+      }
+
+      const provider = wallet.provider.aptos || wallet.provider;
+      
+      if (typeof provider.signAndSubmitTransaction !== 'function') {
+        throw new Error('signAndSubmitTransaction method not available');
+      }
+
+      console.log('📝 Signing transaction:', transaction);
+      
+      const result = await provider.signAndSubmitTransaction(transaction);
+      
+      console.log('✅ Transaction submitted:', result);
+      
+      return {
+        success: true,
+        hash: result.hash || result,
+        result
+      };
+      
+    } catch (error) {
+      console.error('❌ Transaction failed:', error);
+      throw error;
+    }
+  }
+
+  // Sign message with OneWallet
+  async signMessage(message, nonce) {
+    if (!this.isWalletConnected()) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const wallet = this.getWalletProvider();
+      if (!wallet) {
+        throw new Error('OneWallet not available');
+      }
+
+      const provider = wallet.provider.aptos || wallet.provider;
+      
+      if (typeof provider.signMessage !== 'function') {
+        throw new Error('signMessage method not available');
+      }
+
+      const payload = {
+        message,
+        nonce: nonce || Date.now()
+      };
+
+      console.log('✍️  Signing message:', payload);
+      
+      const result = await provider.signMessage(payload);
+      
+      console.log('✅ Message signed');
+      
+      return {
+        signature: result.signature || result,
+        fullMessage: message,
+        nonce: payload.nonce
+      };
+      
+    } catch (error) {
+      console.error('❌ Message signing failed:', error);
+      throw error;
+    }
+  }
+
+  // Get network information
+  async getNetwork() {
+    try {
+      const wallet = this.getWalletProvider();
+      if (!wallet) {
+        return null;
+      }
+
+      const provider = wallet.provider.aptos || wallet.provider;
+      
+      if (typeof provider.network === 'function') {
+        return await provider.network();
+      } else if (provider.network) {
+        return provider.network;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting network:', error);
+      return null;
+    }
+  }
+
+  // Check if wallet is installed
+  isWalletInstalled() {
+    return !!window.onechain;
+  }
+
+  // Get wallet state for debugging
+  getState() {
+    return {
+      connected: this.walletConnected,
+      address: this.walletAddress,
+      provider: this.walletProvider,
+      profile: this.userProfile,
+      hasSessionToken: !!this.sessionToken
+    };
   }
 }
 
