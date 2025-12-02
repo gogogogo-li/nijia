@@ -340,7 +340,7 @@ class OneChainService {
       let account = null;
       let address = null;
       
-      // Try multiple methods to get account
+      // Try multiple methods to get account based on provider type
       if (connectResult && connectResult.address) {
         account = connectResult;
         address = connectResult.address;
@@ -351,45 +351,52 @@ class OneChainService {
           console.log('✅ Got account from provider.account()');
           console.log('   Account object:', account);
           
-          // Handle different account formats
           if (typeof account === 'string') {
             address = account;
           } else if (account && account.address) {
             address = account.address;
-          } else if (account && account.publicKey) {
-            // Some wallets return publicKey, try to get address from accounts array
-            if (provider.accounts && provider.accounts.length > 0) {
-              address = provider.accounts[0];
-            }
           }
         } else if (provider.accounts && provider.accounts.length > 0) {
           address = provider.accounts[0];
           account = { address };
           console.log('✅ Got account from provider.accounts');
         }
-      } else if (typeof provider.account === 'function') {
-        account = await provider.account();
-        console.log('✅ Got account from fallback provider.account()');
-        console.log('   Account object:', account);
-        
-        // Handle different account formats
-        if (typeof account === 'string') {
-          address = account;
-        } else if (account && account.address) {
-          address = account.address;
-        } else if (account && account.publicKey) {
-          // Some wallets return publicKey, try to get address from accounts array
-          if (provider.accounts && provider.accounts.length > 0) {
-            address = provider.accounts[0];
+      } else {
+        // Try getAccounts() for Sui/multi-chain wallets
+        if (typeof provider.getAccounts === 'function') {
+          console.log('   Trying provider.getAccounts()...');
+          const accounts = await provider.getAccounts();
+          console.log('   Accounts:', accounts);
+          
+          if (accounts && accounts.length > 0) {
+            // Handle different account formats
+            if (typeof accounts[0] === 'string') {
+              address = accounts[0];
+            } else if (accounts[0].address) {
+              address = accounts[0].address;
+            } else if (accounts[0].publicKey) {
+              address = accounts[0].publicKey;
+            }
+            account = accounts[0];
+            console.log('✅ Got account from provider.getAccounts()');
           }
+        } else if (typeof provider.account === 'function') {
+          account = await provider.account();
+          console.log('✅ Got account from provider.account()');
+          console.log('   Account object:', account);
+          
+          if (typeof account === 'string') {
+            address = account;
+          } else if (account && account.address) {
+            address = account.address;
+          } else if (account && account.publicKey) {
+            address = account.publicKey;
+          }
+        } else if (provider.accounts && provider.accounts.length > 0) {
+          address = provider.accounts[0];
+          account = { address };
+          console.log('✅ Got address from provider.accounts array');
         }
-      }
-      
-      // Final fallback: try accounts array directly
-      if (!address && provider.accounts && provider.accounts.length > 0) {
-        address = provider.accounts[0];
-        account = { address };
-        console.log('✅ Got address from provider.accounts array');
       }
 
       if (!address) {
@@ -397,6 +404,7 @@ class OneChainService {
         console.error('   connectResult:', connectResult);
         console.error('   account:', account);
         console.error('   provider.accounts:', provider.accounts);
+        console.error('   provider methods:', Object.keys(provider));
         throw new Error('Failed to retrieve account information');
       }
 
