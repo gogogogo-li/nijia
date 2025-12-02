@@ -218,7 +218,7 @@ module ninja_addr::multiplayer_game {
     ) {
         let admin = tx_context::sender(ctx);
         let lobby_id = lobby.id.uid_to_inner();
-        
+
         assert!(admin == lobby.admin, E_NOT_ADMIN);
         assert!(game_id < lobby.next_game_id, E_GAME_NOT_FOUND);
 
@@ -321,15 +321,4 @@ module ninja_addr::multiplayer_game {
             });
         };
     }
-
-    // View functions
-
-    // public fun get_available_games(lobby: &GameLobby): vector<u64> {
-    //     0
-    // }
-
-    // public fun get_player_stats(stats_registry: &StatsRegistry, player_addr: address): (u64, u64, u64, u64, u64) {
-    //     (0,0,0,0)
-    // }
-
 }
