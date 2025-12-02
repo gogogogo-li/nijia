@@ -1,0 +1,138 @@
+/* Missed Token Notification Container */
+.missed-token-notification-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Individual Missed Token Notification */
+.missed-token-notification {
+  background: rgba(255, 170, 0, 0.95);
+  backdrop-filter: blur(10px);
+  border: 2px solid #ffaa00;
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Orbitron', monospace;
+  color: white;
+  font-weight: bold;
+  box-shadow: 
+    0 0 15px rgba(255, 170, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Show Animation */
+.missed-token-notification.show {
+  opacity: 1;
+  transform: scale(1);
+  animation: missedBounce 0.3s ease-out forwards;
+}
+
+/* Fade Animation */
+.missed-token-notification.fade {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+/* Missed Icon */
+.missed-icon {
+  font-size: 20px;
+  animation: flashPulse 0.4s ease-in-out;
+}
+
+/* Missed Text */
+.missed-text {
+  font-size: 14px;
+  text-shadow: 0 0 8px rgba(255, 170, 0, 0.8);
+}
+
+/* Missed Penalty */
+.missed-penalty {
+  font-size: 12px;
+  color: #fff2cc;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-shadow: 0 0 5px rgba(255, 170, 0, 0.5);
+}
+
+/* Missed Bounce Animation */
+@keyframes missedBounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Flash Pulse Animation */
+@keyframes flashPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .missed-token-notification {
+    padding: 10px 16px;
+  }
+  
+  .missed-icon {
+    font-size: 20px;
+  }
+  
+  .missed-text {
+    font-size: 14px;
+  }
+  
+  .missed-penalty {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .missed-token-notification {
+    padding: 8px 12px;
+  }
+  
+  .missed-icon {
+    font-size: 18px;
+  }
+  
+  .missed-text {
+    font-size: 12px;
+  }
+  
+  .missed-penalty {
+    font-size: 10px;
+  }
+}

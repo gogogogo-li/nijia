@@ -1,0 +1,6 @@
+.env
+build/
+build
+.aptos
+node_modules
+gaseless

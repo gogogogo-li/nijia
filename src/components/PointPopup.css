@@ -1,0 +1,166 @@
+/* Point Popup Container */
+.point-popup-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Individual Point Popup */
+.point-popup {
+  position: absolute;
+  pointer-events: none;
+  font-family: 'Orbitron', monospace;
+  font-weight: bold;
+  text-align: center;
+  z-index: 1001;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Show Animation */
+.point-popup.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateY(0px) scale(1.2);
+  animation: popupShow 0.2s ease-out forwards;
+}
+
+/* Fade Animation */
+.point-popup.fade {
+  opacity: 0;
+  transform: translate(-50%, -50%) translateY(-60px) scale(0.8);
+}
+
+/* Point Value Text */
+.point-value {
+  font-size: 32px;
+  font-weight: bold;
+  text-shadow: 
+    0 0 20px currentColor,
+    0 0 40px currentColor,
+    2px 2px 4px rgba(0, 0, 0, 0.8);
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+/* Token Popup Styling */
+.token-popup .point-value {
+  color: #00ff88;
+  text-shadow: 
+    0 0 20px #00ff88,
+    0 0 40px #00ff88,
+    2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Bomb Popup Styling */
+.bomb-popup .point-value {
+  color: #ff4444;
+  text-shadow: 
+    0 0 20px #ff4444,
+    0 0 40px #ff4444,
+    2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Combo Popup Styling - Fruit Ninja Bold Style */
+.combo-popup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.combo-popup .combo-text {
+  font-size: 72px;
+  font-weight: 900;
+  color: #FFD700;
+  text-shadow: 
+    4px 4px 0px #000,
+    -4px -4px 0px #000,
+    4px -4px 0px #000,
+    -4px 4px 0px #000,
+    0 0 30px #FFD700,
+    0 0 50px #FFA500;
+  animation: comboScale 0.2s ease-out;
+  text-transform: uppercase;
+  font-family: 'Impact', 'Arial Black', 'Helvetica', sans-serif;
+  letter-spacing: 4px;
+  transform: rotate(-5deg);
+}
+
+.combo-popup .combo-bonus {
+  font-size: 40px;
+  font-weight: 900;
+  color: #FFF;
+  text-shadow: 
+    3px 3px 0px #000,
+    -3px -3px 0px #000,
+    3px -3px 0px #000,
+    -3px 3px 0px #000,
+    0 0 20px #FFD700;
+  animation: comboScale 0.2s ease-out 0.05s both;
+  font-family: 'Impact', 'Arial Black', 'Helvetica', sans-serif;
+  letter-spacing: 2px;
+}
+
+@keyframes comboScale {
+  0% {
+    transform: scale(0.3) rotate(-10deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(-5deg);
+    opacity: 1;
+  }
+}
+
+@keyframes comboPulse {
+  0%, 100% {
+    filter: 
+      drop-shadow(0 0 15px #00D4FF) 
+      drop-shadow(0 0 25px #0066FF) 
+      drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))
+      drop-shadow(0 0 5px #FFF);
+  }
+  50% {
+    filter: 
+      drop-shadow(0 0 25px #00D4FF) 
+      drop-shadow(0 0 40px #0066FF) 
+      drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8))
+      drop-shadow(0 0 15px #FFF);
+  }
+}
+
+/* Popup Show Animation */
+@keyframes popupShow {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(20px) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(-10px) scale(1.3);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0px) scale(1.2);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .point-value {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .point-value {
+    font-size: 24px;
+  }
+}
