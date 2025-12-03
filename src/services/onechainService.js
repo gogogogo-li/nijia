@@ -17,6 +17,7 @@ class OneChainService {
     // OneChain configuration
     this.ONECHAIN_CONFIG = {
       apiEndpoint: process.env.REACT_APP_ONECHAIN_API || 'https://api.onelabs.cc',
+      rpcEndpoint: process.env.REACT_APP_ONECHAIN_RPC || 'https://fullnode.testnet.onelabs.cc/v1',
       network: process.env.REACT_APP_ONECHAIN_NETWORK || 'testnet',
       projectId: process.env.REACT_APP_ONECHAIN_PROJECT_ID || 'oneninja',
       gameContractAddress: process.env.REACT_APP_GAME_CONTRACT_ADDRESS,
@@ -587,28 +588,104 @@ This signature will be used to verify your identity.`;
     }
 
     try {
-      const response = await fetch(
-        `${this.ONECHAIN_CONFIG.apiEndpoint}/wallet/balance/${this.walletAddress}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
-          }
-        }
-      );
+      console.log('🔍 Fetching balance for:', this.walletAddress);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch balance');
+      // Method 1: Try Sui Testnet RPC (OneChain is built on Sui)
+      try {
+        const rpcUrl = 'https://fullnode.testnet.sui.io:443';
+        console.log('   Trying Sui Testnet RPC at:', rpcUrl);
+        
+        const response = await fetch(rpcUrl, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'suix_getBalance',
+            params: [this.walletAddress]
+          })
+        });
+
+        const data = await response.json();
+        console.log('   RPC Response:', data);
+        
+        if (data.result && data.result.totalBalance !== undefined) {
+          // Convert from MIST (smallest unit) to SUI (9 decimals)
+          const balanceInONE = Number(data.result.totalBalance) / 1_000_000_000;
+          const formattedBalance = balanceInONE.toFixed(4);
+          
+          console.log('✅ Balance from Sui RPC:', formattedBalance, 'ONE');
+          return {
+            amount: formattedBalance,
+            symbol: 'ONE'
+          };
+        } else if (data.error) {
+          console.warn('   RPC returned error:', data.error);
+        }
+      } catch (rpcErr) {
+        console.warn('   RPC balance fetch failed:', rpcErr.message);
       }
 
-      const data = await response.json();
-      return {
-        amount: data.balance || '0',
-        symbol: 'ONE'
-      };
+      // Method 2: Try to get balance from wallet provider directly
+      const provider = this.getWalletProvider();
+      
+      if (provider && provider.provider) {
+        const actualProvider = provider.provider;
+        console.log('   Checking actual provider methods:', Object.keys(actualProvider).filter(k => k.includes('balance') || k.includes('Balance')));
+        
+        // Try getBalance from the actual Sui provider
+        if (typeof actualProvider.getBalance === 'function') {
+          try {
+            console.log('   Calling actualProvider.getBalance()...');
+            const result = await actualProvider.getBalance({ owner: this.walletAddress });
+            console.log('   Provider balance result:', result);
+            
+            if (result && result.totalBalance) {
+              const balanceInONE = (Number(result.totalBalance) / 1_000_000_000).toFixed(4);
+              console.log('✅ Balance from provider:', balanceInONE, 'ONE');
+              return {
+                amount: balanceInONE,
+                symbol: 'ONE'
+              };
+            }
+          } catch (err) {
+            console.warn('   actualProvider.getBalance() failed:', err.message);
+          }
+        }
+
+        // Try getAllBalances
+        if (typeof actualProvider.getAllBalances === 'function') {
+          try {
+            console.log('   Calling actualProvider.getAllBalances()...');
+            const result = await actualProvider.getAllBalances({ owner: this.walletAddress });
+            console.log('   Provider all balances result:', result);
+            
+            if (result && result.length > 0) {
+              const suiBalance = result.find(b => b.coinType === '0x2::sui::SUI');
+              if (suiBalance && suiBalance.totalBalance) {
+                const balanceInONE = (Number(suiBalance.totalBalance) / 1_000_000_000).toFixed(4);
+                console.log('✅ Balance from provider.getAllBalances():', balanceInONE, 'ONE');
+                return {
+                  amount: balanceInONE,
+                  symbol: 'ONE'
+                };
+              }
+            }
+          } catch (err) {
+            console.warn('   actualProvider.getAllBalances() failed:', err.message);
+          }
+        }
+      }
+
+      // Return zero if all methods fail
+      console.warn('⚠️ All balance fetch methods failed, returning 0');
+      return { amount: '0.0000', symbol: 'ONE' };
+
     } catch (error) {
-      console.error('Error fetching balance:', error);
-      return { amount: '0', symbol: 'ONE' };
+      console.error('❌ Error fetching balance:', error);
+      return { amount: '0.0000', symbol: 'ONE' };
     }
   }
 

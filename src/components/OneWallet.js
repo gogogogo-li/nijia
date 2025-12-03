@@ -19,6 +19,7 @@ const OneWallet = ({ onechain }) => {
   const [showStats, setShowStats] = useState(false);
   const [isCheckingWallet, setIsCheckingWallet] = useState(true);
   const [hasOneWallet, setHasOneWallet] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const checkWallet = () => {
@@ -72,6 +73,18 @@ const OneWallet = ({ onechain }) => {
       clearTimeout(timer3);
     };
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isOpen && !event.target.closest('.onechain-wallet')) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
 
   const handleConnect = async () => {
     if (!onechain) {
@@ -155,20 +168,39 @@ const OneWallet = ({ onechain }) => {
 
   return (
     <div className="onechain-wallet">
-      <div className="wallet-header">
-        <div className="wallet-title">
-          <FaWallet className="wallet-icon" />
-          <span>OneWallet</span>
-        </div>
-        {onechain.isConnected && (
-          <FaCheckCircle className="connected-indicator" title="Connected" />
+      {/* Compact Wallet Button */}
+      <button 
+        className={`wallet-trigger-button ${onechain.isConnected ? 'connected' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <FaWallet />
+        {onechain.isConnected ? (
+          <>
+            <span>{formatAddress(onechain.walletAddress)}</span>
+            <FaCheckCircle style={{ color: '#00FF88', fontSize: '12px' }} />
+          </>
+        ) : (
+          <span>Connect Wallet</span>
         )}
-      </div>
+      </button>
 
-      <div className="wallet-content">
-        {!onechain.isConnected ? (
-          /* Disconnected State */
-          <div className="wallet-disconnected">
+      {/* Dropdown Panel */}
+      {isOpen && (
+        <div className="wallet-dropdown">
+          <div className="wallet-header">
+            <div className="wallet-title">
+              <FaWallet className="wallet-icon" />
+              <span>OneWallet</span>
+            </div>
+            {onechain.isConnected && (
+              <FaCheckCircle style={{ color: '#00FF88', marginLeft: 'auto' }} title="Connected" />
+            )}
+          </div>
+
+          <div className="wallet-content">
+            {!onechain.isConnected ? (
+              /* Disconnected State */
+              <div className="wallet-disconnected">
             {onechain.error && (
               <div className="wallet-error-message">
                 ⚠️ {onechain.error}
@@ -250,7 +282,10 @@ const OneWallet = ({ onechain }) => {
               </div>
 
               {/* Disconnect Button */}
-              <button className="disconnect-button" onClick={handleDisconnect}>
+              <button className="disconnect-button" onClick={() => {
+                handleDisconnect();
+                setIsOpen(false);
+              }}>
                 <FaSignOutAlt /> Disconnect
               </button>
             </div>
@@ -334,11 +369,13 @@ const OneWallet = ({ onechain }) => {
             )}
           </div>
         )}
-      </div>
 
-      {onechain.error && (
-        <div className="wallet-error-message">
-          {onechain.error}
+        {onechain.error && (
+          <div className="wallet-error-message">
+            {onechain.error}
+          </div>
+        )}
+          </div>
         </div>
       )}
     </div>
