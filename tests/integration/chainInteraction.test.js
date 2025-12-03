@@ -48,7 +48,7 @@ describe('OneChain Basic Interaction Flow', () => {
     
     expect(detected).toBe(true);
     expect(window.onechain).toBeDefined();
-    expect(window.onechain.aptos).toBeDefined();
+    expect(window.onechain).toBeDefined();
     
     console.log('✅ OneWallet detected successfully');
   });
@@ -103,25 +103,25 @@ describe('OneChain Basic Interaction Flow', () => {
     };
 
     try {
-      const result = await window.onechain.aptos.signAndSubmitTransaction(payload);
+      const result = await window.onechain.signAndSubmitTransaction(payload);
       
       expect(result.hash).toBeDefined();
-      console.log('✅ Game score TX submitted:', result.hash);
+      console.log('Game score TX submitted:', result.hash);
       
       // Try to wait for confirmation (may timeout if API not available)
       try {
         await waitForTransaction(result.hash, 10000);
       } catch (error) {
-        console.log('⚠️  Transaction confirmation timeout (expected in mock mode)');
+        console.log(' Transaction confirmation timeout (expected in mock mode)');
       }
     } catch (error) {
-      console.log('⚠️  Transaction API not available:', error.message);
+      console.log(' Transaction API not available:', error.message);
       expect(true).toBe(true); // Pass test if contract not deployed yet
     }
   });
 
   test('6. Mint NFT transaction', async () => {
-    console.log('\n🎨 Test 6: Mint NFT transaction');
+    console.log('\n Test 6: Mint NFT transaction');
     
     const payload = {
       type: "entry_function_payload",
@@ -136,7 +136,7 @@ describe('OneChain Basic Interaction Flow', () => {
     };
 
     try {
-      const result = await window.onechain.aptos.signAndSubmitTransaction(payload);
+      const result = await window.onechain.signAndSubmitTransaction(payload);
       
       expect(result.hash).toBeDefined();
       console.log('✅ Mint NFT TX submitted:', result.hash);

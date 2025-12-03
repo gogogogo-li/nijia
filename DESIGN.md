@@ -269,30 +269,6 @@ One Ninja is a blockchain-integrated fruit slashing game built on the OneChain n
 - Transaction verification
 - Audit logs
 
-## Future Enhancements
-
-### Planned Features
-- [ ] Multiplayer arena implementation
-- [ ] Tournament system
-- [ ] Power-ups and special fruits
-- [ ] Daily challenges
-- [ ] Social features (friends, teams)
-- [ ] Mobile app version
-- [ ] Additional NFT collections
-- [ ] Token rewards system
-- [ ] Cross-chain compatibility
-- [ ] Replay system
-
-### Technical Improvements
-- [ ] WebSocket for real-time multiplayer
-- [ ] Progressive Web App (PWA)
-- [ ] Analytics dashboard
-- [ ] A/B testing framework
-- [ ] Automated testing suite
-- [ ] CI/CD pipeline
-- [ ] Performance monitoring
-- [ ] Error tracking integration
-
 ## Development Workflow
 
 ### Environment Setup

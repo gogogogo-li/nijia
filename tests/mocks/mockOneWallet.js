@@ -20,7 +20,6 @@ export class MockOneWallet {
   static install(wallet) {
     console.log('🔧 Installing mock OneWallet...');
     
-    // OneWallet injects as window.onechain directly (no aptos nesting)
     window.onechain = {
       /**
        * Connect wallet

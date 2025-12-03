@@ -67,16 +67,16 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
     socket.connect();
 
     socket.on('connect', () => {
-      console.log('🔌 Connected to backend');
+      console.log(' Connected to backend');
     });
 
     socket.on('game_created', (game) => {
-      console.log('🎮 New game created:', game);
+      console.log(' New game created:', game);
       fetchAvailableGames();
     });
 
     socket.on('game_joined', (game) => {
-      console.log('🎮 Game joined:', game);
+      console.log(' Game joined:', game);
       
       // Check if this is YOUR game that was joined (you are player1)
       if (walletAddress && multiplayerService.compareAddresses(game.player1, walletAddress)) {
@@ -90,12 +90,12 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
     });
 
     socket.on('games_updated', (games) => {
-      console.log('🔄 Games list updated:', games);
+      console.log('Games list updated:', games);
       setAvailableGames(games);
     });
 
     socket.on('game_finished', (data) => {
-      console.log('✅ Game finished:', data);
+      console.log('Game finished:', data);
       fetchAvailableGames();
     });
 
@@ -287,7 +287,7 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
                 ) : (
                   <>
                    
-                    Create Game - Stake {selectedTier?.amount || '?'} APT
+                    Create Game - Stake {selectedTier?.amount || '?'} OCT
                   </>
                 )}
               </button>
@@ -358,14 +358,14 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
                                 <span className="info-icon"><GiTwoCoins /></span>
                                 <span className="info-label">Stake:</span>
                                 <span className="info-value" style={{ color: tier?.color || '#fff' }}>
-                                  {tier?.amount || (betAmountOctas / 100000000)} {tier?.token || 'APT'}
+                                  {tier?.amount || (betAmountOctas / 100000000)} {tier?.token || 'OCT'}
                                 </span>
                               </div>
                               <div className="info-row prize">
                                 <span className="info-icon"><GiTrophyCup /></span>
                                 <span className="info-label">Prize:</span>
                                 <span className="info-value gold" style={{ color: tier?.borderColor || '#FFD700' }}>
-                                  {(tier?.amount || (betAmountOctas / 100000000)) * 2} {tier?.token || 'APT'}
+                                  {(tier?.amount || (betAmountOctas / 100000000)) * 2} {tier?.token || 'OCT'}
                                 </span>
                               </div>
                               <div className="info-row">

@@ -2,7 +2,6 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap");
 
-/* Global Styles - Aptos inspired */
 .landing-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
@@ -16,7 +15,6 @@
   position: relative;
 }
 
-/* Aptos Inspired Background Effects */
 .landing-page::before {
   content: "";
   position: fixed;

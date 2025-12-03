@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://one-ninja.vercel.app/sitemap.xml
+Sitemap: https://to-be-added/sitemap.xml

@@ -23,11 +23,11 @@ async function fullIntegrationDemo() {
     console.log('═══════════════════════════════════════════════════════════\n');
 
     const wallet = await createTestWallet();
-    console.log('✅ Test wallet created');
+    console.log(' Test wallet created');
     console.log(`   Address: ${wallet.address}\n`);
 
     MockOneWallet.install(wallet);
-    console.log('✅ Mock OneWallet installed\n');
+    console.log('Mock OneWallet installed\n');
 
     // ═══════════════════════════════════════════════════════════════════
     // PHASE 2: WALLET CONNECTION
@@ -42,7 +42,7 @@ async function fullIntegrationDemo() {
       address: connectResult.address,
       publicKey: connectResult.publicKey ? 'present' : 'missing'
     });
-    console.log('✅ Wallet connected\n');
+    console.log('Wallet connected\n');
 
     // ═══════════════════════════════════════════════════════════════════
     // PHASE 3: AUTHENTICATION (Message Signing)
@@ -67,7 +67,7 @@ This signature will be used to verify your identity.`;
       nonce: Date.now()
     });
 
-    console.log('✅ Authentication signature created');
+    console.log('Authentication signature created');
     console.log(`   Signature: ${authSignature.signature.substring(0, 20)}...`);
     console.log(`   Message length: ${authMessage.length} chars`);
     console.log(`   Nonce: ${authSignature.nonce}\n`);
@@ -91,7 +91,7 @@ This signature will be used to verify your identity.`;
     console.log(`   RPC URL: ${network.url}\n`);
 
     const isConnected = await window.onechain.isConnected();
-    console.log(`Connection status: ${isConnected ? '✅ CONNECTED' : '❌ NOT CONNECTED'}\n`);
+    console.log(`Connection status: ${isConnected ? 'CONNECTED' : 'NOT CONNECTED'}\n`);
 
     // ═══════════════════════════════════════════════════════════════════
     // PHASE 5: TRANSACTION SIGNING
@@ -114,7 +114,7 @@ This signature will be used to verify your identity.`;
     console.log('\nSigning transaction...');
 
     const txResult = await window.onechain.signAndSubmitTransaction(gameTransaction);
-    console.log('✅ Transaction signed and submitted');
+    console.log(' Transaction signed and submitted');
     console.log(`   TX Hash: ${txResult.hash}\n`);
 
     // ═══════════════════════════════════════════════════════════════════
@@ -143,7 +143,7 @@ This signature will be used to verify your identity.`;
     console.log('\nMinting NFT...');
 
     const nftResult = await window.onechain.signAndSubmitTransaction(nftTransaction);
-    console.log('✅ NFT minted successfully');
+    console.log('NFT minted successfully');
     console.log(`   TX Hash: ${nftResult.hash}\n`);
 
     // ═══════════════════════════════════════════════════════════════════
@@ -166,7 +166,7 @@ This signature will be used to verify your identity.`;
     console.log('   Authenticated: YES ✓');
     console.log('   Timestamp:', new Date(sessionData.timestamp).toLocaleString());
     console.log('   Network: testnet');
-    console.log('\n✅ Session would be saved to localStorage\n');
+    console.log('\n Session would be saved to localStorage\n');
 
     // ═══════════════════════════════════════════════════════════════════
     // PHASE 8: DISCONNECT
@@ -176,7 +176,7 @@ This signature will be used to verify your identity.`;
     console.log('═══════════════════════════════════════════════════════════\n');
 
     const disconnectResult = await window.onechain.disconnect();
-    console.log('✅ Wallet disconnected');
+    console.log(' Wallet disconnected');
     console.log(`   Status: ${disconnectResult.status}\n`);
 
     // ═══════════════════════════════════════════════════════════════════
@@ -186,7 +186,7 @@ This signature will be used to verify your identity.`;
     console.log('║                     DEMO COMPLETE                         ║');
     console.log('╚═══════════════════════════════════════════════════════════╝\n');
 
-    console.log('✅ Successfully demonstrated:');
+    console.log('Successfully demonstrated:');
     console.log('   1. Wallet creation and setup');
     console.log('   2. Wallet connection flow');
     console.log('   3. Authentication via message signing');
@@ -205,7 +205,7 @@ This signature will be used to verify your identity.`;
     };
 
   } catch (error) {
-    console.error('\n❌ Demo failed:', error.message);
+    console.error('\ Demo failed:', error.message);
     console.error('Stack:', error.stack);
     return {
       success: false,
@@ -219,17 +219,17 @@ fullIntegrationDemo()
   .then(result => {
     if (result.success) {
       console.log('═══════════════════════════════════════════════════════════');
-      console.log('✅ FULL INTEGRATION TEST PASSED');
+      console.log(' FULL INTEGRATION TEST PASSED');
       console.log('═══════════════════════════════════════════════════════════\n');
       process.exit(0);
     } else {
       console.log('═══════════════════════════════════════════════════════════');
-      console.log('❌ INTEGRATION TEST FAILED');
+      console.log('INTEGRATION TEST FAILED');
       console.log('═══════════════════════════════════════════════════════════\n');
       process.exit(1);
     }
   })
   .catch(error => {
-    console.error('❌ Fatal error:', error);
+    console.error(' Fatal error:', error);
     process.exit(1);
   });

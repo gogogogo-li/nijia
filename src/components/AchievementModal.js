@@ -1,5 +1,4 @@
 import React from 'react';
-// Blockchain features disabled - coming soon
 // import { mintAchievementNFTs, getGasCostEstimate } from '../utils/nftMinting';
 import { getRarityColor, getRarityName } from '../utils/achievements';
 import './AchievementModal.css';

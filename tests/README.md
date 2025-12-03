@@ -103,7 +103,7 @@ const wallet = await createTestWallet();
 MockOneWallet.install(wallet);
 
 // Now window.onechain is available
-const result = await window.onechain.aptos.connect();
+const result = await window.onechain.connect();
 
 // Cleanup
 MockOneWallet.uninstall();
@@ -115,7 +115,7 @@ MockOneWallet.uninstall();
 // Install mock that simulates user rejection
 MockOneWallet.installWithRejection(wallet);
 
-const result = await window.onechain.aptos.connect();
+const result = await window.onechain.connect();
 // result.status === "Rejected"
 ```
 

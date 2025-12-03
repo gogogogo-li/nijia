@@ -13,12 +13,12 @@
   --color-charcoal-700: rgba(31, 33, 33, 1);
   --color-charcoal-800: rgba(38, 40, 40, 1);
   --color-slate-900: rgba(19, 52, 59, 1);
-  --color-teal-300: rgba(46, 216, 167, 1); /* Aptos official accent */
+  --color-teal-300: rgba(46, 216, 167, 1); 
   --color-teal-400: rgba(41, 194, 150, 1); /* Slightly darker */
-  --color-teal-500: rgba(35, 172, 133, 1); /* Base Aptos color variant */
+  --color-teal-500: rgba(35, 172, 133, 1); 
   --color-teal-600: rgba(31, 155, 120, 1); /* Darker variant */
   --color-teal-700: rgba(27, 138, 107, 1); /* Even darker */
-  --color-teal-800: rgba(46, 216, 167, 1); /* Bright Aptos accent */
+  --color-teal-800: rgba(46, 216, 167, 1); 
   --color-red-400: rgba(255, 84, 89, 1);
   --color-red-500: rgba(192, 21, 47, 1);
   --color-orange-400: rgba(230, 129, 97, 1);

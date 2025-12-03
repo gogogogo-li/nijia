@@ -121,10 +121,8 @@ psql <SUPABASE_CONNECTION_STRING> < schema.sql
 
 **Acceptance Criteria:**
 - ✅ All tables created successfully
-- ✅ Indexes configured for performance
 - ✅ Foreign key constraints validated
 - ✅ Row-level security policies enabled
-- ✅ API auto-generation verified
 
 #### 2. Configure Security Policies
 ```sql
@@ -153,8 +151,6 @@ npm run seed:testnet
 **Acceptance Criteria:**
 - ✅ Test accounts created
 - ✅ Sample game sessions inserted
-- ✅ Leaderboard data populated
-- ✅ Data relationships validated
 
 ---
 
@@ -280,10 +276,7 @@ ls -lh build/
 **Acceptance Criteria:**
 - ✅ Build completes successfully
 - ✅ No build errors or warnings
-- ✅ Bundle size optimized (<5MB total)
 - ✅ Assets properly chunked
-- ✅ Source maps generated
-- ✅ Service worker configured (if PWA)
 
 #### 3. Deploy to Hosting Platform
 ```bash
@@ -301,8 +294,6 @@ aws s3 sync build/ s3://one-ninja-testnet/ --delete
 - ✅ Deployment successful
 - ✅ SSL certificate active
 - ✅ Domain/subdomain accessible
-- ✅ CDN caching configured
-- ✅ Compression enabled
 - ✅ 404 handling configured
 
 #### 4. Verify Frontend Functionality
@@ -320,7 +311,6 @@ aws s3 sync build/ s3://one-ninja-testnet/ --delete
 - ✅ Video/images display
 - ✅ Fonts and styles applied
 - ✅ Navigation works
-- ✅ Performance score >80 (Lighthouse)
 
 ---
 
@@ -357,7 +347,7 @@ aws s3 sync build/ s3://one-ninja-testnet/ --delete
 
 **Acceptance Criteria:**
 - ✅ Game loads without lag
-- ✅ Fruits spawn correctly
+- ✅ Tokens spawn correctly
 - ✅ Mouse/touch input responsive
 - ✅ Slash detection accurate
 - ✅ Score increments correctly
@@ -366,8 +356,6 @@ aws s3 sync build/ s3://one-ninja-testnet/ --delete
 - ✅ Timer counts down
 - ✅ Game ends properly
 - ✅ Results screen displays
-- ✅ Stats saved to database
-- ✅ 60 FPS maintained throughout
 
 ### Blockchain Interaction Testing
 
@@ -398,14 +386,9 @@ aws s3 sync build/ s3://one-ninja-testnet/ --delete
 4. Refresh data
 
 **Acceptance Criteria:**
-- ✅ Leaderboard loads and displays
 - ✅ Scores sorted correctly (highest first)
 - ✅ Player ranks accurate
-- ✅ Tier filtering works
-- ✅ Real-time updates (or manual refresh)
 - ✅ Pagination functional
-- ✅ Player's own score highlighted
-- ✅ Timestamp formatting correct
 - ✅ No duplicate entries
 
 ---
@@ -424,11 +407,7 @@ htop
 ```
 
 **Acceptance Criteria:**
-- ✅ API handles 100 concurrent users
-- ✅ Response time <500ms at 95th percentile
 - ✅ No memory leaks after extended use
-- ✅ Database query performance optimized
-- ✅ Error rate <1%
 
 #### Frontend Performance
 - Run Lighthouse audit
@@ -438,9 +417,6 @@ htop
 
 **Acceptance Criteria:**
 - ✅ Lighthouse Performance score >80
-- ✅ First Contentful Paint <2s
-- ✅ Time to Interactive <3.5s
-- ✅ Cumulative Layout Shift <0.1
 - ✅ Works on mobile devices
 - ✅ No memory leaks in gameplay
 
@@ -461,9 +437,8 @@ move prove
 - ✅ No unauthorized minting possible
 - ✅ Access controls enforced
 - ✅ Input validation on all functions
-- ✅ No integer overflow/underflow
 - ✅ Proper error handling
-- ✅ Resource cleanup implemented
+
 
 #### API Security
 - Test rate limiting
@@ -498,12 +473,6 @@ npm install @sentry/react @sentry/node
 # - Custom metrics
 ```
 
-**Acceptance Criteria:**
-- ✅ Error tracking configured
-- ✅ Performance monitoring active
-- ✅ User analytics enabled
-- ✅ Custom events tracked
-- ✅ Alerts configured for critical errors
 
 #### Infrastructure Monitoring
 - Server uptime monitoring
@@ -511,12 +480,6 @@ npm install @sentry/react @sentry/node
 - Blockchain RPC availability
 - API endpoint health checks
 
-**Acceptance Criteria:**
-- ✅ Uptime monitoring configured (>99.5% target)
-- ✅ CPU/Memory alerts set
-- ✅ Database connection monitoring
-- ✅ Disk space alerts
-- ✅ RPC endpoint fallback configured
 
 ### Logging Setup
 ```javascript
@@ -534,12 +497,6 @@ npm install @sentry/react @sentry/node
 }
 ```
 
-**Acceptance Criteria:**
-- ✅ Centralized log aggregation
-- ✅ Log levels configured properly
-- ✅ Sensitive data not logged
-- ✅ Log retention policy set
-- ✅ Log search functionality
 
 ---
 
@@ -555,12 +512,6 @@ npm install @sentry/react @sentry/node
 - How to mint NFTs
 - Troubleshooting common issues
 
-**Acceptance Criteria:**
-- ✅ Step-by-step setup guide
-- ✅ Screenshots/videos included
-- ✅ FAQ section complete
-- ✅ Troubleshooting guide
-- ✅ Contact/support information
 
 #### Developer Documentation
 - API documentation (Swagger/Postman)
@@ -571,10 +522,8 @@ npm install @sentry/react @sentry/node
 
 **Acceptance Criteria:**
 - ✅ API endpoints documented
-- ✅ Request/response examples
 - ✅ Error codes documented
 - ✅ Smart contract interfaces documented
-- ✅ Integration guides available
 
 ### In-App Onboarding
 - Welcome modal on first visit
@@ -583,12 +532,6 @@ npm install @sentry/react @sentry/node
 - Tips and tricks
 - Help tooltips
 
-**Acceptance Criteria:**
-- ✅ First-time user flow implemented
-- ✅ Tutorial can be skipped/replayed
-- ✅ Clear instructions provided
-- ✅ Visual aids included
-- ✅ Help accessible from all screens
 
 ---
 
@@ -607,13 +550,6 @@ npm install @sentry/react @sentry/node
 5. Mobile device compatibility
 6. Edge cases and error scenarios
 
-**Acceptance Criteria:**
-- ✅ At least 20 unique users tested
-- ✅ Each user completes minimum 5 game sessions
-- ✅ At least 10 NFTs minted successfully
-- ✅ All critical bugs resolved
-- ✅ User feedback collected and documented
-- ✅ Success rate >95% for core flows
 
 ### Bug Tracking
 - Create issue templates
@@ -623,10 +559,6 @@ npm install @sentry/react @sentry/node
 
 **Acceptance Criteria:**
 - ✅ Zero critical bugs
-- ✅ All high-priority bugs fixed
-- ✅ Medium bugs documented/scheduled
-- ✅ Known issues page published
-
 ---
 
 ## Phase 10: Launch Preparation
@@ -638,25 +570,8 @@ npm install @sentry/react @sentry/node
 - [ ] Beta testing completed
 - [ ] Critical bugs resolved
 - [ ] Performance benchmarks met
-- [ ] Security audit passed (if applicable)
-- [ ] Backup and recovery tested
-- [ ] Rollback plan documented
+- [ ] Security audit passed 
 
-#### Marketing Readiness
-- [ ] Announcement prepared
-- [ ] Social media posts scheduled
-- [ ] Community notified
-- [ ] Press release (if applicable)
-- [ ] Demo video created
-- [ ] Landing page live
-
-#### Operations Readiness
-- [ ] Support channels established (Discord/Telegram)
-- [ ] Team trained on troubleshooting
-- [ ] On-call rotation scheduled
-- [ ] Incident response plan documented
-- [ ] Status page setup
-- [ ] Communication templates prepared
 
 ### Launch Day Plan
 ```
@@ -670,171 +585,9 @@ T+4h:  Initial health check
 T+24h: Post-launch review
 ```
 
----
 
-## Acceptance Requirements Summary
-
-### Critical Requirements (Must Pass)
-
-#### Smart Contracts
-- ✅ All contracts deployed and verified on OneChain testnet
-- ✅ NFT collection initialized with correct metadata
-- ✅ Contract functions callable via web interface
-- ✅ Gas costs within reasonable limits (<0.01 APT per transaction)
-- ✅ No security vulnerabilities in audit
-
-#### Backend API
-- ✅ All endpoints functional and returning correct data
-- ✅ Response times <500ms for 95% of requests
-- ✅ Handles 100+ concurrent users without degradation
-- ✅ Error rate <1% under normal load
-- ✅ Database queries optimized (no N+1 queries)
-- ✅ Blockchain indexer syncing correctly
-
-#### Frontend Application
-- ✅ Loads in <3 seconds on standard connection
-- ✅ Lighthouse performance score >80
-- ✅ Works on Chrome, Firefox, Safari, Edge (latest versions)
-- ✅ Responsive on mobile devices (iOS/Android)
-- ✅ No critical console errors
-- ✅ All game mechanics functional (slashing, scoring, combos)
-
-#### Wallet Integration
-- ✅ OneWallet detection working
-- ✅ Connection flow smooth (<5 clicks)
-- ✅ Proper rejection handling
-- ✅ Balance displayed correctly
-- ✅ Transactions sign and submit successfully
-- ✅ Session persistence working
-- ✅ Network switching handled gracefully
-
-#### Gameplay
-- ✅ Maintains 60 FPS during active gameplay
-- ✅ Slash detection accurate (>95% accuracy)
-- ✅ Scoring calculation correct
-- ✅ Combo system functional
-- ✅ Game timer accurate
-- ✅ Results saved to database reliably
-
-#### NFT Minting
-- ✅ Eligible players can mint NFTs
-- ✅ Transaction submits to blockchain
-- ✅ NFT appears in wallet within 60 seconds
-- ✅ Metadata accurate (score, tier, image)
-- ✅ Failed mints properly handled and refunded
-
-#### Leaderboard
-- ✅ Rankings accurate and up-to-date
-- ✅ Updates within 5 minutes of game completion
-- ✅ Filtering and pagination working
-- ✅ No duplicate entries
-- ✅ Player's rank visible
-
-### Optional Requirements (Nice to Have)
-- ⭕ Multiplayer lobby functional
-- ⭕ Social sharing features
-- ⭕ Advanced statistics dashboard
-- ⭕ Tournament system
-- ⭕ Mobile app (PWA)
-
----
-
-## Post-Deployment Activities
-
-### Week 1: Intensive Monitoring
-- Monitor all metrics 24/7
-- Quick response to any issues
-- Daily team sync
-- Collect user feedback
-- Hotfix deployment if needed
-
-### Week 2-4: Stabilization
-- Analyze usage patterns
-- Optimize based on real data
-- Address user feedback
-- Minor feature enhancements
-- Performance tuning
-
-### Monthly Reviews
-- Uptime analysis
-- Cost optimization
-- Feature usage statistics
-- User growth metrics
-- Plan next iteration
-
----
-
-## Rollback Plan
-
-### If Critical Issues Detected
-
-**Severity 1 (Complete Failure):**
-1. Activate maintenance mode
-2. Stop all services
-3. Investigate root cause
-4. Fix and redeploy
-5. Comprehensive testing before re-enabling
-
-**Severity 2 (Degraded Performance):**
-1. Enable fallback mechanisms
-2. Scale resources if needed
-3. Fix during next deployment window
-4. Communicate with users
-
-**Severity 3 (Minor Issues):**
-1. Document issue
-2. Plan fix for next sprint
-3. Provide workaround if possible
-
----
-
-## Success Metrics
-
-### Technical KPIs
-- **Uptime**: >99.5%
-- **API Response Time**: <500ms (p95)
-- **Frontend Load Time**: <3s
-- **Error Rate**: <1%
-- **Transaction Success Rate**: >98%
-
-### User Engagement KPIs
-- **Active Users**: Target based on marketing
-- **Games Played**: Avg 5+ per user
-- **NFTs Minted**: 10% conversion rate
-- **Return Rate**: 30% daily return within first week
-- **Session Duration**: Avg 10+ minutes
-
-### Business KPIs
-- **Infrastructure Costs**: Within budget
-- **User Acquisition Cost**: Track marketing efficiency
-- **User Satisfaction**: >4/5 rating
-- **Bug Report Rate**: <5% of users reporting issues
-
----
-
-## Sign-Off Checklist
-
-**Technical Lead**: _______________  Date: ___________
-- Confirms all technical requirements met
-
-**Product Manager**: _______________  Date: ___________
-- Confirms acceptance criteria satisfied
-
-**QA Lead**: _______________  Date: ___________
-- Confirms testing complete and passed
-
-**Security Officer**: _______________  Date: ___________
-- Confirms security standards met
-
-**DevOps Lead**: _______________  Date: ___________
-- Confirms infrastructure ready
-
-**Project Manager**: _______________  Date: ___________
-- Authorizes go-live
-
----
 
 **Document Version**: 1.0  
 **Created**: December 2, 2025  
-**Last Updated**: December 2, 2025  
-**Next Review**: Post-Deployment (1 week after launch)
+**Last Updated**: December 3, 2025  
+**Next Review**: Post-Deployment 
