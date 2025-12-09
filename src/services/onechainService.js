@@ -17,7 +17,7 @@ class OneChainService {
     // OneChain configuration
     this.ONECHAIN_CONFIG = {
       apiEndpoint: process.env.REACT_APP_ONECHAIN_API || 'https://api.onelabs.cc',
-      rpcEndpoint: process.env.REACT_APP_ONECHAIN_RPC || 'https://fullnode.testnet.onelabs.cc/v1',
+      rpcEndpoint: process.env.REACT_APP_ONECHAIN_RPC || 'https://rpc-testnet.onelabs.cc:443',
       network: process.env.REACT_APP_ONECHAIN_NETWORK || 'testnet',
       projectId: process.env.REACT_APP_ONECHAIN_PROJECT_ID || 'oneninja',
       gameContractAddress: process.env.REACT_APP_GAME_CONTRACT_ADDRESS,
@@ -590,10 +590,10 @@ This signature will be used to verify your identity.`;
     try {
       console.log('🔍 Fetching balance for:', this.walletAddress);
 
-      // Method 1: Try Sui Testnet RPC (OneChain is built on Sui)
+      // Method 1: Try OneChain Testnet RPC
       try {
-        const rpcUrl = 'https://fullnode.testnet.sui.io:443';
-        console.log('   Trying Sui Testnet RPC at:', rpcUrl);
+        const rpcUrl = 'https://rpc-testnet.onelabs.cc:443';
+        console.log('   Trying OneChain Testnet RPC at:', rpcUrl);
         
         const response = await fetch(rpcUrl, {
           method: 'POST',
@@ -612,14 +612,14 @@ This signature will be used to verify your identity.`;
         console.log('   RPC Response:', data);
         
         if (data.result && data.result.totalBalance !== undefined) {
-          // Convert from MIST (smallest unit) to SUI (9 decimals)
-          const balanceInONE = Number(data.result.totalBalance) / 1_000_000_000;
-          const formattedBalance = balanceInONE.toFixed(4);
+          // Convert from MIST (smallest unit) to OCT (9 decimals, 1 OCT = 1,000,000,000 MIST)
+          const balanceInOCT = Number(data.result.totalBalance) / 1_000_000_000;
+          const formattedBalance = balanceInOCT.toFixed(4);
           
-          console.log('✅ Balance from Sui RPC:', formattedBalance, 'ONE');
+          console.log('✅ Balance from OneChain RPC:', formattedBalance, 'OCT');
           return {
             amount: formattedBalance,
-            symbol: 'ONE'
+            symbol: 'OCT'
           };
         } else if (data.error) {
           console.warn('   RPC returned error:', data.error);
@@ -643,11 +643,11 @@ This signature will be used to verify your identity.`;
             console.log('   Provider balance result:', result);
             
             if (result && result.totalBalance) {
-              const balanceInONE = (Number(result.totalBalance) / 1_000_000_000).toFixed(4);
-              console.log('✅ Balance from provider:', balanceInONE, 'ONE');
+              const balanceInOCT = (Number(result.totalBalance) / 1_000_000_000).toFixed(4);
+              console.log('✅ Balance from provider:', balanceInOCT, 'OCT');
               return {
-                amount: balanceInONE,
-                symbol: 'ONE'
+                amount: balanceInOCT,
+                symbol: 'OCT'
               };
             }
           } catch (err) {
@@ -665,11 +665,11 @@ This signature will be used to verify your identity.`;
             if (result && result.length > 0) {
               const suiBalance = result.find(b => b.coinType === '0x2::sui::SUI');
               if (suiBalance && suiBalance.totalBalance) {
-                const balanceInONE = (Number(suiBalance.totalBalance) / 1_000_000_000).toFixed(4);
-                console.log('✅ Balance from provider.getAllBalances():', balanceInONE, 'ONE');
+                const balanceInOCT = (Number(suiBalance.totalBalance) / 1_000_000_000).toFixed(4);
+                console.log('✅ Balance from provider.getAllBalances():', balanceInOCT, 'OCT');
                 return {
-                  amount: balanceInONE,
-                  symbol: 'ONE'
+                  amount: balanceInOCT,
+                  symbol: 'OCT'
                 };
               }
             }
@@ -681,11 +681,11 @@ This signature will be used to verify your identity.`;
 
       // Return zero if all methods fail
       console.warn('⚠️ All balance fetch methods failed, returning 0');
-      return { amount: '0.0000', symbol: 'ONE' };
+      return { amount: '0.0000', symbol: 'OCT' };
 
     } catch (error) {
       console.error('❌ Error fetching balance:', error);
-      return { amount: '0.0000', symbol: 'ONE' };
+      return { amount: '0.0000', symbol: 'OCT' };
     }
   }
 

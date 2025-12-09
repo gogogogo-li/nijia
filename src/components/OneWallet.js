@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaWallet, FaTrophy, FaCoins, FaSignOutAlt, FaCheckCircle, FaUser, FaSync } from 'react-icons/fa';
+import { FaWallet, FaTrophy, FaCoins, FaSignOutAlt, FaCheckCircle, FaUser, FaSync, FaCopy, FaArrowLeft } from 'react-icons/fa';
 import './OneWallet.css';
 
 // Helper functions
@@ -9,10 +9,14 @@ const formatAddress = (address) => {
 };
 
 const formatBalance = (balance) => {
-  if (!balance) return '0.00';
-  // Convert from smallest unit to ONE tokens (assuming 8 decimals)
+  if (!balance) return '0.0000';
+  // Balance is already formatted from service (OCT with 9 decimals: 1 OCT = 1,000,000,000 MIST)
+  if (typeof balance === 'object' && balance.amount) {
+    return balance.amount;
+  }
+  // Fallback for raw numbers
   const balanceNum = typeof balance === 'string' ? parseFloat(balance) : balance;
-  return (balanceNum / 100000000).toFixed(4);
+  return balanceNum.toFixed(4);
 };
 
 const OneWallet = ({ onechain }) => {
@@ -223,7 +227,7 @@ const OneWallet = ({ onechain }) => {
               )}
             </button>
             <p className="wallet-hint">
-              🔐 Secure connection to OneChain network
+              Secure connection to OneChain network
             </p>
             <p className="wallet-help">
               New to OneChain? <a href="https://docs.onelabs.cc" target="_blank" rel="noopener noreferrer">Learn more</a>
@@ -257,7 +261,7 @@ const OneWallet = ({ onechain }) => {
                   }}
                   title="Copy address"
                 >
-                  📋
+                  <FaCopy />
                 </button>
               </div>
 
@@ -268,7 +272,7 @@ const OneWallet = ({ onechain }) => {
                   <div className="balance-info">
                     <span className="balance-label">Balance:</span>
                     <span className="balance-value">
-                      {onechain.balance ? formatBalance(onechain.balance) : '...'} ONE
+                      {onechain.balance ? formatBalance(onechain.balance) : '...'} OCT
                     </span>
                   </div>
                   <button 
@@ -294,14 +298,21 @@ const OneWallet = ({ onechain }) => {
               <button
                 className="toggle-button"
                 onClick={() => setShowStats(!showStats)}
+                title={showStats ? 'Hide Achievements' : 'Show Achievements'}
               >
                 <FaTrophy className="trophy-icon" />
-                {showStats ? 'Hide' : 'Show'} Achievements
               </button>
             </div>
 
             {showStats && (
               <div className="stats-panel">
+                <button 
+                  className="stats-back-button" 
+                  onClick={() => setShowStats(false)}
+                  title="Close"
+                >
+                  <FaArrowLeft /> Back
+                </button>
                 <div className="nft-gallery">
                   <h3 className="gallery-title">
                     <FaTrophy /> Your Achievement NFTs
@@ -314,7 +325,7 @@ const OneWallet = ({ onechain }) => {
                           <div className="nft-details">
                             <div className="nft-name">{nft.name}</div>
                             <div className={`nft-rarity rarity-${nft.rarity.toLowerCase()}`}>
-                              ⭐ {nft.rarity}
+                              {nft.rarity}
                             </div>
                             {nft.score && (
                               <div className="nft-score">

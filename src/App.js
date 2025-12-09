@@ -225,7 +225,6 @@ function App() {
 
   return (
     <div className="App">
-      
       {renderScreen()}
       <ParticleContainer particles={particles} />
       <SpeedInsights />

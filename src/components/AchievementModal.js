@@ -1,4 +1,5 @@
 import React from 'react';
+import { FaTrophy, FaGamepad, FaBolt, FaBomb, FaRocket, FaTimes } from 'react-icons/fa';
 // import { mintAchievementNFTs, getGasCostEstimate } from '../utils/nftMinting';
 import { getRarityColor, getRarityName } from '../utils/achievements';
 import './AchievementModal.css';
@@ -21,8 +22,8 @@ const AchievementModal = ({
     <div className="achievement-modal-overlay" onClick={handleClose}>
       <div className="achievement-modal" onClick={(e) => e.stopPropagation()}>
         <div className="achievement-modal-header">
-          <h2>🎉 Achievements Unlocked!</h2>
-          <button className="modal-close" onClick={handleClose}>×</button>
+          <h2><FaTrophy className="header-icon" /> Achievements Unlocked!</h2>
+          <button className="modal-close" onClick={handleClose}><FaTimes /></button>
         </div>
         
         <div className="achievement-modal-content">
@@ -73,7 +74,7 @@ const AchievementModal = ({
 
               {/* Game Stats Summary */}
               <div className="game-stats-summary">
-                <h4>🎮 Game Performance</h4>
+                <h4><FaGamepad className="stats-icon" /> Game Performance</h4>
                 <div className="stats-grid">
                   <div className="stat-item">
                     <span className="stat-label">Score</span>
@@ -103,7 +104,7 @@ const AchievementModal = ({
                 textAlign: 'center',
                 marginTop: '1.5rem'
               }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚀</div>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}><FaRocket /></div>
                 <h3 style={{ color: '#EC796B', marginBottom: '1rem' }}>NFT Minting Coming Soon!</h3>
                 <p style={{ color: '#ccc', marginBottom: '1.5rem' }}>
                   Soon you'll be able to mint your achievements as NFTs on the OneChain blockchain.
@@ -125,7 +126,7 @@ const AchievementModal = ({
             </>
           ) : (
             <div className="no-achievements">
-              <div className="no-achievements-icon">🎯</div>
+              <div className="no-achievements-icon"><FaTrophy /></div>
               <h3>No New Achievements</h3>
               <p>Keep playing to unlock new achievements and mint exclusive NFTs!</p>
             </div>

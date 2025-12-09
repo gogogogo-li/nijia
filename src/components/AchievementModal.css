@@ -21,19 +21,19 @@
 }
 
 .achievement-modal {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
-  border-radius: 24px;
-  padding: 2.5rem;
-  max-width: 900px;
-  width: 95%;
-  max-height: 90vh;
+  background: linear-gradient(135deg, #1a1a24 0%, #16213e 50%, #0f1419 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 800px;
+  width: 92%;
+  max-height: 85vh;
   overflow-y: auto;
-  border: 3px solid rgba(46, 216, 167, 0.4);
+  border: 2px solid rgba(76, 175, 80, 0.3);
   box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.8),
-    0 0 100px rgba(46, 216, 167, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  animation: slideUp 0.4s ease;
+    0 20px 60px rgba(0, 0, 0, 0.9),
+    0 0 80px rgba(76, 175, 80, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
@@ -80,8 +80,14 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #2ED8A7, transparent);
+  background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.5), transparent);
   animation: shimmer 2s ease-in-out infinite;
+}
+
+.stats-icon {
+  color: #4CAF50;
+  margin-right: 8px;
+  font-size: 1.1rem;
 }
 
 @keyframes shimmer {
@@ -90,58 +96,64 @@
 }
 
 .achievement-modal-header h2 {
-  font-family: 'Orbitron', monospace;
-  font-size: 2.2rem;
-  color: #2ED8A7;
+  font-family: 'SF Mono', 'Orbitron', monospace;
+  font-size: 1.75rem;
+  color: #F5F5F5;
   margin: 0;
-  text-shadow: 
-    0 0 20px rgba(46, 216, 167, 0.6),
-    0 0 40px rgba(46, 216, 167, 0.3);
-  background: linear-gradient(135deg, #2ED8A7, #26C799);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.header-icon {
+  color: #4CAF50;
+  font-size: 1.5rem;
 }
 
 .modal-close {
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #ef4444;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 1.5rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #FCA5A5;
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.2rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .modal-close:hover {
-  background: rgba(239, 68, 68, 0.3);
-  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #EF4444;
   transform: scale(1.05);
 }
 
 .achievement-intro {
   text-align: center;
-  margin-bottom: 2rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  line-height: 1.6;
+  margin-bottom: 1.75rem;
+  color: #E5E7EB;
+  font-size: 1rem;
+  line-height: 1.7;
+  font-weight: 400;
 }
 
 .achievement-intro strong {
-  color: #2ED8A7;
-  font-weight: 700;
+  color: #4CAF50;
+  font-weight: 600;
 }
 
 .mint-info {
   display: block;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.95rem;
-  margin-top: 0.5rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  margin-top: 0.75rem;
+  font-weight: 400;
 }
 
 .achievements-grid {
@@ -152,15 +164,15 @@
 }
 
 .achievement-card {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.04);
   border: 2px solid;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 1.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .achievement-card::before {
@@ -186,14 +198,29 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  padding: 0.3rem 0.8rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
   color: white;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.achievement-info h3 {
+  font-size: 1.1rem;
+  color: #F5F5F5;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.achievement-info p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .achievement-icon {
@@ -202,25 +229,8 @@
 }
 
 .achievement-emoji {
-  font-size: 3rem;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-}
-
-.achievement-info h3 {
-  font-family: 'Orbitron', monospace;
-  font-size: 1.4rem;
-  color: #2ED8A7;
-  margin-bottom: 0.5rem;
-  text-align: center;
-  text-shadow: 0 0 10px rgba(50, 184, 198, 0.4);
-}
-
-.achievement-info p {
-  color: rgba(255, 255, 255, 0.8);
-  text-align: center;
-  margin-bottom: 1rem;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 3.5rem;
+  filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
 }
 
 .achievement-attributes {
@@ -241,15 +251,15 @@
 }
 
 .attribute.rarity {
-  background: linear-gradient(135deg, #2ED8A7, #26C799);
-  color: white;
-  border-color: #2ED8A7;
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+  border-color: rgba(76, 175, 80, 0.4);
 }
 
 .attribute.type {
-  background: linear-gradient(135deg, #2ED8A7, #2ED8A7);
-  color: white;
-  border-color: #2ED8A7;
+  background: rgba(76, 175, 80, 0.2);
+  color: #66BB6A;
+  border-color: rgba(76, 175, 80, 0.4);
 }
 
 .attribute.category,
@@ -261,25 +271,30 @@
 .attribute.speed,
 .attribute.mastery,
 .attribute.endurance {
-  background: rgba(139, 92, 246, 0.2);
-  color: #a78bfa;
-  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.15);
+  color: #C084FC;
+  border-color: rgba(139, 92, 246, 0.3);
 }
 
 .game-stats-summary {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(50, 184, 198, 0.3);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(76, 175, 80, 0.25);
+  border-radius: 10px;
   padding: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .game-stats-summary h4 {
-  font-family: 'Orbitron', monospace;
-  color: #2ED8A7;
-  margin-bottom: 1rem;
+  font-family: 'SF Mono', monospace;
+  color: #E5E7EB;
+  margin-bottom: 1.25rem;
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .stats-grid {
@@ -290,24 +305,34 @@
 
 .stat-item {
   text-align: center;
-  padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+}
+
+.stat-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(76, 175, 80, 0.3);
 }
 
 .stat-label {
   display: block;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.85rem;
-  margin-bottom: 0.3rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-value {
   display: block;
-  color: #2ED8A7;
-  font-weight: 700;
-  font-size: 1.2rem;
+  color: #4CAF50;
+  font-weight: 600;
+  font-size: 1.3rem;
+  font-family: 'SF Mono', monospace;
   font-family: 'Orbitron', monospace;
 }
 
@@ -359,16 +384,16 @@
 }
 
 .mint-nft-btn {
-  background: linear-gradient(135deg, #2ED8A7 0%, #26C799 100%);
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
   border: none;
   color: white;
   padding: 1rem 2.5rem;
-  border-radius: 16px;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif;
-  font-size: 1.1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-family: 'SF Mono', sans-serif;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   width: 100%;
   max-width: 400px;
   position: relative;
@@ -493,19 +518,21 @@
 
 .tx-link {
   display: inline-block;
-  color: #2ED8A7;
+  color: #4CAF50;
   text-decoration: none;
   padding: 0.8rem 1.5rem;
-  border: 2px solid rgba(50, 184, 198, 0.3);
-  border-radius: 12px;
-  transition: all 0.3s ease;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  transition: all 0.2s ease;
   font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .tx-link:hover {
-  background: rgba(50, 184, 198, 0.1);
-  border-color: rgba(50, 184, 198, 0.5);
+  background: rgba(76, 175, 80, 0.1);
+  border-color: rgba(76, 175, 80, 0.5);
   transform: translateY(-2px);
+  color: #66BB6A;
 }
 
 .mint-error {
@@ -567,32 +594,35 @@
 .no-achievements-icon {
   font-size: 4rem;
   margin-bottom: 1.5rem;
-  opacity: 0.7;
+  color: #9CA3AF;
 }
 
 .no-achievements h3 {
-  color: rgba(255, 255, 255, 0.8);
-  font-family: 'Orbitron', monospace;
+  color: #E5E7EB;
+  font-family: 'SF Mono', monospace;
   margin-bottom: 1rem;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .no-achievements p {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
 .achievement-modal-footer {
   margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   text-align: center;
 }
 
 .citrea-info {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  font-weight: 400;
   margin: 0;
 }
 

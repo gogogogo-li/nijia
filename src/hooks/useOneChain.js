@@ -148,7 +148,7 @@ export const useOneChain = () => {
       return balanceData;
     } catch (error) {
       console.error('Error refreshing balance:', error);
-      return balance || { amount: '0', symbol: 'ONE' };
+      return balance || { amount: '0', symbol: 'OCT' };
     }
   }, [balance]);
 
