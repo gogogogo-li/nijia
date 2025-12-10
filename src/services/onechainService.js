@@ -1,5 +1,6 @@
 // OneChain Service - Handles all blockchain interactions with OneChain network
 // Integrates OneWallet, OneDEX, OneID, and OneRWA
+import onelabsApiClient from './onelabsApiClient';
 
 class OneChainService {
   constructor() {
@@ -13,6 +14,9 @@ class OneChainService {
     this.currentTokenId = 0;
     this.gameStartTime = null;
     this.listeners = new Set();
+    
+    // Initialize OneLabs API Client
+    this.apiClient = onelabsApiClient;
     
     // OneChain configuration
     this.ONECHAIN_CONFIG = {
@@ -581,7 +585,7 @@ This signature will be used to verify your identity.`;
     return this.walletAddress;
   }
 
-  // Get wallet balance from OneChain
+  // Get wallet balance from OneChain using OneLabs API SDK
   async getBalance() {
     if (!this.isWalletConnected()) {
       throw new Error('Wallet not connected');
@@ -590,50 +594,31 @@ This signature will be used to verify your identity.`;
     try {
       console.log('🔍 Fetching balance for:', this.walletAddress);
 
-      // Method 1: Try OneChain Testnet RPC
+      // Method 1: Use OneLabs API SDK
       try {
-        const rpcUrl = 'https://rpc-testnet.onelabs.cc:443';
-        console.log('   Trying OneChain Testnet RPC at:', rpcUrl);
+        const balance = await this.apiClient.getBalance(this.walletAddress);
+        console.log('   API SDK balance result:', balance);
         
-        const response = await fetch(rpcUrl, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'suix_getBalance',
-            params: [this.walletAddress]
-          })
-        });
-
-        const data = await response.json();
-        console.log('   RPC Response:', data);
-        
-        if (data.result && data.result.totalBalance !== undefined) {
-          // Convert from MIST (smallest unit) to OCT (9 decimals, 1 OCT = 1,000,000,000 MIST)
-          const balanceInOCT = Number(data.result.totalBalance) / 1_000_000_000;
+        if (balance && balance.totalBalance !== undefined) {
+          // Convert from MIST (smallest unit) to OCT (9 decimals)
+          const balanceInOCT = this.apiClient.formatAmount(balance.totalBalance, 9);
           const formattedBalance = balanceInOCT.toFixed(4);
           
-          console.log('✅ Balance from OneChain RPC:', formattedBalance, 'OCT');
+          console.log('✅ Balance from OneLabs API SDK:', formattedBalance, 'OCT');
           return {
             amount: formattedBalance,
             symbol: 'OCT'
           };
-        } else if (data.error) {
-          console.warn('   RPC returned error:', data.error);
         }
-      } catch (rpcErr) {
-        console.warn('   RPC balance fetch failed:', rpcErr.message);
+      } catch (sdkErr) {
+        console.warn('   API SDK balance fetch failed:', sdkErr.message);
       }
 
-      // Method 2: Try to get balance from wallet provider directly
+      // Method 2: Try wallet provider as fallback
       const provider = this.getWalletProvider();
       
       if (provider && provider.provider) {
         const actualProvider = provider.provider;
-        console.log('   Checking actual provider methods:', Object.keys(actualProvider).filter(k => k.includes('balance') || k.includes('Balance')));
         
         // Try getBalance from the actual Sui provider
         if (typeof actualProvider.getBalance === 'function') {
@@ -719,25 +704,14 @@ This signature will be used to verify your identity.`;
     this.slashBuffer = [];
 
     try {
-      const response = await fetch(
-        `${this.ONECHAIN_CONFIG.apiEndpoint}/game/slash-batch`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
-          },
-          body: JSON.stringify({
-            walletAddress: this.walletAddress,
-            slashes: batch,
-            sessionStart: this.gameStartTime
-          })
-        }
+      // Use OneLabs API SDK
+      await this.apiClient.submitSlashBatch(
+        this.walletAddress,
+        batch,
+        this.sessionToken
       );
-
-      if (response.ok) {
-        console.log(`✅ Submitted ${batch.length} slashes to OneChain`);
-      }
+      
+      console.log(`✅ Submitted ${batch.length} slashes to OneChain via API SDK`);
     } catch (error) {
       console.error('Error submitting slash batch:', error);
       // Re-add to buffer on failure
@@ -771,30 +745,17 @@ This signature will be used to verify your identity.`;
         image: this.generateNFTImage(gameStats),
       };
 
-      // Call OneChain API to mint NFT
-      const response = await fetch(
-        `${this.ONECHAIN_CONFIG.apiEndpoint}/nft/mint`,
+      // Call OneChain API to mint NFT using API SDK
+      const result = await this.apiClient.mintNFT(
+        this.walletAddress,
         {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
-          },
-          body: JSON.stringify({
-            walletAddress: this.walletAddress,
-            contractAddress: this.ONECHAIN_CONFIG.gameContractAddress,
-            metadata: nftMetadata
-          })
-        }
+          ...nftMetadata,
+          contractAddress: this.ONECHAIN_CONFIG.gameContractAddress
+        },
+        this.sessionToken
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to mint NFT');
-      }
-
-      const result = await response.json();
-
-      console.log('✅ NFT Minted successfully:', result.transactionHash);
+      console.log('✅ NFT Minted successfully via API SDK:', result.transactionHash);
 
       return {
         success: true,
@@ -827,124 +788,66 @@ This signature will be used to verify your identity.`;
     return emojiMap[tier] || '🎮';
   }
 
-  // Fetch user profile via OneID
+  // Fetch user profile via OneID using API SDK
   async fetchUserProfile() {
     try {
-      const response = await fetch(
-        `${this.ONECHAIN_CONFIG.apiEndpoint}/identity/profile/${this.walletAddress}`,
-        {
-          headers: {
-            'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
-          }
-        }
-      );
-
-      if (response.ok) {
-        const profile = await response.json();
-        console.log('✅ OneID Profile loaded:', profile);
-        return profile;
-      }
+      const profile = await this.apiClient.getUserProfile(this.walletAddress);
+      console.log('✅ OneID Profile loaded via API SDK:', profile);
+      return profile;
     } catch (error) {
       console.error('Error fetching OneID profile:', error);
     }
     return null;
   }
 
-  // Get game state from OneChain
+  // Get game state from OneChain using API SDK
   async getGameState() {
     if (!this.isWalletConnected()) {
       return null;
     }
 
     try {
-      const response = await fetch(
-        `${this.ONECHAIN_CONFIG.apiEndpoint}/game/state/${this.walletAddress}`,
-        {
-          headers: {
-            'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
-          }
-        }
-      );
-
-      if (response.ok) {
-        return await response.json();
-      }
+      return await this.apiClient.getPlayerStats(this.walletAddress);
     } catch (error) {
       console.error('Error fetching game state:', error);
     }
     return null;
   }
 
-  // Get leaderboard from OneChain
+  // Get leaderboard from OneChain using API SDK
   async getLeaderboard(limit = 100) {
     try {
-      const response = await fetch(
-        `${this.ONECHAIN_CONFIG.apiEndpoint}/game/leaderboard?limit=${limit}`,
-        {
-          headers: {
-            'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
-          }
-        }
-      );
-
-      if (response.ok) {
-        return await response.json();
-      }
+      return await this.apiClient.getLeaderboard(limit);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     }
     return [];
   }
 
-  // Get token price from OneDEX
+  // Get token price from OneDEX using API SDK
   async getTokenPrice() {
     try {
-      const response = await fetch(
-        `${this.ONECHAIN_CONFIG.apiEndpoint}/dex/price/ONE`,
-        {
-          headers: {
-            'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
-          }
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.price;
-      }
+      const data = await this.apiClient.getTokenPrice('OCT');
+      return data.price;
     } catch (error) {
       console.error('Error fetching token price:', error);
     }
     return null;
   }
 
-  // Reward player with tokens via OneDEX
+  // Reward player with tokens via OneDEX using API SDK
   async rewardPlayer(amount) {
     if (!this.isWalletConnected()) {
       return { success: false, error: 'Wallet not connected' };
     }
 
     try {
-      const response = await fetch(
-        `${this.ONECHAIN_CONFIG.apiEndpoint}/game/reward`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
-          },
-          body: JSON.stringify({
-            walletAddress: this.walletAddress,
-            amount: amount,
-            currency: 'ONE'
-          })
-        }
+      const result = await this.apiClient.claimReward(
+        this.walletAddress,
+        amount,
+        this.sessionToken
       );
-
-      if (response.ok) {
-        const result = await response.json();
-        return { success: true, ...result };
-      }
+      return { success: true, ...result };
     } catch (error) {
       console.error('Error rewarding player:', error);
     }
@@ -1019,28 +922,18 @@ This signature will be used to verify your identity.`;
     
     while (Date.now() - startTime < timeout) {
       try {
-        // Try to get transaction status from OneChain API
-        const response = await fetch(
-          `${this.ONECHAIN_CONFIG.apiEndpoint}/transactions/${txHash}`,
-          {
-            headers: {
-              'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
-            }
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success || data.confirmed) {
-            const duration = Date.now() - startTime;
-            console.log(`✅ Transaction confirmed (${duration}ms)`);
-            return {
-              success: true,
-              confirmed: true,
-              data,
-              duration
-            };
-          }
+        // Try to get transaction status from OneChain API using SDK
+        const data = await this.apiClient.getTransactionStatus(txHash);
+        
+        if (data && (data.success || data.confirmed)) {
+          const duration = Date.now() - startTime;
+          console.log(`✅ Transaction confirmed via API SDK (${duration}ms)`);
+          return {
+            success: true,
+            confirmed: true,
+            data,
+            duration
+          };
         }
       } catch (err) {
         // Continue waiting
@@ -1111,32 +1004,13 @@ This signature will be used to verify your identity.`;
   // Verify signature (for authentication)
   async verifySignature(message, signature, address) {
     try {
-      console.log('🔍 Verifying signature...');
+      console.log('🔍 Verifying signature via API SDK...');
       
-      // Call OneChain API to verify signature
-      const response = await fetch(
-        `${this.ONECHAIN_CONFIG.apiEndpoint}/auth/verify`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Project-Id': this.ONECHAIN_CONFIG.projectId,
-          },
-          body: JSON.stringify({
-            message,
-            signature,
-            address
-          })
-        }
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ Signature verification:', result.valid ? 'VALID' : 'INVALID');
-        return result.valid;
-      }
+      // Call OneChain API to verify signature using SDK
+      const result = await this.apiClient.verifyAuth(address, message, signature);
       
-      return false;
+      console.log('✅ Signature verification via API SDK:', result.valid ? 'VALID' : 'INVALID');
+      return result.valid;
     } catch (error) {
       console.error('❌ Signature verification failed:', error);
       return false;

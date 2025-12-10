@@ -43,13 +43,13 @@
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  background: rgba(18, 18, 24, 0.98);
+  background: rgba(10, 10, 15, 0.98);
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(76, 175, 80, 0.3);
   border-radius: 12px;
   padding: 18px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-  color: #E0E0E0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  color: #F5F5F5;
   min-width: 320px;
   max-width: 380px;
   z-index: 1000;
@@ -176,11 +176,11 @@
 }
 
 .wallet-info {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(10, 10, 15, 0.95);
   padding: 14px;
   border-radius: 8px;
   margin-bottom: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(76, 175, 80, 0.2);
 }
 
 .address-section {
@@ -189,41 +189,43 @@
   gap: 8px;
   margin-bottom: 10px;
   padding: 8px;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.6);
   border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .address-label {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .address-text {
   font-family: 'SF Mono', 'Courier New', monospace;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   flex: 1;
-  color: #D1D5DB;
+  color: #F5F5F5;
 }
 
 .copy-button {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.3);
   padding: 5px 10px;
   border-radius: 5px;
   cursor: pointer;
   font-size: 11px;
   transition: all 0.2s;
-  color: #9CA3AF;
+  color: #E0E0E0;
 }
 
 .copy-button:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: #D1D5DB;
+  background: rgba(76, 175, 80, 0.25);
+  border-color: rgba(76, 175, 80, 0.5);
+  color: #FFFFFF;
+  transform: translateY(-1px);
 }
 
 .disconnect-button {
@@ -251,11 +253,11 @@
 }
 
 .balance-section {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.6);
   padding: 12px;
   border-radius: 7px;
   margin: 10px 0;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(76, 175, 80, 0.2);
 }
 
 .balance-item {
@@ -263,7 +265,8 @@
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: #D1D5DB;
+  color: #F5F5F5;
+  font-weight: 500;
 }
 
 .balance-icon {
@@ -272,11 +275,12 @@
 }
 
 .balance-value {
-  font-weight: 600;
+  font-weight: 700;
   margin-left: auto;
-  color: #4CAF50;
-  font-size: 16px;
+  color: #66BB6A;
+  font-size: 18px;
   font-family: 'SF Mono', monospace;
+  text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
 }
 
 /* Stats Section */

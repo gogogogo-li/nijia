@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@onelabs/sui": "^1.26.2",
     "@supabase/supabase-js": "^2.76.1",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
@@ -17,13 +18,14 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "GENERATE_SOURCEMAP=false react-scripts start",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
     "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config tests/integration/jest.config.js",
     "test:manual": "node scripts/testOnechainInteraction.js",
     "test:wallet": "node scripts/quickWalletTest.js",
     "test:full": "node scripts/fullIntegrationDemo.js",
+    "test:sdk": "node scripts/testSDKIntegration.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
