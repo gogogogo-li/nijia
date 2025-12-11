@@ -1,0 +1,251 @@
+import express from 'express';
+import { param } from 'express-validator';
+import { asyncHandler } from '../middleware/errorHandler.js';
+import { authenticateWallet, optionalAuth } from '../middleware/auth.js';
+import { validate, validations } from '../middleware/validation.js';
+import logger from '../utils/logger.js';
+
+const router = express.Router();
+
+/**
+ * GET /api/multiplayer/games/available
+ * Get list of available games waiting for players
+ */
+router.get('/games/available', optionalAuth, asyncHandler(async (req, res) => {
+  const { betTier } = req.query;
+  const tier = betTier ? parseInt(betTier) : null;
+  
+  const games = global.gameManager.getAvailableGames(tier);
+  
+  res.json({
+    success: true,
+    games,
+    count: games.length
+  });
+}));
+
+/**
+ * POST /api/multiplayer/games/create
+ * Create a new multiplayer game
+ */
+router.post('/games/create',
+  authenticateWallet,
+  validate([
+    validations.betTier(),
+    validations.transactionHash()
+  ]),
+  asyncHandler(async (req, res) => {
+    const { betTierId, transactionHash } = req.body;
+    const player1Address = req.walletAddress;
+    
+    const result = await global.gameManager.createGame({
+      player1Address,
+      betTierId,
+      transactionHash
+    });
+    
+    res.json(result);
+  })
+);
+
+/**
+ * POST /api/multiplayer/games/:gameId/join
+ * Join an existing game
+ */
+router.post('/games/:gameId/join',
+  authenticateWallet,
+  validate([
+    param('gameId').isString(),
+    validations.transactionHash()
+  ]),
+  asyncHandler(async (req, res) => {
+    const { gameId } = req.params;
+    const { transactionHash } = req.body;
+    const player2Address = req.walletAddress;
+    
+    logger.info(`Join game request: ${gameId} by ${player2Address}`);
+    
+    const result = await global.gameManager.joinGame({
+      gameId,
+      player2Address,
+      transactionHash
+    });
+    
+    res.json(result);
+  })
+);
+
+/**
+ * POST /api/multiplayer/games/:gameId/score
+ * Submit game score (backend validates)
+ */
+router.post('/games/:gameId/score',
+  authenticateWallet,
+  validate([
+    param('gameId').isUUID(),
+    validations.score(),
+    validations.gameEvents()
+  ]),
+  asyncHandler(async (req, res) => {
+    const { gameId } = req.params;
+    const { finalScore, gameEvents } = req.body;
+    const playerAddress = req.walletAddress;
+    
+    const result = await global.gameManager.submitScore({
+      gameId,
+      playerAddress,
+      gameEvents,
+      finalScore
+    });
+    
+    res.json(result);
+  })
+);
+
+/**
+ * POST /api/multiplayer/games/:gameId/cancel
+ * Cancel a game (only creator can cancel)
+ */
+router.post('/games/:gameId/cancel',
+  validate([
+    param('gameId').isUUID()
+  ]),
+  asyncHandler(async (req, res) => {
+    const { gameId } = req.params;
+    const playerAddress = req.walletAddress;
+    
+    const game = global.gameManager.activeGames.get(gameId);
+    
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        error: 'Game not found'
+      });
+    }
+    
+    if (game.player1 !== playerAddress) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only game creator can cancel'
+      });
+    }
+    
+    if (game.state !== 'waiting') {
+      return res.status(400).json({
+        success: false,
+        error: 'Can only cancel waiting games'
+      });
+    }
+    
+    await global.gameManager.cancelGame(gameId, 'player_cancelled');
+    
+    res.json({
+      success: true,
+      message: 'Game cancelled'
+    });
+  })
+);
+
+/**
+ * GET /api/multiplayer/games/:gameId
+ * Get game details
+ */
+router.get('/games/:gameId',
+  validate([
+    param('gameId').isUUID()
+  ]),
+  asyncHandler(async (req, res) => {
+    const { gameId } = req.params;
+    
+    const game = global.gameManager.activeGames.get(gameId);
+    
+    if (!game) {
+      // Try to fetch from database
+      const { data, error } = await global.gameManager.supabase
+        .from('multiplayer_games')
+        .select('*')
+        .eq('game_id', gameId)
+        .single();
+      
+      if (error || !data) {
+        return res.status(404).json({
+          success: false,
+          error: 'Game not found'
+        });
+      }
+      
+      return res.json({
+        success: true,
+        game: data
+      });
+    }
+    
+    res.json({
+      success: true,
+      game
+    });
+  })
+);
+
+/**
+ * GET /api/multiplayer/player/:address/games
+ * Get player's active games
+ */
+router.get('/player/:address/games',
+  validate([
+    param('address').matches(/^0x[a-fA-F0-9]{64}$/)
+  ]),
+  asyncHandler(async (req, res) => {
+    const { address } = req.params;
+    
+    const gameIds = global.gameManager.playerGames.get(address) || [];
+    const games = gameIds
+      .map(id => global.gameManager.activeGames.get(id))
+      .filter(Boolean);
+    
+    res.json({
+      success: true,
+      games,
+      count: games.length
+    });
+  })
+);
+
+/**
+ * GET /api/multiplayer/tiers
+ * Get available bet tiers
+ */
+router.get('/tiers', asyncHandler(async (req, res) => {
+  res.json({
+    success: true,
+    tiers: global.gameManager.betTiers
+  });
+}));
+
+/**
+ * GET /api/multiplayer/stats
+ * Get multiplayer statistics
+ */
+router.get('/stats', asyncHandler(async (req, res) => {
+  const activeGames = global.gameManager.activeGames.size;
+  const waitingGames = global.gameManager.getAvailableGames().length;
+  const activePlayers = global.gameManager.playerGames.size;
+  
+  // Get completed games count from database
+  const { count: completedGames } = await global.gameManager.supabase
+    .from('multiplayer_games')
+    .select('*', { count: 'exact', head: true })
+    .eq('state', 'completed');
+  
+  res.json({
+    success: true,
+    stats: {
+      activeGames,
+      waitingGames,
+      activePlayers,
+      completedGames: completedGames || 0
+    }
+  });
+}));
+
+export default router;

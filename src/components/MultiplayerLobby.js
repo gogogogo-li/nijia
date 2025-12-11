@@ -142,18 +142,26 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
   };
 
   const handleJoinGame = async (gameId) => {
-    setLoading(true);
-    const result = await multiplayerService.joinGame(gameId);
-    
-    if (result.success) {
-      showNotification('Joined game! Starting match...', 'success');
-      setTimeout(() => {
-        onStartGame(gameId);
-      }, 2000);
-    } else {
-      showNotification(`Failed to join game: ${result.error}`, 'error');
+    try {
+      setLoading(true);
+      const result = await multiplayerService.joinGame(gameId);
+      
+      if (result.success) {
+        showNotification('Joined game! Starting match...', 'success');
+        setTimeout(() => {
+          onStartGame(gameId);
+        }, 2000);
+      } else {
+        showNotification(`Failed to join game: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      // Show user-friendly error message
+      const errorMsg = error.message || 'Failed to join game';
+      showNotification(errorMsg, 'error');
+      console.error('Join game error:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const betTiers = multiplayerService.getBetTiers();

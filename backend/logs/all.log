@@ -1,0 +1,1489 @@
+2025-12-11 13:23:23 [32minfo[39m: [32mGameManager initialized[39m
+2025-12-11 13:23:23 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:23:23 [32minfo[39m: [32m🚀 OneChain Ninja Backend Server[39m
+2025-12-11 13:23:23 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:23:23 [32minfo[39m: [32m📡 Server running on port 3001[39m
+2025-12-11 13:23:23 [32minfo[39m: [32m🌐 API: http://localhost:3001[39m
+2025-12-11 13:23:23 [32minfo[39m: [32m🔌 WebSocket: http://localhost:3001[39m
+2025-12-11 13:23:23 [32minfo[39m: [32m🎯 Frontend: http://localhost:3000,https://yourdomain.com[39m
+2025-12-11 13:23:23 [32minfo[39m: [32m🔗 Network: testnet[39m
+2025-12-11 13:23:23 [32minfo[39m: [32m📊 Environment: development[39m
+2025-12-11 13:23:23 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:23:24 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 13:23:24 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 13:28:17 [32minfo[39m: [32mGameManager initialized[39m
+2025-12-11 13:28:18 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:28:18 [32minfo[39m: [32m🚀 OneChain Ninja Backend Server[39m
+2025-12-11 13:28:18 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:28:18 [32minfo[39m: [32m📡 Server running on port 3001[39m
+2025-12-11 13:28:18 [32minfo[39m: [32m🌐 API: http://localhost:3001[39m
+2025-12-11 13:28:18 [32minfo[39m: [32m🔌 WebSocket: http://localhost:3001[39m
+2025-12-11 13:28:18 [32minfo[39m: [32m🎯 Frontend: http://localhost:3000,https://yourdomain.com[39m
+2025-12-11 13:28:18 [32minfo[39m: [32m🔗 Network: testnet[39m
+2025-12-11 13:28:18 [32minfo[39m: [32m📊 Environment: development[39m
+2025-12-11 13:28:18 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:28:18 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 13:28:18 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 13:32:01 [32minfo[39m: [32mGameManager initialized[39m
+2025-12-11 13:32:01 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:32:01 [32minfo[39m: [32m🚀 OneChain Ninja Backend Server[39m
+2025-12-11 13:32:01 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:32:01 [32minfo[39m: [32m📡 Server running on port 3001[39m
+2025-12-11 13:32:01 [32minfo[39m: [32m🌐 API: http://localhost:3001[39m
+2025-12-11 13:32:01 [32minfo[39m: [32m🔌 WebSocket: http://localhost:3001[39m
+2025-12-11 13:32:01 [32minfo[39m: [32m🎯 Frontend: http://localhost:3000,https://one-ninja.vercel.app[39m
+2025-12-11 13:32:01 [32minfo[39m: [32m🔗 Network: testnet[39m
+2025-12-11 13:32:01 [32minfo[39m: [32m📊 Environment: development[39m
+2025-12-11 13:32:01 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:32:01 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 13:32:01 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 13:32:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:32:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:33:16 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:33:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:34:00 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:34:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:34:01 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:34:10 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:34:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:34:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:34:12 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:38:32 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:38:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:32 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:38:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:37 [32minfo[39m: [32mPOST /api/multiplayer/games/create[39m
+2025-12-11 13:38:38 [31merror[39m: [31mError storing game in database: Could not find the 'player1' column of 'multiplayer_games' in the schema cache[39m
+2025-12-11 13:38:38 [32minfo[39m: [32mGame created: 79c14363-eb3b-421c-b043-01a97c8b5edd by null (0.1 OCT)[39m
+2025-12-11 13:38:38 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:38:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:39 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:38:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:38:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:39:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:25 [32minfo[39m: [32m👋 Received shutdown signal, closing gracefully...[39m
+2025-12-11 13:40:28 [32minfo[39m: [32mGameManager initialized[39m
+2025-12-11 13:40:28 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:40:28 [32minfo[39m: [32m🚀 OneChain Ninja Backend Server[39m
+2025-12-11 13:40:28 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:40:28 [32minfo[39m: [32m📡 Server running on port 3001[39m
+2025-12-11 13:40:28 [32minfo[39m: [32m🌐 API: http://localhost:3001[39m
+2025-12-11 13:40:28 [32minfo[39m: [32m🔌 WebSocket: http://localhost:3001[39m
+2025-12-11 13:40:28 [32minfo[39m: [32m🎯 Frontend: http://localhost:3000,https://one-ninja.vercel.app[39m
+2025-12-11 13:40:28 [32minfo[39m: [32m🔗 Network: testnet[39m
+2025-12-11 13:40:28 [32minfo[39m: [32m📊 Environment: development[39m
+2025-12-11 13:40:28 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:40:29 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 13:40:29 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 13:40:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:40:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:41:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:42:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:43:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:44:02 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:44:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:44:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:44:03 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:44:04 [32minfo[39m: [32mPOST /api/multiplayer/games/create[39m
+2025-12-11 13:44:04 [31merror[39m: [31mError storing game in database:[39m
+2025-12-11 13:44:04 [32minfo[39m: [32mGame created: 6909ca7d-4beb-4e88-99c3-b8f90136e178 by null (0.1 OCT)[39m
+2025-12-11 13:44:04 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:44:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:45:06 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 13:45:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:45:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:45:06 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 13:45:08 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 13:45:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:45:10 [32minfo[39m: [32mPOST /api/multiplayer/games/6909ca7d-4beb-4e88-99c3-b8f90136e178/join[39m
+2025-12-11 13:45:10 [31merror[39m: [31mError joining game: Cannot join your own game[39m
+2025-12-11 13:45:10 [31merror[39m: [31mError occurred:[39m
+2025-12-11 13:45:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:45:17 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:45:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:45:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:45:18 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:45:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:45:19 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:45:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:46:39 [32minfo[39m: [32mGameManager initialized[39m
+2025-12-11 13:46:39 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:46:39 [32minfo[39m: [32m🚀 OneChain Ninja Backend Server[39m
+2025-12-11 13:46:39 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:46:39 [32minfo[39m: [32m📡 Server running on port 3001[39m
+2025-12-11 13:46:39 [32minfo[39m: [32m🌐 API: http://localhost:3001[39m
+2025-12-11 13:46:39 [32minfo[39m: [32m🔌 WebSocket: http://localhost:3001[39m
+2025-12-11 13:46:39 [32minfo[39m: [32m🎯 Frontend: http://localhost:3000,https://one-ninja.vercel.app[39m
+2025-12-11 13:46:39 [32minfo[39m: [32m🔗 Network: testnet[39m
+2025-12-11 13:46:39 [32minfo[39m: [32m📊 Environment: development[39m
+2025-12-11 13:46:39 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:46:39 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 13:46:39 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 13:46:49 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:46:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:46:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:46:49 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:46:53 [32minfo[39m: [32mPOST /api/multiplayer/games/create[39m
+2025-12-11 13:46:53 [31merror[39m: [31mError storing game in database:[39m
+2025-12-11 13:46:53 [32minfo[39m: [32mGame created: 8c1be933-a350-40c7-b283-b7e05394a446 by null (0.1 OCT)[39m
+2025-12-11 13:46:53 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:46:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:46:54 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:46:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:46:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:47:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:47:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:47:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:47:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:47:12 [32minfo[39m: [32mPOST /api/multiplayer/games/8c1be933-a350-40c7-b283-b7e05394a446/join[39m
+2025-12-11 13:47:12 [31merror[39m: [31mError joining game: Cannot join your own game[39m
+2025-12-11 13:47:12 [31merror[39m: [31mError occurred:[39m
+2025-12-11 13:47:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:47:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:47:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:47:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:47:50 [32minfo[39m: [32mGameManager initialized[39m
+2025-12-11 13:47:51 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:47:51 [32minfo[39m: [32m🚀 OneChain Ninja Backend Server[39m
+2025-12-11 13:47:51 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:47:51 [32minfo[39m: [32m📡 Server running on port 3001[39m
+2025-12-11 13:47:51 [32minfo[39m: [32m🌐 API: http://localhost:3001[39m
+2025-12-11 13:47:51 [32minfo[39m: [32m🔌 WebSocket: http://localhost:3001[39m
+2025-12-11 13:47:51 [32minfo[39m: [32m🎯 Frontend: http://localhost:3000,https://one-ninja.vercel.app[39m
+2025-12-11 13:47:51 [32minfo[39m: [32m🔗 Network: testnet[39m
+2025-12-11 13:47:51 [32minfo[39m: [32m📊 Environment: development[39m
+2025-12-11 13:47:51 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:47:51 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 13:47:51 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 13:48:59 [32minfo[39m: [32m👋 Received shutdown signal, closing gracefully...[39m
+2025-12-11 13:49:01 [32minfo[39m: [32mGameManager initialized[39m
+2025-12-11 13:49:01 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:49:01 [32minfo[39m: [32m🚀 OneChain Ninja Backend Server[39m
+2025-12-11 13:49:01 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:49:01 [32minfo[39m: [32m📡 Server running on port 3001[39m
+2025-12-11 13:49:01 [32minfo[39m: [32m🌐 API: http://localhost:3001[39m
+2025-12-11 13:49:01 [32minfo[39m: [32m🔌 WebSocket: http://localhost:3001[39m
+2025-12-11 13:49:01 [32minfo[39m: [32m🎯 Frontend: http://localhost:3000,https://one-ninja.vercel.app[39m
+2025-12-11 13:49:01 [32minfo[39m: [32m🔗 Network: testnet[39m
+2025-12-11 13:49:01 [32minfo[39m: [32m📊 Environment: development[39m
+2025-12-11 13:49:01 [32minfo[39m: [32m=====================================[39m
+2025-12-11 13:49:02 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 13:49:02 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 13:52:52 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:52:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:52:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:52:53 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:52:54 [32minfo[39m: [32mPOST /api/multiplayer/games/create[39m
+2025-12-11 13:52:54 [31merror[39m: [31mError storing game in database:[39m
+2025-12-11 13:52:54 [32minfo[39m: [32mGame created: 86b4a007-a19f-46a2-a8d2-958e154e3fd9 by null (0.1 OCT)[39m
+2025-12-11 13:52:54 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:52:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:52:55 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 13:52:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:52:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:53:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:54:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:55:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:56:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:57:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:57:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:57:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:57:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:57:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:57:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:57:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:57:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:57:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:57:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 13:58:02 [32minfo[39m: [32mGame cancelled: 86b4a007-a19f-46a2-a8d2-958e154e3fd9, Reason: expired[39m
+2025-12-11 13:58:02 [32minfo[39m: [32mCleaned up 1 expired games[39m
+2025-12-11 14:00:21 [32minfo[39m: [32m👋 Received shutdown signal, closing gracefully...[39m
+2025-12-11 14:00:41 [32minfo[39m: [32mGameManager initialized[39m
+2025-12-11 14:00:41 [32minfo[39m: [32m=====================================[39m
+2025-12-11 14:00:41 [32minfo[39m: [32m🚀 OneChain Ninja Backend Server[39m
+2025-12-11 14:00:41 [32minfo[39m: [32m=====================================[39m
+2025-12-11 14:00:41 [32minfo[39m: [32m📡 Server running on port 3001[39m
+2025-12-11 14:00:41 [32minfo[39m: [32m🌐 API: http://localhost:3001[39m
+2025-12-11 14:00:41 [32minfo[39m: [32m🔌 WebSocket: http://localhost:3001[39m
+2025-12-11 14:00:41 [32minfo[39m: [32m🎯 Frontend: http://localhost:3000,https://one-ninja.vercel.app[39m
+2025-12-11 14:00:41 [32minfo[39m: [32m🔗 Network: testnet[39m
+2025-12-11 14:00:41 [32minfo[39m: [32m📊 Environment: development[39m
+2025-12-11 14:00:41 [32minfo[39m: [32m=====================================[39m
+2025-12-11 14:00:42 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 14:00:42 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 14:00:54 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:00:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:00:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:00:54 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:00:55 [32minfo[39m: [32mPOST /api/multiplayer/games/create[39m
+2025-12-11 14:00:56 [31merror[39m: [31mError storing game in database:[39m
+2025-12-11 14:00:56 [33mwarn[39m: [33mDatabase storage failed - game only exists in memory cache[39m
+2025-12-11 14:00:56 [32minfo[39m: [32mGame created: dd5100dd-4254-4d36-a701-c9b2b9bb8b83 by null (0.1 OCT)[39m
+2025-12-11 14:00:56 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:00:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:00:57 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:00:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:01:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:01:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:01:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:01:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:01:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:01:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:01:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:01:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:01:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:06:12 [32minfo[39m: [32mGame cancelled: dd5100dd-4254-4d36-a701-c9b2b9bb8b83, Reason: expired[39m
+2025-12-11 14:06:12 [32minfo[39m: [32mCleaned up 1 expired games[39m
+2025-12-11 14:08:06 [32minfo[39m: [32m👋 Received shutdown signal, closing gracefully...[39m
+2025-12-11 14:09:23 [32minfo[39m: [32mGameManager initialized[39m
+2025-12-11 14:09:23 [32minfo[39m: [32m=====================================[39m
+2025-12-11 14:09:23 [32minfo[39m: [32m🚀 OneChain Ninja Backend Server[39m
+2025-12-11 14:09:23 [32minfo[39m: [32m=====================================[39m
+2025-12-11 14:09:23 [32minfo[39m: [32m📡 Server running on port 3001[39m
+2025-12-11 14:09:23 [32minfo[39m: [32m🌐 API: http://localhost:3001[39m
+2025-12-11 14:09:23 [32minfo[39m: [32m🔌 WebSocket: http://localhost:3001[39m
+2025-12-11 14:09:23 [32minfo[39m: [32m🎯 Frontend: http://localhost:3000,https://one-ninja.vercel.app[39m
+2025-12-11 14:09:23 [32minfo[39m: [32m🔗 Network: testnet[39m
+2025-12-11 14:09:23 [32minfo[39m: [32m📊 Environment: development[39m
+2025-12-11 14:09:23 [32minfo[39m: [32m=====================================[39m
+2025-12-11 14:09:23 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 14:09:23 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 14:09:25 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:09:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:26 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:09:27 [32minfo[39m: [32mPOST /api/multiplayer/games/create[39m
+2025-12-11 14:09:27 [31merror[39m: [31mError storing game in database:[39m
+2025-12-11 14:09:27 [33mwarn[39m: [33mDatabase storage failed - game only exists in memory cache[39m
+2025-12-11 14:09:27 [32minfo[39m: [32mGame created: 15d73caf-87a7-4571-815e-53f41b31e1df by null (0.1 OCT)[39m
+2025-12-11 14:09:27 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:09:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:28 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:09:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:51 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:09:58 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:09:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:09:58 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:10:00 [32minfo[39m: [32mPOST /api/multiplayer/games/create[39m
+2025-12-11 14:10:00 [31merror[39m: [31mError storing game in database:[39m
+2025-12-11 14:10:00 [33mwarn[39m: [33mDatabase storage failed - game only exists in memory cache[39m
+2025-12-11 14:10:00 [32minfo[39m: [32mGame created: 438f1b83-52c9-47a3-b145-fe50743284cb by null (0.1 OCT)[39m
+2025-12-11 14:10:00 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:10:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:01 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:10:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:10:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:11:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:12:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:12:30 [32minfo[39m: [32m👋 Received shutdown signal, closing gracefully...[39m
+2025-12-11 14:12:33 [32minfo[39m: [32mGameManager initialized[39m
+2025-12-11 14:12:33 [32minfo[39m: [32m=====================================[39m
+2025-12-11 14:12:33 [32minfo[39m: [32m🚀 OneChain Ninja Backend Server[39m
+2025-12-11 14:12:33 [32minfo[39m: [32m=====================================[39m
+2025-12-11 14:12:33 [32minfo[39m: [32m📡 Server running on port 3001[39m
+2025-12-11 14:12:33 [32minfo[39m: [32m🌐 API: http://localhost:3001[39m
+2025-12-11 14:12:33 [32minfo[39m: [32m🔌 WebSocket: http://localhost:3001[39m
+2025-12-11 14:12:33 [32minfo[39m: [32m🎯 Frontend: http://localhost:3000,https://one-ninja.vercel.app[39m
+2025-12-11 14:12:33 [32minfo[39m: [32m🔗 Network: testnet[39m
+2025-12-11 14:12:33 [32minfo[39m: [32m📊 Environment: development[39m
+2025-12-11 14:12:33 [32minfo[39m: [32m=====================================[39m
+2025-12-11 14:12:33 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 14:12:33 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 14:12:42 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:12:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:12:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:12:43 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:12:44 [32minfo[39m: [32mPOST /api/multiplayer/games/create[39m
+2025-12-11 14:12:44 [31merror[39m: [31mError storing game in database:[39m
+2025-12-11 14:12:44 [31merror[39m: [31mError details: null value in column "player1_tx_hash" of relation "multiplayer_games" violates not-null constraint[39m
+2025-12-11 14:12:44 [33mwarn[39m: [33mDatabase storage failed - game only exists in memory cache[39m
+2025-12-11 14:12:44 [32minfo[39m: [32mGame created: 9459b381-066b-4b48-9578-8e1f791b37a2 by null (0.1 OCT)[39m
+2025-12-11 14:12:44 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:12:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:12:46 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 14:12:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:12:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:12:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:12:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:12:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:13:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:14:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:15:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:16:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:17:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:03 [32minfo[39m: [32mGame cancelled: 9459b381-066b-4b48-9578-8e1f791b37a2, Reason: expired[39m
+2025-12-11 14:18:03 [32minfo[39m: [32mCleaned up 1 expired games[39m
+2025-12-11 14:18:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:18:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:19:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:19:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:19:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:19:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:19:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:19:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:19:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:19:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:23:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:23:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:23:58 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 14:23:58 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 14:24:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:24:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:24:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:30:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:30:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:30:24 [32minfo[39m: [32mSubscribed to multiplayer_games changes[39m
+2025-12-11 14:30:24 [32minfo[39m: [32mSubscribed to players changes[39m
+2025-12-11 14:30:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:30:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:30:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:39:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:39:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:39:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:39:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:39:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:39:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:39:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:40:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:41:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:42:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:43:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:44:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:45:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:46:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:47:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:48:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:49:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:50:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:51:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:52:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:53:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:54:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:55:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:56:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:57:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:58:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 14:59:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:00:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:01:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:02:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:03:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:04:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:05:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:06:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:07:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:54 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 15:08:56 [32minfo[39m: [32mPOST /api/multiplayer/games/create[39m
+2025-12-11 15:08:56 [32minfo[39m: [32m✅ Game stored in database successfully[39m
+2025-12-11 15:08:56 [32minfo[39m: [32mGame created: dea2349a-3670-45bf-a1db-3146cbf195b3 by null (0.1 OCT)[39m
+2025-12-11 15:08:56 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 15:08:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:08:58 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 15:08:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:17 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:09:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:17 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:09:18 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:09:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:19 [32minfo[39m: [32mPOST /api/multiplayer/games/dea2349a-3670-45bf-a1db-3146cbf195b3/join[39m
+2025-12-11 15:09:19 [31merror[39m: [31mError joining game: Cannot join your own game[39m
+2025-12-11 15:09:19 [31merror[39m: [31mError occurred:[39m
+2025-12-11 15:09:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:56 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 15:09:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:09:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:12 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 15:10:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:10:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:11:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:15 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:16 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:12:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:17 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:12:17 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:12:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:18 [32minfo[39m: [32mPOST /api/multiplayer/games/dea2349a-3670-45bf-a1db-3146cbf195b3/join[39m
+2025-12-11 15:12:18 [31merror[39m: [31mError joining game: Cannot join your own game[39m
+2025-12-11 15:12:18 [31merror[39m: [31mError occurred:[39m
+2025-12-11 15:12:18 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:20 [32minfo[39m: [32mPOST /api/multiplayer/games/dea2349a-3670-45bf-a1db-3146cbf195b3/join[39m
+2025-12-11 15:12:21 [31merror[39m: [31mError joining game: Cannot join your own game[39m
+2025-12-11 15:12:21 [31merror[39m: [31mError occurred:[39m
+2025-12-11 15:12:21 [32minfo[39m: [32mPOST /api/multiplayer/games/dea2349a-3670-45bf-a1db-3146cbf195b3/join[39m
+2025-12-11 15:12:21 [31merror[39m: [31mError joining game: Cannot join your own game[39m
+2025-12-11 15:12:21 [31merror[39m: [31mError occurred:[39m
+2025-12-11 15:12:21 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:24 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:27 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:30 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:33 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:36 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:39 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:41 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:42 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:44 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:45 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:47 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:48 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:50 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:51 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:53 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:54 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:56 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:57 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:12:59 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:00 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:03 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:06 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:09 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:12 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:14 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:13:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:14 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 15:13:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:25 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:13:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:25 [32minfo[39m: [32mGET /api/players/0x9e4aa13663f9d739cc7c3b98274c78c8acd813c1295105c6dbbaf372375cee3b/stats[39m
+2025-12-11 15:13:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:40 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:43 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:46 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:49 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:52 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:54 [32minfo[39m: [32mPOST /api/multiplayer/games/dea2349a-3670-45bf-a1db-3146cbf195b3/join[39m
+2025-12-11 15:13:54 [31merror[39m: [31mError joining game: Cannot join your own game[39m
+2025-12-11 15:13:54 [31merror[39m: [31mError occurred:[39m
+2025-12-11 15:13:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:55 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:13:58 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:01 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:02 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:14:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:02 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:03 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:14:03 [32minfo[39m: [32mGame cancelled: dea2349a-3670-45bf-a1db-3146cbf195b3, Reason: expired[39m
+2025-12-11 15:14:03 [32minfo[39m: [32mCleaned up 1 expired games[39m
+2025-12-11 15:14:04 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:04 [32minfo[39m: [32mPOST /api/multiplayer/games/create[39m
+2025-12-11 15:14:04 [32minfo[39m: [32m✅ Game stored in database successfully[39m
+2025-12-11 15:14:04 [32minfo[39m: [32mGame created: 38108458-b2a5-481d-95c1-a56cee940325 by null (0.1 OCT)[39m
+2025-12-11 15:14:04 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:14:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:05 [32minfo[39m: [32mGET /api/players/0x0e5934db9d5f54f221db2996ba48c3959235d3117ef0649c7e340961a227bb4f/stats[39m
+2025-12-11 15:14:05 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:07 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:08 [32minfo[39m: [32mPOST /api/multiplayer/games/38108458-b2a5-481d-95c1-a56cee940325/join[39m
+2025-12-11 15:14:08 [31merror[39m: [31mError joining game: Cannot join your own game[39m
+2025-12-11 15:14:08 [31merror[39m: [31mError occurred:[39m
+2025-12-11 15:14:08 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:10 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:11 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:13 [32minfo[39m: [32mPOST /api/multiplayer/games/38108458-b2a5-481d-95c1-a56cee940325/join[39m
+2025-12-11 15:14:13 [31merror[39m: [31mError joining game: Cannot join your own game[39m
+2025-12-11 15:14:13 [31merror[39m: [31mError occurred:[39m
+2025-12-11 15:14:13 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:14 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:16 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:17 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:19 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:20 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:22 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:23 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:25 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:26 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:28 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:29 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:31 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:32 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:34 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:35 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:37 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m
+2025-12-11 15:14:38 [32minfo[39m: [32mGET /api/multiplayer/games/available[39m

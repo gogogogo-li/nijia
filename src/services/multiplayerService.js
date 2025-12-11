@@ -1,276 +1,491 @@
-/**
- * Multiplayer Service
- * Handles multiplayer game sessions, matchmaking, and score submission
- */
+import io from 'socket.io-client';
 
-const STORAGE_KEY = 'onechain_multiplayer_games';
-// eslint-disable-next-line no-unused-vars
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
+/**
+ * Secure Multiplayer Service for OneChain
+ * All game logic handled by backend - frontend only sends events
+ */
 class MultiplayerService {
   constructor() {
-    this.activeGames = new Map();
+    this.socket = null;
+    this.connected = false;
+    this.authenticated = false;
+    this.walletAddress = null;
+    this.currentGameId = null;
+    this.gameEvents = []; // Track events for backend validation
+    
+    this.betTiers = [
+      { id: 1, amount: 0.1, label: 'Casual', description: 'Perfect for beginners', color: '#4CAF50' },
+      { id: 2, amount: 0.5, label: 'Standard', description: 'Most popular choice', color: '#FFD700' },
+      { id: 3, amount: 1.0, label: 'Competitive', description: 'For serious players', color: '#FF6B6B' },
+      { id: 4, amount: 5.0, label: 'High Stakes', description: 'Big risk, big reward', color: '#9D4EDD' },
+    ];
+    
+    this.listeners = {
+      onGameCreated: null,
+      onGameJoined: null,
+      onGameStarted: null,
+      onGameCompleted: null,
+      onGameCancelled: null,
+      onOpponentFinished: null,
+      onGamesListUpdate: null,
+      onError: null
+    };
   }
-
+  
   /**
-   * Create a new multiplayer game session
+   * Connect to multiplayer server
    */
-  async createGame(walletAddress, tier, wagerAmount = 0) {
-    try {
-      const gameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  async connect(walletAddress, signature = null) {
+    if (this.connected) {
+      return;
+    }
+    
+    this.walletAddress = walletAddress;
+    console.log('🔌 Connecting to multiplayer with wallet:', walletAddress);
+    
+    this.socket = io(API_BASE_URL, {
+      auth: {
+        address: walletAddress,
+        signature
+      },
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
+    
+    this.setupSocketListeners();
+    
+    return new Promise((resolve, reject) => {
+      this.socket.on('connect', () => {
+        console.log('✅ Connected to multiplayer server');
+        this.connected = true;
+        this.authenticated = !!signature;
+        resolve();
+      });
       
-      const game = {
-        id: gameId,
-        creator: walletAddress,
-        tier,
-        wagerAmount,
-        status: 'waiting', // 'waiting', 'active', 'completed'
-        players: [{
-          address: walletAddress,
-          score: null,
-          joined: Date.now()
-        }],
-        createdAt: Date.now(),
-        startedAt: null,
-        completedAt: null
-      };
-
-      // Store in memory
-      this.activeGames.set(gameId, game);
-      
-      // Store in localStorage for cross-tab sync
-      this.saveToLocalStorage();
-      
-      console.log('🎮 Created multiplayer game:', gameId);
-      return { success: true, gameId, game };
-    } catch (error) {
-      console.error('❌ Failed to create game:', error);
-      return { success: false, error: error.message };
+      this.socket.on('connect_error', (error) => {
+        console.error('❌ Connection error:', error);
+        reject(error);
+      });
+    });
+  }
+  
+  /**
+   * Disconnect from server
+   */
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      this.connected = false;
+      this.authenticated = false;
     }
   }
-
+  
+  /**
+   * Setup socket event listeners
+   */
+  setupSocketListeners() {
+    this.socket.on('game:created', (game) => {
+      console.log('🎮 Game created:', game.game_id);
+      if (this.listeners.onGameCreated) {
+        this.listeners.onGameCreated(game);
+      }
+    });
+    
+    this.socket.on('game:joined', (game) => {
+      console.log('👥 Game joined:', game.game_id);
+      if (this.listeners.onGameJoined) {
+        this.listeners.onGameJoined(game);
+      }
+    });
+    
+    this.socket.on('game:started', ({ game_id }) => {
+      console.log('🚀 Game started:', game_id);
+      if (this.listeners.onGameStarted) {
+        this.listeners.onGameStarted(game_id);
+      }
+    });
+    
+    this.socket.on('game:completed', (game) => {
+      console.log('🏁 Game completed:', game.game_id, 'Winner:', game.winner);
+      if (this.listeners.onGameCompleted) {
+        this.listeners.onGameCompleted(game);
+      }
+    });
+    
+    this.socket.on('game:cancelled', ({ game_id, reason }) => {
+      console.log('❌ Game cancelled:', game_id, reason);
+      if (this.listeners.onGameCancelled) {
+        this.listeners.onGameCancelled(game_id, reason);
+      }
+    });
+    
+    this.socket.on('game:opponent_finished', ({ game_id, player }) => {
+      console.log('⏰ Opponent finished:', game_id);
+      if (this.listeners.onOpponentFinished) {
+        this.listeners.onOpponentFinished(game_id, player);
+      }
+    });
+    
+    this.socket.on('games:list', (games) => {
+      if (this.listeners.onGamesListUpdate) {
+        this.listeners.onGamesListUpdate(games);
+      }
+    });
+    
+    this.socket.on('error', (error) => {
+      console.error('Socket error:', error);
+      if (this.listeners.onError) {
+        this.listeners.onError(error);
+      }
+    });
+    
+    this.socket.on('disconnect', (reason) => {
+      console.log('Disconnected from server:', reason);
+      this.connected = false;
+    });
+  }
+  
+  /**
+   * Subscribe to available games updates
+   */
+  subscribeToGames(betTier = null) {
+    if (this.socket && this.connected) {
+      this.socket.emit('subscribe:games', betTier);
+    }
+  }
+  
+  /**
+   * Unsubscribe from games updates
+   */
+  unsubscribeFromGames(betTier = null) {
+    if (this.socket && this.connected) {
+      this.socket.emit('unsubscribe:games', betTier);
+    }
+  }
+  
+  /**
+   * Get available games from API
+   */
+  async getAvailableGames(betTier = null) {
+    try {
+      const url = betTier
+        ? `${API_BASE_URL}/api/multiplayer/games/available?betTier=${betTier}`
+        : `${API_BASE_URL}/api/multiplayer/games/available`;
+      
+      const headers = {};
+      if (this.walletAddress) {
+        headers['X-Wallet-Address'] = this.walletAddress;
+      }
+      
+      const response = await fetch(url, { headers });
+      const data = await response.json();
+      
+      return data.games || [];
+    } catch (error) {
+      console.error('Error fetching available games:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Create a new multiplayer game
+   * Backend handles all validation and creation logic
+   */
+  async createGame(betTierId, transactionHash) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify({
+          betTierId,
+          transactionHash
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create game');
+      }
+      
+      this.currentGameId = data.game.game_id;
+      this.gameEvents = [];
+      
+      return data;
+    } catch (error) {
+      console.error('Error creating game:', error);
+      throw error;
+    }
+  }
+  
   /**
    * Join an existing game
+   * Backend handles validation
    */
-  async joinGame(gameId, walletAddress) {
+  async joinGame(gameId, transactionHash) {
     try {
-      const game = this.activeGames.get(gameId);
+      console.log('🎮 Joining game:', gameId, 'with wallet:', this.walletAddress);
       
-      if (!game) {
-        throw new Error('Game not found');
-      }
-
-      if (game.status !== 'waiting') {
-        throw new Error('Game is no longer accepting players');
-      }
-
-      if (game.players.length >= 2) {
-        throw new Error('Game is full');
-      }
-
-      if (game.players.some(p => p.address === walletAddress)) {
-        throw new Error('Already in this game');
-      }
-
-      // Add player
-      game.players.push({
-        address: walletAddress,
-        score: null,
-        joined: Date.now()
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${gameId}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify({
+          transactionHash
+        })
       });
-
-      // Start game if 2 players
-      if (game.players.length === 2) {
-        game.status = 'active';
-        game.startedAt = Date.now();
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        // Throw error with user-friendly message
+        const errorMsg = data.error || 'Failed to join game';
+        throw new Error(errorMsg);
       }
-
-      this.activeGames.set(gameId, game);
-      this.saveToLocalStorage();
-
-      console.log('🎮 Joined game:', gameId);
-      return { success: true, game };
+      
+      this.currentGameId = gameId;
+      this.gameEvents = [];
+      
+      return data;
     } catch (error) {
-      console.error('❌ Failed to join game:', error);
-      return { success: false, error: error.message };
+      console.error('Error joining game:', error);
+      // Re-throw with the original message for UI display
+      throw error;
     }
   }
-
+  
   /**
-   * Submit score for a game
+   * Record game event (for backend validation)
+   * Frontend tracks events, backend validates and calculates score
    */
-  async submitScore(gameId, score) {
-    try {
-      const game = this.activeGames.get(gameId);
-      
-      if (!game) {
-        throw new Error('Game not found');
-      }
-
-      // This would typically be authenticated via wallet signature
-      const walletAddress = this.getCurrentWalletAddress();
-      const player = game.players.find(p => p.address === walletAddress);
-      
-      if (!player) {
-        throw new Error('Not a player in this game');
-      }
-
-      player.score = score;
-      player.submittedAt = Date.now();
-
-      // Check if game is complete
-      const allScoresSubmitted = game.players.every(p => p.score !== null);
-      if (allScoresSubmitted) {
-        game.status = 'completed';
-        game.completedAt = Date.now();
-        
-        // Calculate winner
-        game.winner = game.players.reduce((prev, current) => 
-          (current.score > prev.score) ? current : prev
-        );
-      }
-
-      this.activeGames.set(gameId, game);
-      this.saveToLocalStorage();
-
-      console.log('🎮 Score submitted for game:', gameId, score);
-      return { success: true, game };
-    } catch (error) {
-      console.error('❌ Failed to submit score:', error);
-      return { success: false, error: error.message };
+  recordEvent(eventType, data) {
+    if (!this.currentGameId) {
+      return;
     }
-  }
-
-  /**
-   * Get available games to join
-   */
-  getAvailableGames() {
-    // Load from localStorage first
-    this.loadFromLocalStorage();
     
-    const games = Array.from(this.activeGames.values())
-      .filter(game => game.status === 'waiting')
-      .sort((a, b) => b.createdAt - a.createdAt);
-
-    return games;
+    const event = {
+      type: eventType,
+      timestamp: Date.now(),
+      ...data
+    };
+    
+    this.gameEvents.push(event);
   }
-
+  
+  /**
+   * Submit final score to backend
+   * Backend validates events and calculates actual score
+   */
+  async submitScore(finalScore) {
+    try {
+      if (!this.currentGameId) {
+        throw new Error('No active game');
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${this.currentGameId}/score`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify({
+          finalScore,
+          gameEvents: this.gameEvents
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to submit score');
+      }
+      
+      console.log('✅ Score validated by server:', data.validatedScore);
+      
+      return data;
+    } catch (error) {
+      console.error('Error submitting score:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Cancel a game (only creator can cancel)
+   */
+  async cancelGame(gameId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${gameId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to cancel game');
+      }
+      
+      if (this.currentGameId === gameId) {
+        this.currentGameId = null;
+        this.gameEvents = [];
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error cancelling game:', error);
+      throw error;
+    }
+  }
+  
   /**
    * Get game details
    */
-  getGame(gameId) {
-    return this.activeGames.get(gameId);
+  async getGame(gameId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${gameId}`, {
+        headers: {
+          'X-Wallet-Address': this.walletAddress
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to get game');
+      }
+      
+      return data.game;
+    } catch (error) {
+      console.error('Error getting game:', error);
+      throw error;
+    }
   }
-
+  
+  /**
+   * Get player's active games
+   */
+  async getPlayerGames(address = null) {
+    try {
+      const playerAddress = address || this.walletAddress;
+      
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/player/${playerAddress}/games`, {
+        headers: {
+          'X-Wallet-Address': this.walletAddress
+        }
+      });
+      
+      const data = await response.json();
+      
+      return data.games || [];
+    } catch (error) {
+      console.error('Error getting player games:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Get bet tiers
+   */
+  getBetTiers() {
+    return this.betTiers;
+  }
+  
+  /**
+   * Get multiplayer stats
+   */
+  async getStats() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/stats`);
+      const data = await response.json();
+      
+      return data.stats || {};
+    } catch (error) {
+      console.error('Error getting stats:', error);
+      return {};
+    }
+  }
+  
   /**
    * Get player statistics
    */
-  async getPlayerStats(walletAddress) {
+  async getPlayerStats(address) {
     try {
-      // Load from localStorage
-      this.loadFromLocalStorage();
+      const playerAddress = address || this.walletAddress;
+      if (!playerAddress) {
+        return {
+          totalGames: 0,
+          wins: 0,
+          losses: 0,
+          earnings: 0,
+          winRate: 0
+        };
+      }
       
-      const allGames = Array.from(this.activeGames.values());
-      const playerGames = allGames.filter(game => 
-        game.players.some(p => p.address === walletAddress)
-      );
-
-      const completedGames = playerGames.filter(g => g.status === 'completed');
-      const wins = completedGames.filter(g => 
-        g.winner?.address === walletAddress
-      ).length;
-
-      const totalWager = completedGames.reduce((sum, game) => 
-        sum + (game.wagerAmount || 0), 0
-      );
-
-      const stats = {
-        gamesPlayed: completedGames.length,
-        wins,
-        losses: completedGames.length - wins,
-        winRate: completedGames.length > 0 ? (wins / completedGames.length * 100).toFixed(1) : 0,
-        totalWager,
-        rank: this.calculateRank(wins, completedGames.length)
+      const response = await fetch(`${API_BASE_URL}/api/players/${playerAddress}/stats`);
+      const data = await response.json();
+      
+      return data.stats || {
+        totalGames: 0,
+        wins: 0,
+        losses: 0,
+        earnings: 0,
+        winRate: 0
       };
-
-      return { success: true, stats };
     } catch (error) {
-      console.error('❌ Failed to get player stats:', error);
-      return { success: false, error: error.message };
+      console.error('Error getting player stats:', error);
+      return {
+        totalGames: 0,
+        wins: 0,
+        losses: 0,
+        earnings: 0,
+        winRate: 0
+      };
     }
   }
-
+  
   /**
-   * Calculate player rank based on performance
+   * Set event listeners
    */
-  calculateRank(wins, totalGames) {
-    if (totalGames === 0) return 'Unranked';
-    
-    const winRate = (wins / totalGames) * 100;
-    
-    if (winRate >= 80 && totalGames >= 10) return 'Legend';
-    if (winRate >= 70 && totalGames >= 5) return 'Master';
-    if (winRate >= 60) return 'Expert';
-    if (winRate >= 50) return 'Skilled';
-    if (winRate >= 40) return 'Intermediate';
-    return 'Beginner';
+  setListeners(listeners) {
+    this.listeners = { ...this.listeners, ...listeners };
   }
-
+  
   /**
-   * Clean up old/expired games
+   * Clear current game
    */
-  cleanupGames() {
-    const now = Date.now();
-    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-
-    for (const [gameId, game] of this.activeGames.entries()) {
-      const age = now - game.createdAt;
-      if (age > maxAge) {
-        this.activeGames.delete(gameId);
-      }
-    }
-
-    this.saveToLocalStorage();
+  clearCurrentGame() {
+    this.currentGameId = null;
+    this.gameEvents = [];
   }
-
+  
   /**
-   * Save games to localStorage
+   * Format wallet address for display
    */
-  saveToLocalStorage() {
-    try {
-      const gamesArray = Array.from(this.activeGames.entries());
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(gamesArray));
-    } catch (error) {
-      console.error('Failed to save games to localStorage:', error);
-    }
+  formatAddress(address) {
+    if (!address) return '';
+    if (address.length <= 12) return address;
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
-
+  
   /**
-   * Load games from localStorage
+   * Compare two wallet addresses (case-insensitive)
    */
-  loadFromLocalStorage() {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const gamesArray = JSON.parse(stored);
-        this.activeGames = new Map(gamesArray);
-      }
-    } catch (error) {
-      console.error('Failed to load games from localStorage:', error);
-    }
-  }
-
-  /**
-   * Get current wallet address (helper)
-   */
-  getCurrentWalletAddress() {
-    // This should be replaced with actual wallet service call
-    const session = localStorage.getItem('onechain_session');
-    if (session) {
-      const sessionData = JSON.parse(session);
-      return sessionData.address;
-    }
-    return null;
+  compareAddresses(addr1, addr2) {
+    if (!addr1 || !addr2) return false;
+    return addr1.toLowerCase() === addr2.toLowerCase();
   }
 }
 
