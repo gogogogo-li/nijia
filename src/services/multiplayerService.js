@@ -29,6 +29,7 @@ class MultiplayerService {
       onGameCompleted: null,
       onGameCancelled: null,
       onOpponentFinished: null,
+      onOpponentFinishedFirst: null,
       onGamesListUpdate: null,
       onError: null
     };

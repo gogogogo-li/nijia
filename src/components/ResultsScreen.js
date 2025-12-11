@@ -24,12 +24,16 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
         setMultiplayerSubmitted(true);
         console.log('🎮 Submitting multiplayer score:', gameState.score);
         
-        const result = await multiplayerService.submitScore(multiplayerGameId, gameState.score);
-        
-        if (result.success) {
-          console.log('✅ Multiplayer score submitted successfully');
-        } else {
-          console.error('❌ Failed to submit multiplayer score:', result.error);
+        try {
+          const result = await multiplayerService.submitScore(gameState.score);
+          
+          if (result.success) {
+            console.log('✅ Multiplayer score submitted successfully:', result);
+          } else {
+            console.error('❌ Failed to submit multiplayer score:', result.error);
+          }
+        } catch (error) {
+          console.error('❌ Error submitting multiplayer score:', error);
         }
       }
     };

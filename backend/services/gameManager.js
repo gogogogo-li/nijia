@@ -205,9 +205,13 @@ export class GameManager {
         logger.error('Error updating game in database:', error);
       }
       
-      // Notify players
+      // Notify both players directly
+      logger.info(`Notifying players - Player1: ${game.player1}, Player2: ${player2Address}`);
       this.io.to(`player:${game.player1}`).emit('game:joined', game);
       this.io.to(`player:${player2Address}`).emit('game:joined', game);
+      
+      // Also broadcast to global listeners (for MultiplayerLobby)
+      this.io.emit('game_joined', game);
       
       // Remove from public game lists
       this.io.to('games:all').emit('game:started', { game_id: gameId });
@@ -225,6 +229,7 @@ export class GameManager {
   /**
    * Submit game score - BACKEND VALIDATION CRITICAL
    * Frontend sends game events, backend calculates and validates score
+   * RACE MODE: First player to finish ends the game for both players
    */
   async submitScore({ gameId, playerAddress, gameEvents, finalScore }) {
     try {
@@ -240,6 +245,11 @@ export class GameManager {
       
       if (playerAddress !== game.player1 && playerAddress !== game.player2) {
         throw new Error('Player not in this game');
+      }
+      
+      // Check if game is already being finalized
+      if (game.state === 'finalizing') {
+        logger.info(`Game ${gameId} already finalizing, accepting late score`);
       }
       
       // CRITICAL: Backend validates the score
@@ -261,32 +271,46 @@ export class GameManager {
         game.player2_submitted_at = new Date().toISOString();
       }
       
-      // Check if both players have submitted
-      if (game.player1_score !== null && game.player2_score !== null) {
-        await this.finalizeGame(gameId);
-      } else {
-        // Update cache and database
+      logger.info(`Score submitted for game ${gameId} by ${playerAddress}: ${validatedScore}`);
+      
+      // RACE MODE: First player to submit ends the game immediately
+      const isFirstToFinish = (isPlayer1 && game.player2_score === null) || 
+                              (!isPlayer1 && game.player1_score === null);
+      
+      if (isFirstToFinish) {
+        logger.info(`🏁 ${playerAddress} finished FIRST! Ending game immediately for both players.`);
+        
+        // Mark game as finalizing to prevent race conditions
+        game.state = 'finalizing';
         this.activeGames.set(gameId, game);
         
-        await this.supabase
-          .from('multiplayer_games')
-          .update({
-            player1_score: game.player1_score,
-            player2_score: game.player2_score,
-            player1_submitted_at: game.player1_submitted_at,
-            player2_submitted_at: game.player2_submitted_at
-          })
-          .eq('game_id', gameId);
-        
-        // Notify opponent that player has finished
+        // Notify opponent that they lost (first to finish wins)
         const opponentAddress = isPlayer1 ? game.player2 : game.player1;
-        this.io.to(`player:${opponentAddress}`).emit('game:opponent_finished', {
+        this.io.to(`player:${opponentAddress}`).emit('game:opponent_finished_first', {
           game_id: gameId,
-          player: playerAddress
+          opponent: playerAddress,
+          opponentScore: validatedScore,
+          message: 'Opponent finished! Game ending...'
         });
+        
+        // Give opponent 2 seconds to submit their current score, then finalize
+        setTimeout(async () => {
+          // If opponent hasn't submitted yet, use score of 0
+          if (isPlayer1 && game.player2_score === null) {
+            game.player2_score = 0;
+            logger.info(`Player2 did not submit in time, using score 0`);
+          } else if (!isPlayer1 && game.player1_score === null) {
+            game.player1_score = 0;
+            logger.info(`Player1 did not submit in time, using score 0`);
+          }
+          
+          await this.finalizeGame(gameId);
+        }, 2000);
+      } else {
+        // Both players submitted, finalize immediately
+        logger.info(`🏁 Both players finished! Finalizing game.`);
+        await this.finalizeGame(gameId);
       }
-      
-      logger.info(`Score submitted for game ${gameId} by ${playerAddress}: ${validatedScore}`);
       
       return { success: true, validatedScore };
     } catch (error) {

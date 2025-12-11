@@ -173,6 +173,7 @@ function App() {
         
         <MultiplayerLobby 
           walletAddress={onechain.walletAddress}
+          onechain={onechain}
           onStartGame={handleStartMultiplayerGame}
           onBack={handleBackToLanding}
         />

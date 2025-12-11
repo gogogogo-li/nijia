@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import multiplayerService from '../services/multiplayerService';
+import onechainService from '../services/onechainService';
 import './MultiplayerLobby.css';
 import { GiCrossedSwords, GiTwoCoins, GiTrophyCup, GiLightningBow, GiDiamondHard, GiGamepad, GiCrossedSabres, GiTargetArrows } from 'react-icons/gi';
 import { FaChartLine } from 'react-icons/fa';
@@ -9,11 +10,12 @@ import { IoMdRefresh } from 'react-icons/io';
 // Use environment variable or fallback to localhost
 const SOCKET_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
-const socket = io(SOCKET_URL, {
-  autoConnect: false
-});
+// Multiplayer game escrow address (treasury)
+const ESCROW_ADDRESS = process.env.REACT_APP_ESCROW_ADDRESS || '0x0000000000000000000000000000000000000000000000000000000000000001';
 
-const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
+let socket = null;
+
+const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
   const [activeTab, setActiveTab] = useState('create'); // 'create', 'join', 'stats'
   const [selectedTier, setSelectedTier] = useState(null);
   const [availableGames, setAvailableGames] = useState([]);
@@ -64,18 +66,26 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
 
   // WebSocket connection for real-time updates
   useEffect(() => {
-    // Initialize multiplayer service with wallet address
-    if (walletAddress) {
-      console.log('🔌 Connecting multiplayer service with wallet:', walletAddress);
-      multiplayerService.connect(walletAddress).catch(err => {
-        console.error('Failed to connect multiplayer service:', err);
-      });
-    }
+    if (!walletAddress) return;
     
-    socket.connect();
+    // Initialize multiplayer service with wallet address
+    console.log('🔌 Connecting multiplayer service with wallet:', walletAddress);
+    multiplayerService.connect(walletAddress).catch(err => {
+      console.error('Failed to connect multiplayer service:', err);
+    });
+    
+    // Create authenticated socket connection
+    socket = io(SOCKET_URL, {
+      auth: {
+        address: walletAddress
+      },
+      transports: ['websocket', 'polling']
+    });
 
     socket.on('connect', () => {
-      console.log('✅ Connected to backend');
+      console.log('✅ Connected to backend with wallet:', walletAddress);
+      // Subscribe to game updates
+      socket.emit('subscribe:games');
     });
 
     socket.on('game_created', (game) => {
@@ -84,15 +94,25 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
     });
 
     socket.on('game_joined', (game) => {
-      console.log(' Game joined:', game);
+      console.log('👥 Game joined event received:', {
+        gameId: game.game_id,
+        player1: game.player1,
+        player2: game.player2,
+        myWallet: walletAddress
+      });
       
       // Check if this is YOUR game that was joined (you are player1)
-      if (walletAddress && multiplayerService.compareAddresses(game.player1, walletAddress)) {
+      const isPlayer1 = multiplayerService.compareAddresses(game.player1, walletAddress);
+      console.log('🔍 Am I player1?', isPlayer1, '- Comparison:', game.player1, 'vs', walletAddress);
+      
+      if (walletAddress && isPlayer1) {
+        console.log('🎮 I am player1! Starting game in 2 seconds...');
         showNotification('Opponent joined! Starting match...', 'success');
         setTimeout(() => {
           onStartGame(game.game_id);
         }, 2000);
       } else {
+        console.log('📝 Not player1, refreshing available games');
         fetchAvailableGames();
       }
     });
@@ -108,12 +128,14 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
     });
 
     return () => {
-      socket.off('connect');
-      socket.off('game_created');
-      socket.off('game_joined');
-      socket.off('games_updated');
-      socket.off('game_finished');
-      socket.disconnect();
+      if (socket) {
+        socket.off('connect');
+        socket.off('game_created');
+        socket.off('game_joined');
+        socket.off('games_updated');
+        socket.off('game_finished');
+        socket.disconnect();
+      }
       
       // Disconnect multiplayer service
       multiplayerService.disconnect();
@@ -136,26 +158,78 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
       return;
     }
 
-    setLoading(true);
-    const result = await multiplayerService.createGame(selectedTier.id);
-    
-    if (result.success) {
-      showNotification(`Game created! Waiting for opponent...`, 'success');
-      await fetchPlayerStats();
-      setTimeout(async () => {
-        await fetchAvailableGames();
-        setActiveTab('join');
-      }, 1000);
-    } else {
-      showNotification(`Failed to create game: ${result.error}`, 'error');
+    if (!onechain || !onechain.isConnected) {
+      showNotification('Please connect your wallet first', 'error');
+      return;
     }
-    setLoading(false);
+
+    setLoading(true);
+    
+    try {
+      // Step 1: Transfer OCT to escrow
+      showNotification(`Transferring ${selectedTier.amount} OCT stake...`, 'info');
+      console.log(`💸 Transferring ${selectedTier.amount} OCT to escrow ${ESCROW_ADDRESS}`);
+      
+      const transferResult = await onechainService.transferOCT(ESCROW_ADDRESS, selectedTier.amount);
+      
+      if (!transferResult.success) {
+        throw new Error('Failed to transfer stake');
+      }
+      
+      console.log('✅ Stake transferred, transaction hash:', transferResult.transactionHash);
+      
+      // Step 2: Create game with transaction hash
+      const result = await multiplayerService.createGame(selectedTier.id, transferResult.transactionHash);
+      
+      if (result.success) {
+        showNotification(`Game created! Waiting for opponent...`, 'success');
+        await fetchPlayerStats();
+        setTimeout(async () => {
+          await fetchAvailableGames();
+          setActiveTab('join');
+        }, 1000);
+      } else {
+        showNotification(`Failed to create game: ${result.error}`, 'error');
+      }
+    } catch (error) {
+      console.error('Error creating game:', error);
+      showNotification(`Error: ${error.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleJoinGame = async (gameId) => {
+    if (!onechain || !onechain.isConnected) {
+      showNotification('Please connect your wallet first', 'error');
+      return;
+    }
+
     try {
       setLoading(true);
-      const result = await multiplayerService.joinGame(gameId);
+      
+      // Find the game to get bet amount
+      const game = availableGames.find(g => g.game_id === gameId);
+      if (!game) {
+        throw new Error('Game not found');
+      }
+      
+      const betAmountOCT = parseFloat(game.bet_amount) / 100000000; // Convert from MIST to OCT
+      
+      // Step 1: Transfer OCT stake to escrow
+      showNotification(`Transferring ${betAmountOCT} OCT stake...`, 'info');
+      console.log(`💸 Transferring ${betAmountOCT} OCT to escrow ${ESCROW_ADDRESS}`);
+      
+      const transferResult = await onechainService.transferOCT(ESCROW_ADDRESS, betAmountOCT);
+      
+      if (!transferResult.success) {
+        throw new Error('Failed to transfer stake');
+      }
+      
+      console.log('✅ Stake transferred, transaction hash:', transferResult.transactionHash);
+      
+      // Step 2: Join game with transaction hash
+      const result = await multiplayerService.joinGame(gameId, transferResult.transactionHash);
       
       if (result.success) {
         showNotification('Joined game! Starting match...', 'success');

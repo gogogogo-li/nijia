@@ -5,6 +5,7 @@ import { useBladeTrail } from '../hooks/useBladeTrail';
 import { useVisibility } from '../hooks/useVisibility';
 import { usePointPopups } from '../hooks/usePointPopups';
 import { useMissedTokenNotifications } from '../hooks/useMissedTokenNotifications';
+import multiplayerService from '../services/multiplayerService';
 import PointPopup from './PointPopup';
 
 const GameScreen = ({ 
@@ -19,7 +20,8 @@ const GameScreen = ({
   onDecrementTimer,
   updateParticles,
   onBackToHome,
-  onechain
+  onechain,
+  multiplayerGameId
 }) => {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
@@ -30,6 +32,26 @@ const GameScreen = ({
   const { 
     clearAllMissedNotifications 
   } = useMissedTokenNotifications();
+
+  // Listen for multiplayer events - RACE MODE
+  useEffect(() => {
+    if (!multiplayerGameId) return;
+
+    // Handle opponent finishing their game first
+    const handleOpponentFinishedFirst = (data) => {
+      console.log('🚨 OPPONENT FINISHED FIRST! Ending my game immediately:', data);
+      console.log(`   Opponent: ${data.opponent}`);
+      console.log(`   Opponent Score: ${data.opponentScore}`);
+      // Immediately end the game - opponent finished first
+      onEndGame();
+    };
+
+    multiplayerService.listeners.onOpponentFinishedFirst = handleOpponentFinishedFirst;
+
+    return () => {
+      multiplayerService.listeners.onOpponentFinishedFirst = null;
+    };
+  }, [multiplayerGameId, onEndGame]);
 
   // Handle missed fruit without notification
   const handleMissedFruit = useCallback(() => {

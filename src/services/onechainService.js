@@ -1055,6 +1055,68 @@ This signature will be used to verify your identity.`;
       hasSessionToken: !!this.sessionToken
     };
   }
+
+  /**
+   * Transfer OCT to a recipient
+   * @param {string} recipient - Recipient wallet address
+   * @param {number} amount - Amount in OCT (will be converted to MIST)
+   * @returns {Promise<Object>} Transaction result with hash
+   */
+  async transferOCT(recipient, amount) {
+    try {
+      if (!this.walletConnected || !this.walletAddress) {
+        throw new Error('Wallet not connected');
+      }
+
+      const wallet = this.getWalletProvider();
+      if (!wallet || !wallet.provider) {
+        throw new Error('Wallet provider not available');
+      }
+
+      console.log(`💸 Transferring ${amount} OCT to ${recipient}...`);
+
+      // Convert OCT to MIST (1 OCT = 10^9 MIST)
+      const amountInMist = BigInt(Math.floor(amount * 1_000_000_000));
+
+      // Create transaction using Sui's transfer object
+      const tx = {
+        kind: 'moveCall',
+        data: {
+          packageObjectId: '0x2',
+          module: 'pay',
+          function: 'split_and_transfer',
+          typeArguments: ['0x2::sui::SUI'],
+          arguments: [
+            recipient,
+            amountInMist.toString()
+          ],
+          gasBudget: 10000
+        }
+      };
+
+      console.log('📝 Transaction details:', tx);
+
+      // Sign and execute transaction
+      const result = await wallet.provider.signAndExecuteTransactionBlock({
+        transactionBlock: tx,
+        options: {
+          showEffects: true,
+          showEvents: true
+        }
+      });
+
+      console.log('✅ Transfer successful:', result);
+
+      return {
+        success: true,
+        transactionHash: result.digest || result.hash,
+        effects: result.effects
+      };
+    } catch (error) {
+      console.error('❌ Transfer failed:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance
