@@ -20,6 +20,9 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
+// Trust proxy for Render deployment (required for rate limiting)
+app.set('trust proxy', 1);
+
 // Parse allowed origins
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
   .split(',')

@@ -154,6 +154,10 @@ export class GameManager {
         throw new Error('Game is not available');
       }
       
+      // Log the comparison for debugging
+      logger.info(`Join check - Player1: "${game.player1}", Player2: "${player2Address}"`);
+      logger.info(`Addresses match: ${game.player1 === player2Address}`);
+      
       if (game.player1 === player2Address) {
         throw new Error('Cannot join your own game');
       }

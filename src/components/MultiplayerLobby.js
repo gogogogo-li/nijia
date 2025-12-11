@@ -64,10 +64,18 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
 
   // WebSocket connection for real-time updates
   useEffect(() => {
+    // Initialize multiplayer service with wallet address
+    if (walletAddress) {
+      console.log('🔌 Connecting multiplayer service with wallet:', walletAddress);
+      multiplayerService.connect(walletAddress).catch(err => {
+        console.error('Failed to connect multiplayer service:', err);
+      });
+    }
+    
     socket.connect();
 
     socket.on('connect', () => {
-      console.log(' Connected to backend');
+      console.log('✅ Connected to backend');
     });
 
     socket.on('game_created', (game) => {
@@ -106,6 +114,9 @@ const MultiplayerLobby = ({ walletAddress, onStartGame, onBack }) => {
       socket.off('games_updated');
       socket.off('game_finished');
       socket.disconnect();
+      
+      // Disconnect multiplayer service
+      multiplayerService.disconnect();
     };
   }, [walletAddress, onStartGame]);
 

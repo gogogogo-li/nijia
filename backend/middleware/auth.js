@@ -53,6 +53,8 @@ export async function authenticateWallet(req, res, next) {
     const signature = req.headers['x-wallet-signature'];
     const message = req.headers['x-wallet-message'];
     
+    logger.info(`Auth check - Address: ${address}, Has signature: ${!!signature}`);
+    
     if (!address) {
       return res.status(401).json({
         success: false,
