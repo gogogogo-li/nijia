@@ -1076,6 +1076,7 @@ This signature will be used to verify your identity.`;
       console.log(`💸 Transferring ${amount} OCT to ${recipient}...`);
 
       // Convert OCT to MIST (1 OCT = 10^9 MIST)
+      // eslint-disable-next-line no-undef
       const amountInMist = BigInt(Math.floor(amount * 1_000_000_000));
 
       // Create transaction using Sui's transfer object
