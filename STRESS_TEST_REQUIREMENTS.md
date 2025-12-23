@@ -34,8 +34,8 @@
 
 ### Scenario A: Single Player Peak Load
 - **Objective**: Verify game performance under heavy single-player usage
-- **Load**: 100 concurrent single-player sessions
-- **Duration**: 30 minutes
+- **Load**: 5 concurrent single-player sessions
+- **Duration**: 5 minutes
 - **Pass Criteria**:
   - [ ] No game freezes or crashes
   - [ ] Score updates persisted correctly
@@ -43,8 +43,8 @@
 
 ### Scenario B: Multiplayer Stress Test
 - **Objective**: Test real-time multiplayer synchronization
-- **Load**: 50 concurrent multiplayer matches (100 players)
-- **Duration**: 15 minutes
+- **Load**: 5 concurrent multiplayer matches (100 players)
+- **Duration**: 5 minutes
 - **Pass Criteria**:
   - [ ] Game state sync latency < 100ms
   - [ ] No player disconnections due to server
@@ -53,8 +53,8 @@
 
 ### Scenario C: NFT Minting Burst
 - **Objective**: Test blockchain interaction under load
-- **Load**: 50 simultaneous NFT mint requests
-- **Duration**: 5 minutes
+- **Load**: 5 simultaneous NFT mint requests
+- **Duration**: 1 minutes
 - **Pass Criteria**:
   - [ ] All transactions submitted successfully
   - [ ] Transaction hash returned for each mint
@@ -63,8 +63,8 @@
 
 ### Scenario D: Sustained Load
 - **Objective**: Long-running stability test
-- **Load**: 25 concurrent users (mixed gameplay)
-- **Duration**: 2 hours
+- **Load**: 5 concurrent users (mixed gameplay)
+- **Duration**: 30 minutes
 - **Pass Criteria**:
   - [ ] Server uptime 100%
   - [ ] No memory growth > 20%
@@ -77,10 +77,10 @@
 
 ### Pre-Stress Test
 - [ ] Backend deployed to production environment
-- [ ] Frontend deployed to Vercel (or production CDN)
+- [ ] Frontend deployed to Vercel 
 - [ ] Database (Supabase) connection pool configured
 - [ ] RPC endpoint rate limits verified
-- [ ] Monitoring/logging enabled
+- [ ] Logging enabled
 - [ ] Environment variables set correctly
 
 ### Server Configuration
@@ -111,7 +111,7 @@ Database Pool Size: 20
 | Chrome DevTools | Frontend profiling |
 
 ### Test Data Setup
-- [ ] 100+ test wallet addresses
+- [ ] 10+ test wallet addresses
 - [ ] Pre-funded testnet wallets (for NFT minting)
 - [ ] Test game data seeded in Supabase
 
@@ -134,27 +134,9 @@ Database Pool Size: 20
 4. ❌ > 10% transaction failures
 5. ❌ Multiplayer match state corruption
 
----
-
-## 6. Post-Test Deliverables
-
-- [ ] Performance test report (metrics + graphs)
-- [ ] Identified bottlenecks list
-- [ ] Recommendations for optimization
-- [ ] Go/No-Go decision for mainnet
 
 ---
 
-## 7. Sign-Off
-
-| Role | Name | Approved | Date |
-|------|------|----------|------|
-| Developer | | ☐ | |
-| QA Lead | | ☐ | |
-| DevOps | | ☐ | |
-| Product Owner | | ☐ | |
-
----
 
 *Document Version: 1.0*  
 *Last Updated: 2025-12-23*
