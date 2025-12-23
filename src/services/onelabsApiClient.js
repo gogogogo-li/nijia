@@ -10,17 +10,24 @@ import { verifyPersonalMessageSignature } from '@onelabs/sui/verify';
  */
 class OnelabsApiClient {
   constructor(config = {}) {
+    // Backend proxy URL for RPC calls (bypasses CORS)
+    // Use REACT_APP_API_BASE_URL for consistency with multiplayer service
+    const backendUrl = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+
     this.config = {
       apiEndpoint: config.apiEndpoint || process.env.REACT_APP_ONECHAIN_API || 'https://api.onelabs.cc',
-      rpcEndpoint: config.rpcEndpoint || process.env.REACT_APP_ONECHAIN_RPC || 'https://rpc-testnet.onelabs.cc:443',
+      // Use backend proxy for RPC to bypass CORS
+      rpcEndpoint: config.rpcEndpoint || `${backendUrl}/api/rpc`,
+      // Keep original RPC URL for reference
+      originalRpcEndpoint: process.env.REACT_APP_ONECHAIN_RPC || 'https://rpc-testnet.onelabs.cc:443',
       network: config.network || process.env.REACT_APP_ONECHAIN_NETWORK || 'testnet',
       projectId: config.projectId || process.env.REACT_APP_ONECHAIN_PROJECT_ID || 'oneninja',
       timeout: config.timeout || 30000, // 30 seconds default
     };
 
-    // Initialize Sui client with OneLabs RPC
-    this.suiClient = new SuiClient({ 
-      url: this.config.rpcEndpoint 
+    // Initialize Sui client with backend RPC proxy
+    this.suiClient = new SuiClient({
+      url: this.config.rpcEndpoint
     });
 
     // API request headers
@@ -28,6 +35,8 @@ class OnelabsApiClient {
       'Content-Type': 'application/json',
       'X-Project-Id': this.config.projectId,
     };
+
+    console.log('📡 OnelabsApiClient initialized with RPC proxy:', this.config.rpcEndpoint);
   }
 
   /**
@@ -53,7 +62,7 @@ class OnelabsApiClient {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: response.statusText }));
         throw new Error(error.message || `API request failed: ${response.status}`);
@@ -77,13 +86,26 @@ class OnelabsApiClient {
    * Get wallet balance
    */
   async getBalance(address) {
+    console.log('📊 OnelabsApiClient.getBalance() called');
+    console.log('   Address:', address);
+    console.log('   RPC Endpoint:', this.config.rpcEndpoint);
+
     try {
+      const startTime = Date.now();
       const balance = await this.suiClient.getBalance({
         owner: address,
       });
+      const duration = Date.now() - startTime;
+
+      console.log('   RPC Response time:', duration, 'ms');
+      console.log('   Response:', JSON.stringify(balance));
+
       return balance;
     } catch (error) {
-      console.error('Error fetching balance:', error);
+      console.error('❌ OnelabsApiClient.getBalance() error:');
+      console.error('   Error name:', error.name);
+      console.error('   Error message:', error.message);
+      if (error.cause) console.error('   Error cause:', error.cause);
       throw error;
     }
   }
@@ -356,7 +378,7 @@ class OnelabsApiClient {
     try {
       const chainId = await this.suiClient.getChainIdentifier();
       const latestCheckpoint = await this.suiClient.getLatestCheckpointSequenceNumber();
-      
+
       return {
         chainId,
         latestCheckpoint,

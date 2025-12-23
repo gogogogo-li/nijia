@@ -1,13 +1,12 @@
 module ninja_addr::multiplayer_game {
-    use one::object::{Self, UID, ID};
-    use one::tx_context::{Self, TxContext};
-    use one::transfer;
     use one::coin::{Self, Coin};
     use one::balance::{Self, Balance};
     use one::event;
     use one::clock::{Self, Clock};
     use one::dynamic_field as df;
-    use std::vector;
+    use one::object::{Self, UID, ID};
+    use one::tx_context::{Self, TxContext};
+    use one::transfer;
 
     // Bet tiers (in MIST, 1 OCT = 1,000,000,000 MIST)
     const BET_TIER_1: u64 = 100000000;    // 0.1 OCT
@@ -21,13 +20,10 @@ module ninja_addr::multiplayer_game {
     const STATE_FINISHED: u8 = 2;
 
     // Error codes
-    const E_NOT_INITIALIZED: u64 = 1;
-    const E_ALREADY_INITIALIZED: u64 = 2;
     const E_GAME_NOT_FOUND: u64 = 3;
     const E_GAME_ALREADY_STARTED: u64 = 4;
     const E_NOT_YOUR_GAME: u64 = 5;
     const E_GAME_NOT_IN_PROGRESS: u64 = 6;
-    const E_ALREADY_SUBMITTED: u64 = 7;
     const E_INVALID_BET_TIER: u64 = 8;
     const E_INSUFFICIENT_BALANCE: u64 = 9;
     const E_GAME_FULL: u64 = 10;
@@ -46,6 +42,7 @@ module ninja_addr::multiplayer_game {
         winner: address,
         state: u8,
         created_at: u64,
+        joined_at: u64,
         finished_at: u64,
         escrow: Balance<T>,
     }
@@ -77,44 +74,100 @@ module ninja_addr::multiplayer_game {
         game_id: u64,
         creator: address,
         bet_amount: u64,
-        game_lobby: ID,
     }
 
     public struct GameJoinedEvent has copy, drop {
         game_id: u64,
         player: address,
         bet_amount: u64,
-        game_lobby: ID,
     }
 
     public struct GameFinishedEvent has copy, drop {
         game_id: u64,
         winner: address,
         prize: u64,
-        game_lobby: ID,
+    }
+    
+    public struct GameForfeitedEvent has copy, drop {
+        game_id: u64,
+        forfeiter: address,
     }
 
-    // Initialize the game lobby
-    public fun initialize(ctx: &mut TxContext) {
-        
+    public struct GameRefundedEvent has copy, drop {
+        game_id: u64,
+        refunder: address,
+    }
+    
+    public struct ContractDeployed has copy, drop {
+        lobby_id: ID,
+        registry_id: ID,
     }
 
-    // Create a new multiplayer game
+    // View helpers for tests/clients
+    public fun get_available_games(lobby: &GameLobby): vector<u64> {
+        lobby.available_games
+    }
+
+    public fun get_game_state<T>(lobby: &GameLobby, game_id: u64): u8 {
+        let game: &MultiplayerGame<T> = df::borrow(&lobby.id, game_id);
+        game.state
+    }
+
+    public fun get_lobby_stats(lobby: &GameLobby): (u64, u64) {
+        (lobby.total_games_played, lobby.total_volume)
+    }
+
+    public fun get_player_stats(
+        stats_registry: &StatsRegistry,
+        player: address
+    ): (u64, u64, u64, u64) {
+        if (!df::exists_(&stats_registry.id, player)) {
+            (0, 0, 0, 0)
+        } else {
+            let stats: &PlayerStats = df::borrow(&stats_registry.id, player);
+            (stats.games_played, stats.games_won, stats.total_wagered, stats.total_winnings)
+        }
+    }
+
+    fun init(ctx: &mut TxContext) {
+        let admin = tx_context::sender(ctx);
+
+        let lobby = GameLobby {
+            id: object::new(ctx),
+            available_games: vector::empty<u64>(),
+            next_game_id: 0,
+            total_games_played: 0,
+            total_volume: 0,
+            admin,
+        };
+
+        let stats_registry = StatsRegistry {
+            id: object::new(ctx),
+        };
+
+        let lobby_id = object::uid_to_inner(&lobby.id);
+        let reg_id = object::uid_to_inner(&stats_registry.id);
+
+        transfer::share_object(lobby);
+        transfer::share_object(stats_registry);
+
+        event::emit(ContractDeployed {
+            lobby_id: lobby_id,
+            registry_id: reg_id,
+        });
+    }
+
     public fun create_game<T>(
         lobby: &mut GameLobby,
-        stats_registry: &mut StatsRegistry,
         bet_tier: u64,
         payment: Coin<T>,
         clock: &Clock,
         ctx: &mut TxContext
     ) {
         let player_addr = tx_context::sender(ctx);
-        let lobby_id = lobby.id.uid_to_inner();
 
-        // Validate bet tier
         assert!(bet_tier <= 3, E_INVALID_BET_TIER);
 
-        // Calculate bet amount based on tier
         let bet_amount = if (bet_tier == 0) {
             BET_TIER_1
         } else if (bet_tier == 1) {
@@ -125,10 +178,8 @@ module ninja_addr::multiplayer_game {
             BET_TIER_4
         };
 
-        // Check payment amount
         assert!(coin::value(&payment) >= bet_amount, E_INSUFFICIENT_BALANCE);
 
-        // Create new game
         let game_id = lobby.next_game_id;
         let game_id_event = game_id;
         lobby.next_game_id = lobby.next_game_id + 1;
@@ -144,67 +195,58 @@ module ninja_addr::multiplayer_game {
             winner: @0x0,
             state: STATE_WAITING,
             created_at: clock::timestamp_ms(clock),
+            joined_at: 0,
             finished_at: 0,
             escrow: coin::into_balance(payment),
         };
-        // Store game as dynamic field
         df::add(&mut lobby.id, game_id, game);
 
-        // Add to available games
         vector::push_back(&mut lobby.available_games, game_id);
 
-
-        // Emit event
         event::emit(GameCreatedEvent {
             game_id: game_id_event,
             creator: player_addr,
             bet_amount: bet_amount,
-            game_lobby: lobby_id,
         });
     }
 
-    // Join an existing game
     public fun join_game<T>(
         lobby: &mut GameLobby,
-        stats_registry: &mut StatsRegistry,
         game_id: u64,
         payment: Coin<T>,
         clock: &Clock,
         ctx: &mut TxContext
     ) {
         let player_addr = tx_context::sender(ctx);
-        let lobby_id = lobby.id.uid_to_inner();
+        let bet_amount;
+        {
+            assert!(game_id < lobby.next_game_id, E_GAME_NOT_FOUND);
+            let game: &mut MultiplayerGame<T> = df::borrow_mut(&mut lobby.id, game_id);
+            assert!(game.state == STATE_WAITING, E_GAME_ALREADY_STARTED);
+            assert!(game.player2 == @0x0, E_GAME_FULL);
+            assert!(game.player1 != player_addr, E_CANNOT_JOIN_OWN_GAME);
+            
+            assert!(coin::value(&payment) == game.bet_amount, E_INSUFFICIENT_BALANCE);
 
-        assert!(game_id < lobby.next_game_id, E_GAME_NOT_FOUND);
+            bet_amount = game.bet_amount;
+            let paid = coin::into_balance(payment);
+            balance::join(&mut game.escrow, paid);
 
-        let game: &mut MultiplayerGame<T> = df::borrow_mut(&mut lobby.id, game_id);
-        assert!(game.state == STATE_WAITING, E_GAME_ALREADY_STARTED);
-        assert!(game.player2 == @0x0, E_GAME_FULL);
-        assert!(game.player1 != player_addr, E_CANNOT_JOIN_OWN_GAME);
-        
-        // Check payment amount
-        assert!(coin::value(&payment) == game.bet_amount, E_INSUFFICIENT_BALANCE);
+            game.player2 = player_addr;
+            game.state = STATE_IN_PROGRESS;
+            game.joined_at = clock::timestamp_ms(clock);
 
-        // Deposit bet to escrow
-        let paid = coin::into_balance(payment);
-        balance::join(&mut game.escrow, paid);
+            lobby.total_volume = lobby.total_volume + (game.bet_amount * 2);
+        };
+        remove_available_game(lobby, game_id);
 
-        // Update game
-        game.player2 = player_addr;
-        game.state = STATE_IN_PROGRESS;
-
-        lobby.total_volume = lobby.total_volume + (game.bet_amount * 2);
-
-        // Emit event
         event::emit(GameJoinedEvent {
-            game_id: game.game_id,
+            game_id: game_id,
             player: player_addr,
-            bet_amount: game.bet_amount,
-            game_lobby: lobby_id
+            bet_amount: bet_amount,
         });
     }
 
-    // Submit final score
     public fun submit_score<T>(
         lobby: &mut GameLobby,
         stats_registry: &mut StatsRegistry,
@@ -217,7 +259,6 @@ module ninja_addr::multiplayer_game {
         ctx: &mut TxContext
     ) {
         let admin = tx_context::sender(ctx);
-        let lobby_id = lobby.id.uid_to_inner();
 
         assert!(admin == lobby.admin, E_NOT_ADMIN);
         assert!(game_id < lobby.next_game_id, E_GAME_NOT_FOUND);
@@ -226,38 +267,15 @@ module ninja_addr::multiplayer_game {
         assert!(game.state == STATE_IN_PROGRESS, E_GAME_NOT_IN_PROGRESS);
         assert!(player1_address == game.player1 || player2_address == game.player2, E_NOT_YOUR_GAME);
 
-        // Record score
         game.player1_score = player1_score;
         game.player2_score = player2_score;
+        game.state = STATE_FINISHED;
+        game.finished_at = clock::timestamp_ms(clock);
 
-         // Initialize or update player stats
-        let mut player1_stats;
-        let mut player2_stats;
-        if (!df::exists_(&stats_registry.id, player1_address)) {
-            let stats = PlayerStats {
-                id: object::new(ctx),
-                address: player1_address,
-                games_played: 0,
-                games_won: 0,
-                total_wagered: game.bet_amount,
-                total_winnings: 0,
-            };
-            df::add(&mut stats_registry.id, player1_address, stats);
-        };
-        if (!df::exists_(&stats_registry.id, player2_address)) {
-            let stats = PlayerStats {
-                id: object::new(ctx),
-                address: player2_address,
-                games_played: 0,
-                games_won: 0,
-                total_wagered: game.bet_amount,
-                total_winnings: 0,
-            };
-            df::add(&mut stats_registry.id, player2_address, stats);
-        };
+        initialize_player_stats(stats_registry, player1_address, ctx);
+        initialize_player_stats(stats_registry, player2_address, ctx);
 
         lobby.total_games_played = lobby.total_games_played + 1;
-        // Update wagered amounts (borrow one at a time to avoid conflicting mutable borrows)
         {
             let player1_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, player1_address);
             player1_stats.total_wagered = player1_stats.total_wagered + game.bet_amount;
@@ -270,55 +288,320 @@ module ninja_addr::multiplayer_game {
         };
 
         if (game.player1_score == game.player2_score) {
-            // Tie - refund both players
-            let refund1 = balance::split(&mut game.escrow, game.bet_amount);
-            let refund1_coin = coin::from_balance(refund1, ctx);
-            transfer::public_transfer(refund1_coin, game.player1);
-
-            let refund2 = balance::withdraw_all(&mut game.escrow);
-            let refund2_coin = coin::from_balance(refund2, ctx);
-            transfer::public_transfer(refund2_coin, game.player2);
-
+            handle_tie(lobby.admin, game, ctx);
             return
         };
 
-        // Determine winner and loser addresses
-        let (winner_addr, loser_addr) = if (game.player1_score > game.player2_score) {
+        let (winner_addr, _) = if (game.player1_score > game.player2_score) {
             (game.player1, game.player2)
         } else {
             (game.player2, game.player1)
         };
 
-        game.winner = winner_addr;
-        let prize = game.bet_amount * 2;
+        handle_win(lobby.admin, stats_registry, game, winner_addr, ctx);
+    }
 
-        // Transfer prize to winner
-        let prize_balance = balance::withdraw_all(&mut game.escrow);
-        let prize_coin = coin::from_balance(prize_balance, ctx);
-        transfer::public_transfer(prize_coin, winner_addr);
+    public fun forfeit_game<T>(
+        lobby: &mut GameLobby,
+        stats_registry: &mut StatsRegistry,
+        game_id: u64,
+        forfeiter: address,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ){
+        let admin = tx_context::sender(ctx);
 
-        // Update winner stats
+        assert!(admin == lobby.admin, E_NOT_ADMIN);
+        assert!(game_id < lobby.next_game_id, E_GAME_NOT_FOUND);
+
+        let game: &mut MultiplayerGame<T> = df::borrow_mut(&mut lobby.id, game_id);
+        assert!(game.state == STATE_IN_PROGRESS, E_GAME_NOT_IN_PROGRESS);
+        assert!(forfeiter == game.player1 || forfeiter == game.player2, E_NOT_YOUR_GAME);
+
+        let player1_address = game.player1;
+        let player2_address = game.player2;
+
+        initialize_player_stats(stats_registry, player1_address, ctx);
+        initialize_player_stats(stats_registry, player2_address, ctx);
+
+        lobby.total_games_played = lobby.total_games_played + 1;
+
+        let opponent = if (forfeiter == game.player1) {
+            game.player2
+        } else {
+            game.player1
+        };
+
+        let (platform_coin, winner_coin, loser_coin) = calculate_payouts(&mut game.escrow, 2, game.bet_amount, ctx);
+        let prize_amount = coin::value(&winner_coin);
+
+        game.state = STATE_FINISHED;
+        game.winner = opponent;
+        game.finished_at = clock::timestamp_ms(clock);
+
         {
-            let winner_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, winner_addr);
+            let forfeiter_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, forfeiter);
+            forfeiter_stats.games_played = forfeiter_stats.games_played + 1;
+        };
+        {
+            let opponent_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, opponent);
+            opponent_stats.games_played = opponent_stats.games_played + 1;
+            opponent_stats.games_won = opponent_stats.games_won + 1;
+            opponent_stats.total_winnings = opponent_stats.total_winnings + prize_amount;
+        };
+
+        // Transfers last
+        coin::destroy_zero(loser_coin);
+        if (coin::value(&platform_coin) > 0) {
+            transfer::public_transfer(platform_coin, lobby.admin);
+        } else {
+            coin::destroy_zero(platform_coin);
+        };
+        transfer::public_transfer(winner_coin, opponent);
+
+        event::emit(GameForfeitedEvent {
+            game_id: game_id,
+            forfeiter,
+        });
+    }
+
+    /// NEW: Instant win when opponent loses all lives
+    /// Called by backend when a player reaches 0 lives
+    public fun instant_win<T>(
+        lobby: &mut GameLobby,
+        stats_registry: &mut StatsRegistry,
+        game_id: u64,
+        winner_address: address,
+        winner_score: u64,
+        loser_score: u64,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ) {
+        let admin = tx_context::sender(ctx);
+        assert!(admin == lobby.admin, E_NOT_ADMIN);
+        assert!(game_id < lobby.next_game_id, E_GAME_NOT_FOUND);
+
+        let game: &mut MultiplayerGame<T> = df::borrow_mut(&mut lobby.id, game_id);
+        assert!(game.state == STATE_IN_PROGRESS, E_GAME_NOT_IN_PROGRESS);
+        assert!(winner_address == game.player1 || winner_address == game.player2, E_NOT_YOUR_GAME);
+
+        // Set scores
+        if (winner_address == game.player1) {
+            game.player1_score = winner_score;
+            game.player2_score = loser_score;
+        } else {
+            game.player2_score = winner_score;
+            game.player1_score = loser_score;
+        };
+
+        game.state = STATE_FINISHED;
+        game.finished_at = clock::timestamp_ms(clock);
+        game.winner = winner_address;
+
+        // Initialize stats
+        let loser_address = if (winner_address == game.player1) { game.player2 } else { game.player1 };
+        initialize_player_stats(stats_registry, winner_address, ctx);
+        initialize_player_stats(stats_registry, loser_address, ctx);
+
+        // Update stats
+        lobby.total_games_played = lobby.total_games_played + 1;
+        {
+            let winner_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, winner_address);
             winner_stats.games_played = winner_stats.games_played + 1;
             winner_stats.games_won = winner_stats.games_won + 1;
-            winner_stats.total_winnings = winner_stats.total_winnings + prize;
+            winner_stats.total_wagered = winner_stats.total_wagered + game.bet_amount;
         };
-
-        // Update loser stats
         {
-            let loser_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, loser_addr);
+            let loser_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, loser_address);
             loser_stats.games_played = loser_stats.games_played + 1;
+            loser_stats.total_wagered = loser_stats.total_wagered + game.bet_amount;
         };
 
-        // Emit event
-        if (game.winner != @0x0) {
-            event::emit(GameFinishedEvent {
-                game_id: game.game_id,
-                winner: game.winner,
-                prize: game.bet_amount * 2,
-                game_lobby: lobby_id
-            });
+        // Calculate payouts (2% platform fee)
+        let (platform_coin, winner_coin, loser_coin) = calculate_payouts(&mut game.escrow, 1, game.bet_amount, ctx);
+        let prize_amount = coin::value(&winner_coin);
+
+        {
+            let winner_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, winner_address);
+            winner_stats.total_winnings = winner_stats.total_winnings + prize_amount;
         };
+
+        // Transfers
+        coin::destroy_zero(loser_coin);
+        if (coin::value(&platform_coin) > 0) {
+            transfer::public_transfer(platform_coin, lobby.admin);
+        } else {
+            coin::destroy_zero(platform_coin);
+        };
+        transfer::public_transfer(winner_coin, winner_address);
+
+        event::emit(GameFinishedEvent {
+            game_id: game.game_id,
+            winner: winner_address,
+            prize: prize_amount,
+        });
+    }
+
+    public fun refund_game<T>(
+        lobby: &mut GameLobby,
+        game_id: u64,
+        ctx: &mut TxContext
+    ){
+        let sender = tx_context::sender(ctx);
+
+        assert!(game_id < lobby.next_game_id, E_GAME_NOT_FOUND);
+        let (coin, player1_addr) = {
+            let game: &mut MultiplayerGame<T> = df::borrow_mut(&mut lobby.id, game_id);
+            assert!(sender == lobby.admin || sender != game.player1, E_NOT_ADMIN);
+            assert!(game.state == STATE_WAITING, E_GAME_ALREADY_STARTED);
+            let refund = balance::withdraw_all(&mut game.escrow);
+            (coin::from_balance(refund, ctx), game.player1)
+        };
+
+        remove_available_game(lobby, game_id);
+
+        transfer::public_transfer(coin, player1_addr);
+        event::emit(GameRefundedEvent { game_id, refunder: player1_addr });
+    }
+
+    // Remove game from available games vector (if it exists)
+    fun remove_available_game(
+        lobby: &mut GameLobby,
+        game_id: u64
+    ) {
+        let (exists, index) = vector::index_of(&lobby.available_games, &game_id);
+        if (exists) {
+            vector::remove(&mut lobby.available_games, index);
+        };
+    }
+
+    // Ensure player stats record exists; initialize with a starting wager if missing
+    fun initialize_player_stats(
+        stats_registry: &mut StatsRegistry,
+        player_address: address,
+        ctx: &mut TxContext
+    ) {
+        if (!df::exists_(&stats_registry.id, player_address)) {
+            let stats = PlayerStats {
+                id: object::new(ctx),
+                address: player_address,
+                games_played: 0,
+                games_won: 0,
+                total_wagered: 0,
+                total_winnings: 0,
+            };
+            df::add(&mut stats_registry.id, player_address, stats);
+        };
+    }
+
+    /// Calculate payout coins (platform, winner, loser) based on outcome.
+    /// outcome: 0 = tie, 1 = normal win, 2 = forfeit win.
+    /// Platform fee for win: 2% of total pot (2 * bet_amount).
+    fun calculate_payouts<T>(
+        escrow: &mut Balance<T>,
+        outcome: u8,
+        bet_amount: u64,
+        ctx: &mut TxContext
+    ): (Coin<T>, Coin<T>, Coin<T>) {
+        let total = balance::value(escrow);
+
+        let platform_fee = (total * 2) / 100; // 2% of total pot
+
+        if (outcome == 0) {
+            let platform_coin = coin::zero<T>(ctx);
+            let p1_bal = balance::split(escrow, bet_amount);
+            let p2_bal = balance::withdraw_all(escrow);
+            (platform_coin, coin::from_balance(p1_bal, ctx), coin::from_balance(p2_bal, ctx))
+        
+        } else if (outcome == 1) {
+            let platform_coin = if (platform_fee > 0) {
+                let platform_bal = balance::split(escrow, platform_fee);
+                coin::from_balance(platform_bal, ctx)
+            } else {
+                coin::zero<T>(ctx)
+            };
+
+            let win = balance::withdraw_all(escrow);
+            (platform_coin, coin::from_balance(win, ctx), coin::zero<T>(ctx))
+
+        } else {
+            // Forfeit: 2% platform fee, winner gets 98%
+            let platform_coin = if (platform_fee > 0) {
+                let platform_bal = balance::split(escrow, platform_fee);
+                coin::from_balance(platform_bal, ctx)
+            } else {
+                coin::zero<T>(ctx)
+            };
+            
+            let winner_bal = balance::withdraw_all(escrow); // Winner gets 98%
+            (
+                platform_coin,
+                coin::from_balance(winner_bal, ctx),
+                coin::zero<T>(ctx)
+            )
+        }
+    }
+
+    fun handle_tie<T>(
+        admin: address,
+        game: &mut MultiplayerGame<T>,
+        ctx: &mut TxContext
+    ) {
+        let (platform_coin, p1_coin, p2_coin) = calculate_payouts(&mut game.escrow, 0, game.bet_amount, ctx);
+
+        game.winner = @0x0;
+        let prize_amount = game.bet_amount;
+
+        if (coin::value(&platform_coin) > 0) {
+            transfer::public_transfer(platform_coin, admin);
+        } else {
+            coin::destroy_zero(platform_coin);
+        };
+        transfer::public_transfer(p1_coin, game.player1);
+        transfer::public_transfer(p2_coin, game.player2);
+
+        event::emit(GameFinishedEvent {
+            game_id: game.game_id,
+            winner: game.winner,
+            prize: prize_amount,
+        });
+    }
+
+    fun handle_win<T>(
+        admin: address,
+        stats_registry: &mut StatsRegistry,
+        game: &mut MultiplayerGame<T>,
+        winner_addr: address,
+        ctx: &mut TxContext
+    ) {
+        game.winner = winner_addr;
+
+        let (platform_coin, winner_coin, loser_coin) = calculate_payouts(&mut game.escrow, 1, game.bet_amount, ctx);
+        let prize_amount = coin::value(&winner_coin);
+
+        
+        let winner_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, winner_addr);
+        winner_stats.games_won = winner_stats.games_won + 1;
+        winner_stats.total_winnings = winner_stats.total_winnings + prize_amount;
+        
+
+        coin::destroy_zero(loser_coin);
+        if (coin::value(&platform_coin) > 0) {
+            transfer::public_transfer(platform_coin, admin);
+        } else {
+            coin::destroy_zero(platform_coin);
+        };
+        transfer::public_transfer(winner_coin, winner_addr);
+
+        event::emit(GameFinishedEvent {
+            game_id: game.game_id,
+            winner: game.winner,
+            prize: prize_amount,
+        });
+    }
+
+    #[test_only]
+    public fun initialize(ctx: &mut TxContext){
+        init(ctx);
     }
 }

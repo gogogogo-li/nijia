@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../utils/logger.js';
 import { suiClient, mistToOct, octToMist } from '../config/onechain.js';
+import onChainSettlement from './onChainSettlement.js';
 
 /**
  * GameManager - Central service for managing multiplayer games
@@ -10,20 +11,25 @@ export class GameManager {
   constructor(io, supabase) {
     this.io = io;
     this.supabase = supabase;
-    
+    this.suiClient = suiClient; // Add suiClient to instance
+
     // In-memory game cache for active games
     this.activeGames = new Map();
     this.playerGames = new Map(); // Track active games per player
-    
+    this.joinCodes = new Map(); // Map join codes to game IDs
+    this.playerConnections = new Map(); // Track player socket connections for disconnect handling
+
     // Configuration
     this.config = {
       gameTimeout: parseInt(process.env.GAME_TIMEOUT_MS) || 300000, // 5 minutes
       maxActiveGamesPerPlayer: parseInt(process.env.MAX_ACTIVE_GAMES_PER_PLAYER) || 3,
       minBetAmount: BigInt(process.env.MIN_BET_AMOUNT || 100000000), // 0.1 OCT
       maxBetAmount: BigInt(process.env.MAX_BET_AMOUNT || 10000000000), // 10 OCT
-      cleanupInterval: 30000 // 30 seconds
+      cleanupInterval: 30000, // 30 seconds
+      disconnectGracePeriod: 5000, // 5 seconds grace window for reconnection
+      countdownDuration: 3000 // 3 second countdown before game start
     };
-    
+
     // Bet tiers (in OCT)
     this.betTiers = [
       { id: 1, amount: 0.1, label: 'Casual', description: 'Perfect for beginners' },
@@ -31,44 +37,212 @@ export class GameManager {
       { id: 3, amount: 1.0, label: 'Competitive', description: 'For serious players' },
       { id: 4, amount: 5.0, label: 'High Stakes', description: 'Big risk, big reward' },
     ];
-    
+
     // Start cleanup interval
     this.startCleanup();
-    
+
+    // Initialize on-chain settlement (async, runs in background)
+    onChainSettlement.initialize().then(enabled => {
+      if (enabled) {
+        logger.info('✅ On-chain settlement is ENABLED');
+      } else {
+        logger.info('ℹ️  On-chain settlement is DISABLED (database only)');
+      }
+    });
+
     logger.info('GameManager initialized');
   }
-  
+
+  /**
+   * Generate a unique 6-character join code for private rooms
+   */
+  generateJoinCode() {
+    let code;
+    do {
+      code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    } while (this.joinCodes.has(code)); // Ensure uniqueness
+    return code;
+  }
+
+  /**
+   * Track player connection for disconnect handling
+   */
+  trackPlayerConnection(address, socketId) {
+    this.playerConnections.set(address, {
+      socketId,
+      connected: true,
+      lastSeen: Date.now()
+    });
+    logger.info(`📡 Player ${address.slice(0, 10)}... connected (socket: ${socketId})`);
+  }
+
+  /**
+   * Handle player disconnect with grace period
+   */
+  handlePlayerDisconnectWithGrace(address, gameId) {
+    const connection = this.playerConnections.get(address);
+    if (connection) {
+      connection.connected = false;
+      connection.disconnectedAt = Date.now();
+      this.playerConnections.set(address, connection);
+    }
+
+    const game = this.activeGames.get(gameId);
+    if (!game || game.state !== 'in_progress') return;
+
+    logger.info(`⚠️ Player ${address.slice(0, 10)}... disconnected from game ${gameId}`);
+    logger.info(`   Starting ${this.config.disconnectGracePeriod / 1000}s grace period...`);
+
+    // Notify opponent about disconnect
+    const opponent = game.player1 === address ? game.player2 : game.player1;
+    this.io.to(`player:${opponent}`).emit('game:opponent_disconnected', {
+      game_id: gameId,
+      gracePeriodMs: this.config.disconnectGracePeriod
+    });
+
+    // Start grace period timer
+    setTimeout(async () => {
+      const currentConnection = this.playerConnections.get(address);
+      const currentGame = this.activeGames.get(gameId);
+
+      // Check if player reconnected or game already ended
+      if (!currentGame || currentGame.state === 'completed') return;
+      if (currentConnection && currentConnection.connected) {
+        logger.info(`✅ Player ${address.slice(0, 10)}... reconnected within grace period`);
+        this.io.to(`player:${opponent}`).emit('game:opponent_reconnected', { game_id: gameId });
+        return;
+      }
+
+      // Player did not reconnect - forfeit
+      logger.info(`❌ Player ${address.slice(0, 10)}... did not reconnect - FORFEIT`);
+      currentGame.winner = opponent;
+      currentGame.forfeit_by = address;
+      this.activeGames.set(gameId, currentGame);
+
+      await this.finalizeGameInstant(gameId, 'forfeit');
+    }, this.config.disconnectGracePeriod);
+  }
+
   /**
    * Create a new multiplayer game
    * Backend validates and creates the game
+   * @param {Object} params
+   * @param {string} params.player1Address - Creator's wallet address
+   * @param {number} params.betTierId - Bet tier ID (1-4)
+   * @param {string} params.transactionHash - On-chain transaction hash
+   * @param {string} params.roomType - 'public' or 'private' (default: 'public')
    */
-  async createGame({ player1Address, betTierId, transactionHash }) {
+  async createGame({ player1Address, betTierId, transactionHash, roomType = 'public' }) {
     try {
       // Validate inputs
       const tier = this.betTiers.find(t => t.id === betTierId);
       if (!tier) {
         throw new Error('Invalid bet tier');
       }
-      
+
       // Check player's active games limit
       const playerActiveGames = this.playerGames.get(player1Address) || [];
       if (playerActiveGames.length >= this.config.maxActiveGamesPerPlayer) {
         throw new Error(`Maximum ${this.config.maxActiveGamesPerPlayer} active games allowed`);
       }
-      
+
       // Verify transaction on-chain (optional but recommended for production)
-      if (transactionHash) {
-        const isValid = await this.verifyTransaction(transactionHash, player1Address);
-        if (!isValid) {
-          logger.warn(`Invalid transaction hash for game creation: ${transactionHash}`);
+      let gameId = null;
+
+      // Check if this is a development/mock transaction
+      // Development transactions have the prefix 0xDEV
+      const isMockTransaction = transactionHash && transactionHash.startsWith('0xDEV');
+
+      if (transactionHash && !isMockTransaction) {
+        logger.info(`🔍 Verifying transaction: ${transactionHash}`);
+
+        // Retry mechanism - wait for transaction to be indexed
+        const maxRetries = 3;
+        const retryDelay = 2000; // 2 seconds between retries
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            logger.info(`   Attempt ${attempt}/${maxRetries}...`);
+
+            // Get transaction details to extract game_id from GameCreatedEvent
+            const txDetails = await this.suiClient.getTransactionBlock({
+              digest: transactionHash,
+              options: { showEvents: true }
+            });
+
+            logger.info(`   Transaction events count: ${txDetails.events?.length || 0}`);
+
+            // Log all events for debugging
+            if (txDetails.events) {
+              txDetails.events.forEach((event, idx) => {
+                logger.info(`   Event ${idx}: ${event.type}`);
+              });
+            }
+
+            // Find GameCreatedEvent to get the contract's game_id
+            const gameCreatedEvent = txDetails.events?.find(event =>
+              event.type.includes('GameCreatedEvent')
+            );
+
+            if (gameCreatedEvent) {
+              logger.info(`   GameCreatedEvent found:`, JSON.stringify(gameCreatedEvent.parsedJson));
+              gameId = parseInt(gameCreatedEvent.parsedJson.game_id);
+              logger.info(`✅ Extracted game_id from contract: ${gameId}`);
+              break; // Success! Exit retry loop
+            } else {
+              logger.warn('⚠️  Could not find GameCreatedEvent in transaction events');
+              if (attempt < maxRetries) {
+                logger.info(`   Waiting ${retryDelay}ms before retry...`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+              }
+            }
+
+            const isValid = await this.verifyTransaction(transactionHash, player1Address);
+            if (!isValid) {
+              logger.warn(`⚠️ Transaction verification failed for: ${transactionHash}`);
+              logger.warn('   Continuing anyway (verification is optional in current mode)');
+            } else {
+              logger.info(`✅ Transaction verified successfully`);
+            }
+
+            break; // Transaction found, exit retry loop
+          } catch (err) {
+            // Handle transaction not found gracefully
+            if (err.message && err.message.includes('Could not find the referenced transaction')) {
+              if (attempt < maxRetries) {
+                logger.info(`   Transaction not indexed yet, waiting ${retryDelay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+              } else {
+                logger.warn(`⚠️  Transaction not found after ${maxRetries} attempts: ${transactionHash}`);
+                logger.warn(`   Using fallback game ID.`);
+              }
+            } else {
+              // Log other errors with more detail
+              logger.error(`Transaction verification error:`, err.message);
+              break;
+            }
+          }
         }
+      } else if (isMockTransaction) {
+        logger.info(`🧪 Development Mode: Skipping verification for mock transaction`);
+        logger.info(`   Transaction hash: ${transactionHash}`);
+        logger.info(`   Note: Deploy smart contract and use real transactions for production`);
       }
-      
-      // Generate unique game ID
-      const gameId = uuidv4();
+
+
+      // Fallback if game ID couldn't be extracted
+      if (gameId === null) {
+        // Use timestamp-based numeric ID as fallback
+        gameId = Date.now() % 1000000000;
+        logger.warn(`⚠️  Using fallback numeric game_id: ${gameId}`);
+      }
+
       const betAmountMist = octToMist(tier.amount);
-      
+
       // Create game object
+      const isPrivate = roomType === 'private';
+      const joinCode = isPrivate ? this.generateJoinCode() : null;
+
       const game = {
         game_id: gameId,
         bet_tier: betTierId,
@@ -78,21 +252,36 @@ export class GameManager {
         player2: null,
         player1_score: null,
         player2_score: null,
+        player1_lives: 3,
+        player2_lives: 3,
         winner: null,
-        state: 'waiting', // waiting, in_progress, completed, cancelled
+        state: 'waiting', // waiting, countdown, in_progress, completed, cancelled
+        room_type: roomType, // 'public' or 'private'
+        join_code: joinCode, // 6-char code for private rooms
+        join_code_expires_at: isPrivate ? new Date(Date.now() + 5 * 60 * 1000).toISOString() : null, // 5-minute expiry for private codes
+        countdown_start_at: null, // Server time when countdown begins (set on join)
+        game_start_at: null, // Server time when game actually starts
         created_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + this.config.gameTimeout).toISOString(),
         transaction_hash: transactionHash,
-        verified: !!transactionHash
+        verified: !!transactionHash,
+        game_timer: null,
+        forfeit_by: null // Track who forfeited if applicable
       };
-      
+
       // Store in cache
       this.activeGames.set(gameId, game);
-      
+
+      // Store join code mapping for private rooms
+      if (joinCode) {
+        this.joinCodes.set(joinCode, gameId);
+        logger.info(`🔐 Private room created with join code: ${joinCode}`);
+      }
+
       // Update player's active games
       playerActiveGames.push(gameId);
       this.playerGames.set(player1Address, playerActiveGames);
-      
+
       // Store in database
       const { data, error } = await this.supabase
         .from('multiplayer_games')
@@ -102,6 +291,8 @@ export class GameManager {
           bet_amount: betAmountMist.toString(),
           pool_amount: (betAmountMist * 2n).toString(),
           status: 'waiting',
+          room_type: roomType,
+          join_code: joinCode,
           player1_address: player1Address,
           player1_tx_hash: transactionHash,
           created_at: game.created_at,
@@ -109,7 +300,7 @@ export class GameManager {
         })
         .select()
         .single();
-      
+
       if (error) {
         logger.error('Error storing game in database:', JSON.stringify(error, null, 2));
         logger.error('Error details:', {
@@ -123,109 +314,218 @@ export class GameManager {
       } else {
         logger.info('✅ Game stored in database successfully');
       }
-      
-      // Broadcast to all clients
-      this.io.to('games:all').emit('game:created', game);
-      this.io.to(`games:tier:${betTierId}`).emit('game:created', game);
-      
-      logger.info(`Game created: ${gameId} by ${player1Address} (${tier.amount} OCT)`);
-      
+
+      // Only broadcast PUBLIC games to the game list
+      // Private games should only be joinable via code
+      if (roomType === 'public') {
+        this.io.to('games:all').emit('game:created', game);
+        this.io.to(`games:tier:${betTierId}`).emit('game:created', game);
+      }
+
+      logger.info(`Game created: ${gameId} by ${player1Address.slice(0, 10)}... (${tier.amount} OCT, ${roomType})${joinCode ? ` [Code: ${joinCode}]` : ''}`);
+
       return { success: true, game };
     } catch (error) {
       logger.error('Error creating game:', error);
       throw error;
     }
   }
-  
+
   /**
    * Join an existing game
    * Backend validates and processes the join
    */
   async joinGame({ gameId, player2Address, transactionHash }) {
     try {
+      // Convert gameId to number (comes as string from URL params)
+      const numericGameId = typeof gameId === 'string' ? parseInt(gameId) : gameId;
+
       // Get game from cache
-      const game = this.activeGames.get(gameId);
-      
+      const game = this.activeGames.get(numericGameId);
+
       if (!game) {
         throw new Error('Game not found');
       }
-      
+
       if (game.state !== 'waiting') {
         throw new Error('Game is not available');
       }
-      
+
       // Log the comparison for debugging
       logger.info(`Join check - Player1: "${game.player1}", Player2: "${player2Address}"`);
       logger.info(`Addresses match: ${game.player1 === player2Address}`);
-      
+
       if (game.player1 === player2Address) {
         throw new Error('Cannot join your own game');
       }
-      
+
       // Check if game has expired
       if (new Date(game.expires_at) < new Date()) {
-        await this.cancelGame(gameId, 'expired');
+        await this.cancelGame(numericGameId, 'expired');
         throw new Error('Game has expired');
       }
-      
+
       // Verify transaction (optional)
-      if (transactionHash) {
+      const isMockTransaction = transactionHash && transactionHash.startsWith('0xDEV');
+
+      if (transactionHash && !isMockTransaction) {
+        logger.info(`🔍 Verifying join transaction: ${transactionHash}`);
         const isValid = await this.verifyTransaction(transactionHash, player2Address);
         if (!isValid) {
-          logger.warn(`Invalid transaction hash for game join: ${transactionHash}`);
+          logger.warn(`⚠️ Join transaction verification failed for: ${transactionHash}`);
+          logger.warn('   Continuing anyway (verification is optional in current mode)');
+          // In production, you might want to reject the join here
+          // throw new Error('Invalid transaction hash');
+        } else {
+          logger.info(`✅ Join transaction verified successfully`);
         }
+      } else if (isMockTransaction) {
+        logger.info(`🧪 Development Mode: Skipping verification for mock join transaction`);
       }
-      
-      // Update game
+
+      // Update game with countdown sync
+      const countdownStartAt = Date.now();
+      const gameStartAt = countdownStartAt + this.config.countdownDuration; // 3 seconds later
+
       game.player2 = player2Address;
-      game.state = 'in_progress';
+      game.state = 'countdown'; // First enter countdown state
+      game.countdown_start_at = countdownStartAt;
+      game.game_start_at = gameStartAt;
       game.started_at = new Date().toISOString();
       game.join_transaction_hash = transactionHash;
-      
+
+      // Remove join code from lookup (no longer needed)
+      if (game.join_code) {
+        this.joinCodes.delete(game.join_code);
+      }
+
+      // Start the game after countdown completes
+      const self = this;
+      setTimeout(() => {
+        const g = self.activeGames.get(numericGameId);
+        if (g && g.state === 'countdown') {
+          g.state = 'in_progress';
+          self.activeGames.set(numericGameId, g);
+          logger.info(`▶️ Game ${numericGameId} now IN PROGRESS`);
+
+          // Notify both players game has started
+          self.io.to(`player:${g.player1}`).emit('game:started', { game_id: numericGameId });
+          self.io.to(`player:${g.player2}`).emit('game:started', { game_id: numericGameId });
+        }
+      }, this.config.countdownDuration);
+
+      // Start 60-second game timer (starts after countdown)
+      setTimeout(() => {
+        game.game_timer = setTimeout(async () => {
+          logger.info(`⏰ 60-second timer expired for game ${numericGameId}`);
+          await self.finalizeGameByTimeout(numericGameId);
+        }, 60000); // 60 seconds
+      }, this.config.countdownDuration);
+
       // Update cache
-      this.activeGames.set(gameId, game);
-      
+      this.activeGames.set(numericGameId, game);
+
       // Update player's active games
       const player2ActiveGames = this.playerGames.get(player2Address) || [];
-      player2ActiveGames.push(gameId);
+      player2ActiveGames.push(numericGameId);
       this.playerGames.set(player2Address, player2ActiveGames);
-      
-      // Update database
+
+      // Update database - use 'player2', 'state', and 'player2_tx_hash' to match current schema
       const { error } = await this.supabase
         .from('multiplayer_games')
         .update({
           player2: player2Address,
+          player2_tx_hash: transactionHash,
           state: 'in_progress',
           started_at: game.started_at,
-          join_transaction_hash: transactionHash
+          player2_lives: 3
         })
-        .eq('game_id', gameId);
-      
+        .eq('game_id', numericGameId);
+
       if (error) {
-        logger.error('Error updating game in database:', error);
+        logger.error('Error updating game in database:', error.message);
+        // Don't fail the join if database update fails - game is in memory
+        logger.warn('   Game joined in memory but database update failed');
       }
-      
+
       // Notify both players directly
       logger.info(`Notifying players - Player1: ${game.player1}, Player2: ${player2Address}`);
-      this.io.to(`player:${game.player1}`).emit('game:joined', game);
-      this.io.to(`player:${player2Address}`).emit('game:joined', game);
-      
+
+      // Create a clean game object without circular references (remove timer)
+      const gameData = {
+        game_id: game.game_id,
+        bet_tier: game.bet_tier,
+        bet_amount: game.bet_amount,
+        bet_amount_oct: game.bet_amount_oct,
+        player1: game.player1,
+        player2: game.player2,
+        player1_score: game.player1_score,
+        player2_score: game.player2_score,
+        player1_lives: game.player1_lives,
+        player2_lives: game.player2_lives,
+        winner: game.winner,
+        state: game.state,
+        room_type: game.room_type,
+        countdown_start_at: game.countdown_start_at,
+        game_start_at: game.game_start_at,
+        countdown_duration: this.config.countdownDuration,
+        created_at: game.created_at,
+        started_at: game.started_at,
+        expires_at: game.expires_at,
+        transaction_hash: game.transaction_hash,
+        join_transaction_hash: game.join_transaction_hash,
+        verified: game.verified
+      };
+
+      this.io.to(`player:${game.player1}`).emit('game:joined', gameData);
+      this.io.to(`player:${player2Address}`).emit('game:joined', gameData);
+
       // Also broadcast to global listeners (for MultiplayerLobby)
-      this.io.emit('game_joined', game);
-      
+      this.io.emit('game_joined', gameData);
+
       // Remove from public game lists
-      this.io.to('games:all').emit('game:started', { game_id: gameId });
-      this.io.to(`games:tier:${game.bet_tier}`).emit('game:started', { game_id: gameId });
-      
-      logger.info(`Game joined: ${gameId} by ${player2Address}`);
-      
-      return { success: true, game };
+      this.io.to('games:all').emit('game:started', { game_id: numericGameId });
+      this.io.to(`games:tier:${game.bet_tier}`).emit('game:started', { game_id: numericGameId });
+
+      logger.info(`Game joined: ${numericGameId} by ${player2Address}`);
+
+      return { success: true, game: gameData };
     } catch (error) {
       logger.error('Error joining game:', error);
       throw error;
     }
   }
-  
+
+  /**
+   * Join a game using a private room join code
+   * @param {Object} params
+   * @param {string} params.joinCode - 6-char join code
+   * @param {string} params.player2Address - Joining player's wallet address  
+   * @param {string} params.transactionHash - On-chain transaction hash
+   */
+  async joinByCode({ joinCode, player2Address, transactionHash }) {
+    const code = joinCode.toUpperCase();
+
+    if (!this.joinCodes.has(code)) {
+      throw new Error('Invalid or expired join code');
+    }
+
+    const gameId = this.joinCodes.get(code);
+    const game = this.activeGames.get(gameId);
+
+    // Check if join code has expired (5 minutes since creation)
+    if (game && game.join_code_expires_at && new Date(game.join_code_expires_at) < new Date()) {
+      this.joinCodes.delete(code);
+      logger.info(`⏰ Join code ${code} expired for game ${gameId}`);
+      throw new Error('Join code has expired (5-minute limit)');
+    }
+
+    logger.info(`🔑 Join by code: ${code} → Game ${gameId}`);
+
+    // Delegate to regular joinGame
+    return this.joinGame({ gameId, player2Address, transactionHash });
+  }
+
   /**
    * Submit game score - BACKEND VALIDATION CRITICAL
    * Frontend sends game events, backend calculates and validates score
@@ -233,34 +533,67 @@ export class GameManager {
    */
   async submitScore({ gameId, playerAddress, gameEvents, finalScore }) {
     try {
-      const game = this.activeGames.get(gameId);
-      
+      // Convert gameId to number (comes as string from URL params)
+      const numericGameId = typeof gameId === 'string' ? parseInt(gameId) : gameId;
+
+      const game = this.activeGames.get(numericGameId);
+
+      logger.info(`📊 ═══════════════════════════════════════════════════════`);
+      logger.info(`📊 SCORE SUBMISSION - Game: ${numericGameId}`);
+      logger.info(`📊 Player: ${playerAddress}`);
+
       if (!game) {
+        logger.error(`❌ Game ${numericGameId} not found in cache (may have been removed already)`);
+        logger.error(`   This usually means the game completed >2 minutes ago`);
         throw new Error('Game not found');
       }
-      
-      if (game.state !== 'in_progress') {
-        throw new Error('Game is not in progress');
+
+      logger.info(`📊 Current game state: ${game.state}`);
+      logger.info(`📊 Player1 (${game.player1}): ${game.player1_score === null ? 'not submitted' : game.player1_score}`);
+      logger.info(`📊 Player2 (${game.player2}): ${game.player2_score === null ? 'not submitted' : game.player2_score}`);
+      logger.info(`📊 Claimed score: ${finalScore}`);
+
+      // Allow submissions during 'in_progress' or 'finalizing' states
+      // For 'completed' games, gracefully ignore (game may have ended due to life_loss)
+      if (game.state === 'completed') {
+        logger.info(`ℹ️ Game already completed - ignoring score submission`);
+        return {
+          success: true,
+          gameId: numericGameId,
+          score: finalScore,
+          validated: false,
+          message: 'Game already completed',
+          alreadyCompleted: true,
+          game
+        };
       }
-      
+
+      if (game.state !== 'in_progress' && game.state !== 'finalizing') {
+        logger.error(`❌ Game state invalid for submission: ${game.state}`);
+        throw new Error(`Game is not in progress (current state: ${game.state})`);
+      }
+
       if (playerAddress !== game.player1 && playerAddress !== game.player2) {
+        logger.error(`❌ Player ${playerAddress} not in game (Player1: ${game.player1}, Player2: ${game.player2})`);
         throw new Error('Player not in this game');
       }
-      
-      // Check if game is already being finalized
-      if (game.state === 'finalizing') {
-        logger.info(`Game ${gameId} already finalizing, accepting late score`);
+
+      // Check if this player already submitted
+      const isPlayer1 = playerAddress === game.player1;
+      if ((isPlayer1 && game.player1_score !== null) || (!isPlayer1 && game.player2_score !== null)) {
+        logger.info(`ℹ️ Player ${playerAddress} already submitted score, ignoring duplicate`);
+        logger.info(`📊 ═══════════════════════════════════════════════════════`);
+        return { success: true, validatedScore: isPlayer1 ? game.player1_score : game.player2_score };
       }
-      
+
       // CRITICAL: Backend validates the score
       const validatedScore = await this.validateGameScore(gameEvents, finalScore);
-      
+
       if (validatedScore === null) {
         throw new Error('Invalid game score - validation failed');
       }
-      
+
       // Store score
-      const isPlayer1 = playerAddress === game.player1;
       if (isPlayer1) {
         game.player1_score = validatedScore;
         game.player1_events = gameEvents;
@@ -270,55 +603,198 @@ export class GameManager {
         game.player2_events = gameEvents;
         game.player2_submitted_at = new Date().toISOString();
       }
-      
-      logger.info(`Score submitted for game ${gameId} by ${playerAddress}: ${validatedScore}`);
-      
-      // RACE MODE: First player to submit ends the game immediately
-      const isFirstToFinish = (isPlayer1 && game.player2_score === null) || 
-                              (!isPlayer1 && game.player1_score === null);
-      
-      if (isFirstToFinish) {
+
+      // Update cache immediately
+      this.activeGames.set(gameId, game);
+
+      logger.info(`✅ Score stored: ${validatedScore} (claimed: ${finalScore})`);
+
+      // Check if both players have now submitted
+      const bothSubmitted = game.player1_score !== null && game.player2_score !== null;
+
+      if (bothSubmitted) {
+        // Both players submitted, finalize immediately
+        logger.info(`🏁 Both players finished! Finalizing game NOW.`);
+        logger.info(`📊 ═══════════════════════════════════════════════════════`);
+        await this.finalizeGame(gameId);
+      } else {
+        // This is the first player to finish
         logger.info(`🏁 ${playerAddress} finished FIRST! Ending game immediately for both players.`);
-        
-        // Mark game as finalizing to prevent race conditions
-        game.state = 'finalizing';
-        this.activeGames.set(gameId, game);
-        
+
+        // Mark game as finalizing to indicate race is over
+        if (game.state === 'in_progress') {
+          game.state = 'finalizing';
+          this.activeGames.set(gameId, game);
+          logger.info(`   Game state changed: in_progress → finalizing`);
+        }
+
         // Notify opponent that they lost (first to finish wins)
         const opponentAddress = isPlayer1 ? game.player2 : game.player1;
+
+        logger.info(`📡 Broadcasting opponent_finished_first to: ${opponentAddress}`);
+
+        // Broadcast to both socket rooms and global
         this.io.to(`player:${opponentAddress}`).emit('game:opponent_finished_first', {
           game_id: gameId,
           opponent: playerAddress,
           opponentScore: validatedScore,
           message: 'Opponent finished! Game ending...'
         });
-        
-        // Give opponent 2 seconds to submit their current score, then finalize
+
+        this.io.emit('game:opponent_finished_first', {
+          game_id: gameId,
+          opponent: playerAddress,
+          opponentScore: validatedScore,
+          message: 'Opponent finished! Game ending...'
+        });
+
+        logger.info(`   Waiting 5 seconds for opponent submission...`);
+        logger.info(`📊 ═══════════════════════════════════════════════════════`);
+
+        // Give opponent 5 seconds to submit their current score, then finalize
         setTimeout(async () => {
-          // If opponent hasn't submitted yet, use score of 0
-          if (isPlayer1 && game.player2_score === null) {
-            game.player2_score = 0;
-            logger.info(`Player2 did not submit in time, using score 0`);
-          } else if (!isPlayer1 && game.player1_score === null) {
-            game.player1_score = 0;
-            logger.info(`Player1 did not submit in time, using score 0`);
+          const currentGame = this.activeGames.get(gameId);
+          if (!currentGame) {
+            logger.warn(`⚠️ Game ${gameId} no longer exists, skipping timeout finalization`);
+            return;
           }
-          
+
+          // Check if game already completed (both players submitted)
+          if (currentGame.state === 'completed') {
+            logger.info(`ℹ️ Game ${gameId} already completed by both players, skipping timeout finalization`);
+            return;
+          }
+
+          logger.info(`⏰ 5-second grace period expired for game ${gameId}`);
+
+          // If opponent still hasn't submitted, use score of 0
+          if (isPlayer1 && currentGame.player2_score === null) {
+            currentGame.player2_score = 0;
+            logger.info(`   Player2 did not submit in time, using score 0`);
+          } else if (!isPlayer1 && currentGame.player1_score === null) {
+            currentGame.player1_score = 0;
+            logger.info(`   Player1 did not submit in time, using score 0`);
+          }
+
+          this.activeGames.set(gameId, currentGame);
           await this.finalizeGame(gameId);
-        }, 2000);
-      } else {
-        // Both players submitted, finalize immediately
-        logger.info(`🏁 Both players finished! Finalizing game.`);
-        await this.finalizeGame(gameId);
+        }, 5000);
       }
-      
+
       return { success: true, validatedScore };
     } catch (error) {
       logger.error('Error submitting score:', error);
       throw error;
     }
   }
-  
+
+  /**
+   * NEW: Update player lives in real-time
+   * Called when a player loses a life (hits bomb or misses fruit)
+   * Ends game immediately if a player reaches 0 lives
+   */
+  async updatePlayerLives({ gameId, playerAddress, lives, score }) {
+    try {
+      // Convert gameId to number (comes as string from URL params)
+      const numericGameId = typeof gameId === 'string' ? parseInt(gameId) : gameId;
+
+      const game = this.activeGames.get(numericGameId);
+
+      if (!game) {
+        throw new Error('Game not found');
+      }
+
+      // Gracefully ignore updates for completed games (may happen due to race conditions)
+      if (game.state === 'completed') {
+        logger.info(`ℹ️ Game ${numericGameId} already completed - ignoring lives update`);
+        return {
+          success: true,
+          lives: game.player1_lives,
+          player2_lives: game.player2_lives,
+          alreadyCompleted: true
+        };
+      }
+
+      if (game.state !== 'in_progress') {
+        throw new Error('Game is not in progress');
+      }
+
+      const isPlayer1 = game.player1 === playerAddress;
+      const isPlayer2 = game.player2 === playerAddress;
+
+      if (!isPlayer1 && !isPlayer2) {
+        throw new Error('Player not in this game');
+      }
+
+      // Update lives and score
+      if (isPlayer1) {
+        game.player1_lives = lives;
+        game.player1_score = score;
+      } else {
+        game.player2_lives = lives;
+        game.player2_score = score;
+      }
+
+      this.activeGames.set(numericGameId, game);
+
+      // Broadcast life update to both players
+      this.io.to(`player:${game.player1}`).emit('game:lives_update', {
+        game_id: numericGameId,
+        player1_lives: game.player1_lives,
+        player2_lives: game.player2_lives,
+        player1_score: game.player1_score,
+        player2_score: game.player2_score
+      });
+
+      this.io.to(`player:${game.player2}`).emit('game:lives_update', {
+        game_id: numericGameId,
+        player1_lives: game.player1_lives,
+        player2_lives: game.player2_lives,
+        player1_score: game.player1_score,
+        player2_score: game.player2_score
+      });
+
+      logger.info(`💚 Lives updated for ${numericGameId}: P1=${game.player1_lives}, P2=${game.player2_lives}, Scores: P1=${game.player1_score}, P2=${game.player2_score}`);
+
+      // Check if THIS specific player reached 0 lives - INSTANT GAME END
+      // IMPORTANT: Only end when ONE player hits 0, not when both have lost some lives
+      if (lives === 0) {
+        logger.info(`💀 Player ${playerAddress} lost ALL 3 lives! Ending game immediately.`);
+        logger.info(`   Loser: ${playerAddress} (0 lives)`);
+        logger.info(`   Winner: ${isPlayer1 ? game.player2 : game.player1} (${isPlayer1 ? game.player2_lives : game.player1_lives} lives)`);
+
+        // Prevent game from ending twice
+        if (game.state === 'completed') {
+          logger.warn(`   Game already completed, skipping instant end`);
+          return { success: true, lives: game.player1_lives, player2_lives: game.player2_lives };
+        }
+
+        // Clear the 60-second timer
+        if (game.game_timer) {
+          clearTimeout(game.game_timer);
+          game.game_timer = null;
+          logger.info(`   60-second timer cleared`);
+        }
+
+        // Determine winner (the other player who still has lives)
+        const winner = isPlayer1 ? game.player2 : game.player1;
+        game.winner = winner;
+        game.state = 'completed'; // Mark as completed to prevent double finalization
+        this.activeGames.set(numericGameId, game);
+
+        logger.info(`   Finalizing game with instant loss...`);
+
+        // Finalize game with instant loss condition
+        await this.finalizeGameInstant(numericGameId, 'life_loss');
+      }
+
+      return { success: true, lives: game.player1_lives, player2_lives: game.player2_lives };
+    } catch (error) {
+      logger.error('Error updating player lives:', error);
+      throw error;
+    }
+  }
+
   /**
    * Finalize game and determine winner
    * Backend calculates winner securely
@@ -326,11 +802,22 @@ export class GameManager {
   async finalizeGame(gameId) {
     try {
       const game = this.activeGames.get(gameId);
-      
+
       if (!game) {
-        throw new Error('Game not found');
+        logger.warn(`⚠️ Game ${gameId} not found for finalization (already removed?)`);
+        return { success: false, error: 'Game not found' };
       }
-      
+
+      // Check if already finalized
+      if (game.state === 'completed') {
+        logger.info(`ℹ️ Game ${gameId} already completed, skipping finalization`);
+        return { success: true, game };
+      }
+
+      logger.info(`🏁 Finalizing game ${gameId}...`);
+      logger.info(`   Player1 (${game.player1}): ${game.player1_score}`);
+      logger.info(`   Player2 (${game.player2}): ${game.player2_score}`);
+
       // Determine winner
       let winner = null;
       if (game.player1_score > game.player2_score) {
@@ -338,75 +825,267 @@ export class GameManager {
       } else if (game.player2_score > game.player1_score) {
         winner = game.player2;
       } // else it's a draw
-      
+
       game.winner = winner;
       game.state = 'completed';
       game.completed_at = new Date().toISOString();
-      
+
       // Calculate winnings (winner takes pot minus platform fee)
       const totalPot = BigInt(game.bet_amount) * 2n;
-      const platformFee = totalPot * 5n / 100n; // 5% platform fee
+      const platformFee = totalPot * 2n / 100n; // 2% platform fee (as specified)
       const winnings = totalPot - platformFee;
-      
+
       game.winnings = winner ? winnings.toString() : '0';
       game.platform_fee = platformFee.toString();
-      
+
       // Update cache
       this.activeGames.set(gameId, game);
-      
+
       // Update database
       await this.supabase
         .from('multiplayer_games')
         .update({
           winner,
-          state: 'completed',
+          status: 'completed',
           completed_at: game.completed_at,
-          winnings: game.winnings,
-          platform_fee: game.platform_fee
+          winner_payout: game.winnings,
+          platform_fee: game.platform_fee,
+          player1_score: game.player1_score,
+          player2_score: game.player2_score
         })
         .eq('game_id', gameId);
-      
-      // Notify both players
+
+      // Notify both players via their rooms
       this.io.to(`player:${game.player1}`).emit('game:completed', game);
       this.io.to(`player:${game.player2}`).emit('game:completed', game);
-      
-      // Remove from active games
-      this.removeGameFromActive(gameId);
-      
-      logger.info(`Game completed: ${gameId}, Winner: ${winner || 'draw'}`);
-      
+
+      // Also broadcast globally to ensure both clients receive it
+      this.io.emit('game_completed', game);
+
+      // Keep game in cache for 2 minutes so both players can query final results
+      // This prevents "Game not found" errors from delayed score submissions
+      setTimeout(() => {
+        this.removeGameFromActive(gameId);
+        logger.info(`🗑️ Game ${gameId} removed from cache after 2-minute grace period`);
+      }, 120000);
+
+      logger.info(`✅ Game completed: ${gameId}, Winner: ${winner || 'draw'}, Player1: ${game.player1_score}, Player2: ${game.player2_score}`);
+
       return { success: true, game };
     } catch (error) {
       logger.error('Error finalizing game:', error);
       throw error;
     }
   }
-  
+
+  /**
+   * NEW: Finalize game instantly when a player loses all lives
+   * Winner is automatically the opponent
+   */
+  async finalizeGameInstant(gameId, reason = 'life_loss') {
+    try {
+      const game = this.activeGames.get(gameId);
+
+      if (!game) {
+        logger.warn(`Game ${gameId} not found for instant finalization`);
+        throw new Error('Game not found');
+      }
+
+      // Prevent double finalization
+      if (game.finalized) {
+        logger.warn(`Game ${gameId} already finalized, skipping duplicate`);
+        return { success: true, game };
+      }
+
+      logger.info(`🏁 Instant finalization for ${gameId} - Reason: ${reason}`);
+      logger.info(`   Winner: ${game.winner}`);
+      logger.info(`   Player 1 lives: ${game.player1_lives}, Player 2 lives: ${game.player2_lives}`);
+
+      game.state = 'completed';
+      game.completed_at = new Date().toISOString();
+      game.end_reason = reason; // 'forfeit', 'life_loss', 'timeout', 'disconnect'
+      game.finalized = true; // Mark as finalized to prevent duplicate calls
+
+      // Calculate winnings based on end reason
+      // Forfeit/Disconnect: Winner gets 1.6x stake (80%), Platform gets 0.4x (20%)
+      // Normal win (life_loss/timeout): Winner gets 98% of pot, Platform gets 2%
+      const stake = BigInt(game.bet_amount);
+      const totalPot = stake * 2n;
+
+      let winnings, platformFee;
+
+      if (reason === 'forfeit' || reason === 'disconnect') {
+        // Forfeit payout: Winner gets 1.6x their stake, platform keeps 0.4x
+        winnings = stake * 160n / 100n; // 1.6x stake = 80% of pot
+        platformFee = stake * 40n / 100n; // 0.4x stake = 20% of pot
+        logger.info(`   FORFEIT PAYOUT (80/20 split)`);
+      } else {
+        // Normal win (life_loss, timeout): 98% winner, 2% platform
+        platformFee = totalPot * 2n / 100n; // 2%
+        winnings = totalPot - platformFee; // 98%
+        logger.info(`   NORMAL PAYOUT (98/2 split)`);
+      }
+
+      game.winnings = game.winner ? winnings.toString() : '0';
+      game.platform_fee = platformFee.toString();
+
+      logger.info(`   Total Pot: ${mistToOct(totalPot)} OCT`);
+      logger.info(`   Platform Fee: ${mistToOct(platformFee)} OCT`);
+      logger.info(`   Winner Gets: ${game.winner ? mistToOct(winnings) : '0'} OCT`);
+
+      // Update cache
+      this.activeGames.set(gameId, game);
+
+      // Update database
+      await this.supabase
+        .from('multiplayer_games')
+        .update({
+          winner: game.winner,
+          status: 'completed',
+          completed_at: game.completed_at,
+          winner_payout: game.winnings,
+          platform_fee: game.platform_fee,
+          player1_score: game.player1_score,
+          player2_score: game.player2_score
+        })
+        .eq('game_id', gameId);
+
+      // ⛓️ ON-CHAIN SETTLEMENT: Transfer winnings to winner
+      // This calls the smart contract to actually move funds
+      if (reason === 'forfeit' || reason === 'disconnect') {
+        // Use forfeit_game for forfeits/disconnects
+        const forfeiter = reason === 'forfeit' ? game.forfeit_by :
+          (game.player1 === game.winner ? game.player2 : game.player1);
+        const settlementResult = await onChainSettlement.forfeitGame(game, forfeiter);
+        if (settlementResult.success) {
+          game.settlement_tx = settlementResult.digest;
+          logger.info(`⛓️  On-chain forfeit recorded: ${settlementResult.digest}`);
+        } else {
+          logger.warn(`⚠️  On-chain forfeit failed: ${settlementResult.reason}`);
+        }
+      } else {
+        // Use submit_score for normal completions (life_loss, timeout)
+        const settlementResult = await onChainSettlement.settleGame(game);
+        if (settlementResult.success) {
+          game.settlement_tx = settlementResult.digest;
+          logger.info(`⛓️  On-chain settlement complete: ${settlementResult.digest}`);
+        } else {
+          logger.warn(`⚠️  On-chain settlement failed: ${settlementResult.reason}`);
+        }
+      }
+
+      // Notify both players - DEBUG: Log socket rooms and emission
+      logger.info(`📢 Emitting game:completed to both players...`);
+      logger.info(`   Player1 room: player:${game.player1}`);
+      logger.info(`   Player2 room: player:${game.player2}`);
+
+      // Check if socket.io is available
+      if (!this.io) {
+        logger.error(`❌ Socket.io instance not available!`);
+      } else {
+        // Get socket room info for debugging
+        const player1Room = this.io.sockets.adapter.rooms.get(`player:${game.player1}`);
+        const player2Room = this.io.sockets.adapter.rooms.get(`player:${game.player2}`);
+
+        logger.info(`   Player1 room sockets: ${player1Room ? player1Room.size : 0}`);
+        logger.info(`   Player2 room sockets: ${player2Room ? player2Room.size : 0}`);
+
+        if (!player1Room || player1Room.size === 0) {
+          logger.warn(`⚠️  Player1 has no connected sockets in room!`);
+        }
+        if (!player2Room || player2Room.size === 0) {
+          logger.warn(`⚠️  Player2 has no connected sockets in room!`);
+        }
+      }
+
+      this.io.to(`player:${game.player1}`).emit('game:completed', game);
+      this.io.to(`player:${game.player2}`).emit('game:completed', game);
+      this.io.emit('game_completed', game);
+
+      logger.info(`✅ game:completed events emitted to both players`);
+
+      // Remove from active games after delay
+      setTimeout(() => {
+        this.removeGameFromActive(gameId);
+        logger.info(`🗑️ Game ${gameId} removed from cache`);
+      }, 120000);
+
+      logger.info(`✅ Game instantly completed: ${gameId}, Winner: ${game.winner}`);
+
+      return { success: true, game };
+    } catch (error) {
+      logger.error('Error instantly finalizing game:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * NEW: Finalize game when 60-second timer expires
+   * Winner is player with higher score
+   */
+  async finalizeGameByTimeout(gameId) {
+    try {
+      const game = this.activeGames.get(gameId);
+
+      if (!game) {
+        logger.warn(`Game ${gameId} not found for timeout finalization`);
+        return;
+      }
+
+      if (game.state === 'completed') {
+        logger.info(`Game ${gameId} already completed, skipping timeout`);
+        return;
+      }
+
+      logger.info(`⏰ Finalizing game ${gameId} by timeout`);
+
+      // Determine winner by score (if both still have lives)
+      let winner = null;
+      const score1 = game.player1_score || 0;
+      const score2 = game.player2_score || 0;
+
+      if (score1 > score2) {
+        winner = game.player1;
+      } else if (score2 > score1) {
+        winner = game.player2;
+      }
+      // If scores are equal, it's a draw
+
+      game.winner = winner;
+
+      await this.finalizeGameInstant(gameId, 'timeout');
+
+      return { success: true, game };
+    } catch (error) {
+      logger.error('Error finalizing game by timeout:', error);
+      throw error;
+    }
+  }
+
   /**
    * Cancel a game (expired, player disconnect, etc.)
    */
   async cancelGame(gameId, reason = 'cancelled') {
     try {
       const game = this.activeGames.get(gameId);
-      
+
       if (!game) {
         return;
       }
-      
+
       game.state = 'cancelled';
       game.cancelled_at = new Date().toISOString();
       game.cancel_reason = reason;
-      
+
       // Update database
       await this.supabase
         .from('multiplayer_games')
         .update({
-          state: 'cancelled',
-          cancelled_at: game.cancelled_at,
-          cancel_reason: reason
+          status: 'cancelled',
+          cancellation_reason: reason
         })
         .eq('game_id', gameId);
-      
+
       // Notify players
       if (game.player1) {
         this.io.to(`player:${game.player1}`).emit('game:cancelled', { game_id: gameId, reason });
@@ -414,16 +1093,16 @@ export class GameManager {
       if (game.player2) {
         this.io.to(`player:${game.player2}`).emit('game:cancelled', { game_id: gameId, reason });
       }
-      
+
       // Remove from active games
       this.removeGameFromActive(gameId);
-      
+
       logger.info(`Game cancelled: ${gameId}, Reason: ${reason}`);
     } catch (error) {
       logger.error('Error cancelling game:', error);
     }
   }
-  
+
   /**
    * Validate game score based on game events
    * CRITICAL SECURITY FUNCTION
@@ -434,11 +1113,11 @@ export class GameManager {
         logger.warn('Invalid game events format');
         return null;
       }
-      
+
       let calculatedScore = 0;
       let combo = 0;
       let lastEventTime = 0;
-      
+
       // Validate each game event
       for (const event of gameEvents) {
         // Event must have required fields
@@ -446,14 +1125,14 @@ export class GameManager {
           logger.warn('Invalid event structure');
           return null;
         }
-        
+
         // Events must be in chronological order
         if (event.timestamp < lastEventTime) {
           logger.warn('Events not in chronological order');
           return null;
         }
         lastEventTime = event.timestamp;
-        
+
         // Validate event types
         if (event.type === 'slash') {
           // Validate points are within reasonable range
@@ -461,19 +1140,19 @@ export class GameManager {
             logger.warn(`Invalid slash points: ${event.points}`);
             return null;
           }
-          
+
           // Update combo
           combo++;
-          
+
           // Calculate score with combo multiplier
           const comboMultiplier = Math.min(combo / 10, 3); // Max 3x multiplier
           const points = Math.floor(event.points * (1 + comboMultiplier));
           calculatedScore += points;
-          
+
         } else if (event.type === 'miss') {
           // Reset combo on miss
           combo = 0;
-          
+
         } else if (event.type === 'special') {
           // Validate special token points
           if (event.points < 0 || event.points > 500) {
@@ -483,30 +1162,45 @@ export class GameManager {
           calculatedScore += event.points;
         }
       }
-      
+
       // Allow small variance for timing differences (max 5%)
       const variance = Math.abs(calculatedScore - claimedScore);
       const maxAllowedVariance = calculatedScore * 0.05;
-      
+
       if (variance > maxAllowedVariance) {
         logger.warn(`Score validation failed: calculated=${calculatedScore}, claimed=${claimedScore}`);
         return null;
       }
-      
+
       // Return server-validated score
       return calculatedScore;
-      
+
     } catch (error) {
       logger.error('Error validating score:', error);
       return null;
     }
   }
-  
+
   /**
    * Verify transaction on OneChain
+   * Returns true if verified, false otherwise
+   * Non-blocking - logs errors but doesn't throw
    */
   async verifyTransaction(txHash, expectedSender) {
     try {
+      if (!txHash) {
+        logger.warn('No transaction hash provided for verification');
+        return false;
+      }
+
+      // Skip verification for simulated transactions (start with 0x, used in development)
+      if (txHash.startsWith('0x')) {
+        logger.info(`   Simulated transaction detected, skipping verification: ${txHash.substring(0, 20)}...`);
+        return true; // Accept simulated transactions in development mode
+      }
+
+      logger.info(`   Querying blockchain for tx: ${txHash.substring(0, 20)}...`);
+
       const tx = await suiClient.getTransactionBlock({
         digest: txHash,
         options: {
@@ -515,38 +1209,41 @@ export class GameManager {
           showEvents: true
         }
       });
-      
+
       if (!tx) {
+        logger.warn(`   Transaction not found on chain`);
         return false;
       }
-      
+
       // Verify sender matches
       const sender = tx.transaction?.data?.sender;
       if (sender !== expectedSender) {
-        logger.warn(`Transaction sender mismatch: expected ${expectedSender}, got ${sender}`);
+        logger.warn(`   Sender mismatch: expected ${expectedSender}, got ${sender}`);
         return false;
       }
-      
+
       // Verify transaction was successful
       if (tx.effects?.status?.status !== 'success') {
-        logger.warn(`Transaction not successful: ${txHash}`);
+        logger.warn(`   Transaction status: ${tx.effects?.status?.status || 'unknown'}`);
         return false;
       }
-      
+
+      logger.info(`   Transaction verified: sender=${sender}, status=success`);
       return true;
     } catch (error) {
-      logger.error('Error verifying transaction:', error);
+      // Don't throw - just log and return false
+      logger.warn(`   Transaction verification error: ${error.message}`);
       return false;
     }
   }
-  
+
   /**
    * Get available games for matchmaking
    */
   getAvailableGames(betTier = null) {
     const now = new Date();
     const games = [];
-    
+
     for (const [gameId, game] of this.activeGames) {
       // Only return waiting games that haven't expired
       if (game.state === 'waiting' && new Date(game.expires_at) > now) {
@@ -562,38 +1259,41 @@ export class GameManager {
             bet_amount: game.bet_amount,
             bet_amount_oct: game.bet_amount_oct,
             state: game.state,
+            room_type: game.room_type, // CRITICAL: Include room_type for filtering
+            join_code: game.join_code, // Include for private room matching
             created_at: game.created_at,
             expires_at: game.expires_at
           });
         }
       }
     }
-    
+
     return games;
   }
-  
+
+
   /**
    * Handle player disconnect
    */
   async handlePlayerDisconnect(address) {
     const playerGames = this.playerGames.get(address) || [];
-    
+
     for (const gameId of playerGames) {
       const game = this.activeGames.get(gameId);
-      
+
       if (game && game.state === 'waiting') {
         // Cancel waiting games on disconnect
         await this.cancelGame(gameId, 'player_disconnect');
       }
     }
   }
-  
+
   /**
    * Handle database changes from Supabase realtime
    */
   handleDatabaseChange(payload) {
     const { eventType, new: newRecord } = payload;
-    
+
     if (eventType === 'UPDATE' && newRecord) {
       // Sync cache with database updates
       if (this.activeGames.has(newRecord.game_id)) {
@@ -602,13 +1302,13 @@ export class GameManager {
       }
     }
   }
-  
+
   /**
    * Remove game from active tracking
    */
   removeGameFromActive(gameId) {
     const game = this.activeGames.get(gameId);
-    
+
     if (game) {
       // Remove from player tracking
       [game.player1, game.player2].forEach(address => {
@@ -625,12 +1325,12 @@ export class GameManager {
           }
         }
       });
-      
+
       // Remove from active games
       this.activeGames.delete(gameId);
     }
   }
-  
+
   /**
    * Periodic cleanup of expired games
    */
@@ -638,23 +1338,23 @@ export class GameManager {
     setInterval(async () => {
       const now = new Date();
       const expiredGames = [];
-      
+
       for (const [gameId, game] of this.activeGames) {
         if (new Date(game.expires_at) < now && game.state === 'waiting') {
           expiredGames.push(gameId);
         }
       }
-      
+
       for (const gameId of expiredGames) {
         await this.cancelGame(gameId, 'expired');
       }
-      
+
       if (expiredGames.length > 0) {
         logger.info(`Cleaned up ${expiredGames.length} expired games`);
       }
     }, this.config.cleanupInterval);
   }
-  
+
   /**
    * Cleanup on shutdown
    */

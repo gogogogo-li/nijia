@@ -13,12 +13,12 @@
   --color-charcoal-700: rgba(31, 33, 33, 1);
   --color-charcoal-800: rgba(38, 40, 40, 1);
   --color-slate-900: rgba(19, 52, 59, 1);
-  --color-teal-300: rgba(46, 216, 167, 1); 
-  --color-teal-400: rgba(41, 194, 150, 1); /* Slightly darker */
-  --color-teal-500: rgba(35, 172, 133, 1); 
-  --color-teal-600: rgba(31, 155, 120, 1); /* Darker variant */
-  --color-teal-700: rgba(27, 138, 107, 1); /* Even darker */
-  --color-teal-800: rgba(46, 216, 167, 1); 
+  --color-teal-300: rgba(70, 125, 255, 1); 
+  --color-teal-400: rgba(100, 145, 255, 1); /* Slightly lighter */
+  --color-teal-500: rgba(70, 125, 255, 1); 
+  --color-teal-600: rgba(50, 105, 230, 1); /* Darker variant */
+  --color-teal-700: rgba(40, 90, 210, 1); /* Even darker */
+  --color-teal-800: rgba(70, 125, 255, 1); 
   --color-red-400: rgba(255, 84, 89, 1);
   --color-red-500: rgba(192, 21, 47, 1);
   --color-orange-400: rgba(230, 129, 97, 1);
@@ -26,14 +26,14 @@
 
   /* RGB versions for opacity control */
   --color-brown-600-rgb: 94, 82, 64;
-  --color-teal-500-rgb: 35, 172, 133;
+  --color-teal-500-rgb: 70, 125, 255;
   --color-slate-900-rgb: 19, 52, 59;
   --color-slate-500-rgb: 98, 108, 113;
   --color-red-500-rgb: 192, 21, 47;
   --color-red-400-rgb: 255, 84, 89;
   --color-orange-500-rgb: 168, 75, 47;
   --color-orange-400-rgb: 230, 129, 97;
-  --color-teal-300-rgb: 46, 216, 167;
+  --color-teal-300-rgb: 70, 125, 255;
 
   /* Background color tokens (Light Mode) */
   --color-bg-1: rgba(59, 130, 246, 0.08);
@@ -148,7 +148,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --color-gray-400-rgb: 119, 124, 124;
-    --color-teal-300-rgb: 50, 184, 198;
+    --color-teal-300-rgb: 70, 125, 255;
     --color-gray-300-rgb: 167, 169, 169;
     --color-gray-200-rgb: 245, 245, 245;
 
@@ -690,7 +690,7 @@ p {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   background: rgba(var(--color-slate-900-rgb, 19, 52, 59), 0.8);
-  cursor: crosshair;
+  cursor: none !important;
 }
 
 .fullscreen-canvas {
@@ -701,7 +701,7 @@ p {
   border-radius: 0 !important;
   box-shadow: none !important;
   background: transparent !important;
-  cursor: crosshair;
+  cursor: none !important;
   z-index: 10;
 }
 
@@ -2521,24 +2521,24 @@ button {
 
 /* Game cursor styles */
 .game-canvas {
-  cursor: crosshair;
+  cursor: none !important;
 }
 
 .game-canvas:active {
-  cursor: crosshair;
+  cursor: none !important;
 }
 
-/* Hide cursor only on touch devices */
-@media (hover: none) and (pointer: coarse) {
-  .game-canvas,
-  .fullscreen-canvas {
-    cursor: none !important;
-  }
+/* Hide cursor for all devices - custom BladeCursor component is used */
+.game-canvas,
+.fullscreen-canvas,
+canvas {
+  cursor: none !important;
+}
 
-  .game-canvas:active,
-  .fullscreen-canvas:active {
-    cursor: none !important;
-  }
+.game-canvas:active,
+.fullscreen-canvas:active,
+canvas:active {
+  cursor: none !important;
 }
 
 /* Wallet Connection Notification */
@@ -2841,7 +2841,8 @@ button {
   position: absolute;
   pointer-events: none;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.8), transparent);
+  background: radial-gradient(circle, rgba(191, 193, 255, 0.9), rgba(70, 125, 255, 0.5), transparent);
+  box-shadow: 0 0 20px rgba(70, 125, 255, 0.8), 0 0 40px rgba(191, 193, 255, 0.6);
   animation: blade-glow 0.2s ease-out forwards;
 }
 

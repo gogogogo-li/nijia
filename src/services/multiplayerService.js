@@ -14,14 +14,14 @@ class MultiplayerService {
     this.walletAddress = null;
     this.currentGameId = null;
     this.gameEvents = []; // Track events for backend validation
-    
+
     this.betTiers = [
       { id: 1, amount: 0.1, label: 'Casual', description: 'Perfect for beginners', color: '#4CAF50' },
       { id: 2, amount: 0.5, label: 'Standard', description: 'Most popular choice', color: '#FFD700' },
       { id: 3, amount: 1.0, label: 'Competitive', description: 'For serious players', color: '#FF6B6B' },
       { id: 4, amount: 5.0, label: 'High Stakes', description: 'Big risk, big reward', color: '#9D4EDD' },
     ];
-    
+
     this.listeners = {
       onGameCreated: null,
       onGameJoined: null,
@@ -34,7 +34,7 @@ class MultiplayerService {
       onError: null
     };
   }
-  
+
   /**
    * Connect to multiplayer server
    */
@@ -42,10 +42,10 @@ class MultiplayerService {
     if (this.connected) {
       return;
     }
-    
+
     this.walletAddress = walletAddress;
     console.log('🔌 Connecting to multiplayer with wallet:', walletAddress);
-    
+
     this.socket = io(API_BASE_URL, {
       auth: {
         address: walletAddress,
@@ -56,9 +56,9 @@ class MultiplayerService {
       reconnectionAttempts: 5,
       reconnectionDelay: 1000
     });
-    
+
     this.setupSocketListeners();
-    
+
     return new Promise((resolve, reject) => {
       this.socket.on('connect', () => {
         console.log('✅ Connected to multiplayer server');
@@ -66,14 +66,14 @@ class MultiplayerService {
         this.authenticated = !!signature;
         resolve();
       });
-      
+
       this.socket.on('connect_error', (error) => {
         console.error('❌ Connection error:', error);
         reject(error);
       });
     });
   }
-  
+
   /**
    * Disconnect from server
    */
@@ -85,7 +85,21 @@ class MultiplayerService {
       this.authenticated = false;
     }
   }
-  
+
+  /**
+   * Check if connected to server
+   */
+  isConnected() {
+    return this.connected && this.socket && this.socket.connected;
+  }
+
+  /**
+   * Get the socket instance for direct event listening
+   */
+  getSocket() {
+    return this.socket;
+  }
+
   /**
    * Setup socket event listeners
    */
@@ -96,61 +110,77 @@ class MultiplayerService {
         this.listeners.onGameCreated(game);
       }
     });
-    
+
     this.socket.on('game:joined', (game) => {
       console.log('👥 Game joined:', game.game_id);
       if (this.listeners.onGameJoined) {
         this.listeners.onGameJoined(game);
       }
     });
-    
+
     this.socket.on('game:started', ({ game_id }) => {
       console.log('🚀 Game started:', game_id);
       if (this.listeners.onGameStarted) {
         this.listeners.onGameStarted(game_id);
       }
     });
-    
+
     this.socket.on('game:completed', (game) => {
-      console.log('🏁 Game completed:', game.game_id, 'Winner:', game.winner);
+      console.log('🏁 [Socket] game:completed received:', game.game_id, 'Winner:', game.winner);
       if (this.listeners.onGameCompleted) {
         this.listeners.onGameCompleted(game);
       }
     });
-    
+
+    // FALLBACK: Also listen for global broadcast (game_completed without colon)
+    this.socket.on('game_completed', (game) => {
+      console.log('🏁 [Socket] game_completed (global) received:', game.game_id, 'Winner:', game.winner);
+      if (this.listeners.onGameCompleted) {
+        this.listeners.onGameCompleted(game);
+      }
+    });
+
     this.socket.on('game:cancelled', ({ game_id, reason }) => {
       console.log('❌ Game cancelled:', game_id, reason);
       if (this.listeners.onGameCancelled) {
         this.listeners.onGameCancelled(game_id, reason);
       }
     });
-    
+
     this.socket.on('game:opponent_finished', ({ game_id, player }) => {
       console.log('⏰ Opponent finished:', game_id);
       if (this.listeners.onOpponentFinished) {
         this.listeners.onOpponentFinished(game_id, player);
       }
     });
-    
+
+    // NEW: Listen for real-time life updates
+    this.socket.on('game:lives_update', (data) => {
+      console.log('💚 Lives updated:', data);
+      if (this.listeners.onLivesUpdate) {
+        this.listeners.onLivesUpdate(data);
+      }
+    });
+
     this.socket.on('games:list', (games) => {
       if (this.listeners.onGamesListUpdate) {
         this.listeners.onGamesListUpdate(games);
       }
     });
-    
+
     this.socket.on('error', (error) => {
       console.error('Socket error:', error);
       if (this.listeners.onError) {
         this.listeners.onError(error);
       }
     });
-    
+
     this.socket.on('disconnect', (reason) => {
       console.log('Disconnected from server:', reason);
       this.connected = false;
     });
   }
-  
+
   /**
    * Subscribe to available games updates
    */
@@ -159,7 +189,7 @@ class MultiplayerService {
       this.socket.emit('subscribe:games', betTier);
     }
   }
-  
+
   /**
    * Unsubscribe from games updates
    */
@@ -168,7 +198,7 @@ class MultiplayerService {
       this.socket.emit('unsubscribe:games', betTier);
     }
   }
-  
+
   /**
    * Get available games from API
    */
@@ -177,27 +207,30 @@ class MultiplayerService {
       const url = betTier
         ? `${API_BASE_URL}/api/multiplayer/games/available?betTier=${betTier}`
         : `${API_BASE_URL}/api/multiplayer/games/available`;
-      
+
       const headers = {};
       if (this.walletAddress) {
         headers['X-Wallet-Address'] = this.walletAddress;
       }
-      
+
       const response = await fetch(url, { headers });
       const data = await response.json();
-      
+
       return data.games || [];
     } catch (error) {
       console.error('Error fetching available games:', error);
       return [];
     }
   }
-  
+
   /**
    * Create a new multiplayer game
    * Backend handles all validation and creation logic
+   * @param {number} betTierId - Bet tier ID (1-4)
+   * @param {string} transactionHash - On-chain transaction hash
+   * @param {string} roomType - 'public' or 'private' (default: 'public')
    */
-  async createGame(betTierId, transactionHash) {
+  async createGame(betTierId, transactionHash, roomType = 'public') {
     try {
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/create`, {
         method: 'POST',
@@ -207,26 +240,29 @@ class MultiplayerService {
         },
         body: JSON.stringify({
           betTierId,
-          transactionHash
+          transactionHash,
+          roomType
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to create game');
       }
-      
+
       this.currentGameId = data.game.game_id;
       this.gameEvents = [];
-      
+
+      console.log(`🎮 Game created (${roomType})`, data.game.join_code ? `Code: ${data.game.join_code}` : '');
+
       return data;
     } catch (error) {
       console.error('Error creating game:', error);
       throw error;
     }
   }
-  
+
   /**
    * Join an existing game
    * Backend handles validation
@@ -234,7 +270,7 @@ class MultiplayerService {
   async joinGame(gameId, transactionHash) {
     try {
       console.log('🎮 Joining game:', gameId, 'with wallet:', this.walletAddress);
-      
+
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${gameId}/join`, {
         method: 'POST',
         headers: {
@@ -245,18 +281,18 @@ class MultiplayerService {
           transactionHash
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (!data.success) {
         // Throw error with user-friendly message
         const errorMsg = data.error || 'Failed to join game';
         throw new Error(errorMsg);
       }
-      
+
       this.currentGameId = gameId;
       this.gameEvents = [];
-      
+
       return data;
     } catch (error) {
       console.error('Error joining game:', error);
@@ -264,7 +300,47 @@ class MultiplayerService {
       throw error;
     }
   }
-  
+
+  /**
+   * Join a private game using a join code
+   * @param {string} joinCode - 6-character join code
+   * @param {string} transactionHash - On-chain transaction hash
+   */
+  async joinByCode(joinCode, transactionHash) {
+    try {
+      const code = joinCode.toUpperCase();
+      console.log('🔑 Joining game by code:', code, 'with wallet:', this.walletAddress);
+
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/join-code/${code}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify({
+          transactionHash
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        const errorMsg = data.error || 'Failed to join game';
+        throw new Error(errorMsg);
+      }
+
+      this.currentGameId = data.game.game_id;
+      this.gameEvents = [];
+
+      console.log('✅ Joined private game:', this.currentGameId);
+
+      return data;
+    } catch (error) {
+      console.error('Error joining by code:', error);
+      throw error;
+    }
+  }
+
   /**
    * Record game event (for backend validation)
    * Frontend tracks events, backend validates and calculates score
@@ -273,16 +349,16 @@ class MultiplayerService {
     if (!this.currentGameId) {
       return;
     }
-    
+
     const event = {
       type: eventType,
       timestamp: Date.now(),
       ...data
     };
-    
+
     this.gameEvents.push(event);
   }
-  
+
   /**
    * Submit final score to backend
    * Backend validates events and calculates actual score
@@ -292,7 +368,7 @@ class MultiplayerService {
       if (!this.currentGameId) {
         throw new Error('No active game');
       }
-      
+
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${this.currentGameId}/score`, {
         method: 'POST',
         headers: {
@@ -304,22 +380,60 @@ class MultiplayerService {
           gameEvents: this.gameEvents
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to submit score');
       }
-      
+
       console.log('✅ Score validated by server:', data.validatedScore);
-      
+
       return data;
     } catch (error) {
       console.error('Error submitting score:', error);
       throw error;
     }
   }
-  
+
+  /**
+   * NEW: Update player lives in real-time
+   * Called whenever a player loses a life
+   */
+  async updateLives(lives, score) {
+    try {
+      if (!this.currentGameId) {
+        console.warn('No active game for life update');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${this.currentGameId}/lives`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify({
+          lives,
+          score
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        console.error('Failed to update lives:', data.error);
+      } else {
+        console.log(`💚 Lives updated: ${lives}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error updating lives:', error);
+      // Don't throw - this is a non-critical update
+    }
+  }
+
   /**
    * Cancel a game (only creator can cancel)
    */
@@ -332,25 +446,25 @@ class MultiplayerService {
           'X-Wallet-Address': this.walletAddress
         }
       });
-      
+
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to cancel game');
       }
-      
+
       if (this.currentGameId === gameId) {
         this.currentGameId = null;
         this.gameEvents = [];
       }
-      
+
       return data;
     } catch (error) {
       console.error('Error cancelling game:', error);
       throw error;
     }
   }
-  
+
   /**
    * Get game details
    */
@@ -361,49 +475,49 @@ class MultiplayerService {
           'X-Wallet-Address': this.walletAddress
         }
       });
-      
+
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to get game');
       }
-      
+
       return data.game;
     } catch (error) {
       console.error('Error getting game:', error);
       throw error;
     }
   }
-  
+
   /**
    * Get player's active games
    */
   async getPlayerGames(address = null) {
     try {
       const playerAddress = address || this.walletAddress;
-      
+
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/player/${playerAddress}/games`, {
         headers: {
           'X-Wallet-Address': this.walletAddress
         }
       });
-      
+
       const data = await response.json();
-      
+
       return data.games || [];
     } catch (error) {
       console.error('Error getting player games:', error);
       return [];
     }
   }
-  
+
   /**
    * Get bet tiers
    */
   getBetTiers() {
     return this.betTiers;
   }
-  
+
   /**
    * Get multiplayer stats
    */
@@ -411,14 +525,14 @@ class MultiplayerService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/stats`);
       const data = await response.json();
-      
+
       return data.stats || {};
     } catch (error) {
       console.error('Error getting stats:', error);
       return {};
     }
   }
-  
+
   /**
    * Get player statistics
    */
@@ -434,10 +548,10 @@ class MultiplayerService {
           winRate: 0
         };
       }
-      
+
       const response = await fetch(`${API_BASE_URL}/api/players/${playerAddress}/stats`);
       const data = await response.json();
-      
+
       return data.stats || {
         totalGames: 0,
         wins: 0,
@@ -456,14 +570,14 @@ class MultiplayerService {
       };
     }
   }
-  
+
   /**
    * Set event listeners
    */
   setListeners(listeners) {
     this.listeners = { ...this.listeners, ...listeners };
   }
-  
+
   /**
    * Clear current game
    */
@@ -471,7 +585,7 @@ class MultiplayerService {
     this.currentGameId = null;
     this.gameEvents = [];
   }
-  
+
   /**
    * Format wallet address for display
    */
@@ -480,7 +594,7 @@ class MultiplayerService {
     if (address.length <= 12) return address;
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
-  
+
   /**
    * Compare two wallet addresses (case-insensitive)
    */

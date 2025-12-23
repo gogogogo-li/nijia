@@ -1,143 +1,176 @@
-// Tier system similar to 8 Ball Pool - makes the game addictive and rewarding
+// Industry-standard tier system with progressive NFT rewards
+// Inspired by League of Legends, Valorant, and 8 Ball Pool ranking systems
 
 export const TIERS = [
   {
     id: 1,
-    name: "Wooden Blade",
-    icon: "🪵",
+    name: "Beginner",
+    icon: "🌱",
     minScore: 0,
-    maxScore: 499,
-    color: "#8B4513",
-    gradient: "linear-gradient(135deg, #8B4513, #A0522D)",
+    maxScore: 99,
+    color: "#8B7355",
+    gradient: "linear-gradient(135deg, #8B7355, #A0826D)",
     requiredGames: 0,
-    canMintNFT: false,
+    canMintNFT: true, // Welcome NFT on first game!
+    nftType: "welcome",
+    nftReward: "Welcome Ninja Badge",
+    nftDescription: "Congratulations on your first game! Your ninja journey begins.",
     rewards: {
-      title: "Beginner",
-      badge: "🌱"
+      title: "Fresh Recruit",
+      badge: "🌱",
+      bonus: 50
     }
   },
   {
     id: 2,
-    name: "Bronze Blade",
+    name: "Bronze",
     icon: "🥉",
-    minScore: 500,
-    maxScore: 999,
+    minScore: 100,
+    maxScore: 299,
     color: "#CD7F32",
     gradient: "linear-gradient(135deg, #CD7F32, #B87333)",
-    requiredGames: 5,
-    canMintNFT: false,
+    requiredGames: 2,
+    canMintNFT: true,
+    nftType: "achievement",
+    nftReward: "Bronze Ninja NFT",
+    nftDescription: "You've earned Bronze rank! A worthy start to your journey.",
     rewards: {
-      title: "Novice Ninja",
-      badge: "🔰"
+      title: "Bronze Ninja",
+      badge: "🥉",
+      bonus: 100
     }
   },
   {
     id: 3,
-    name: "Silver Blade",
+    name: "Silver",
     icon: "🥈",
-    minScore: 1000,
-    maxScore: 2499,
+    minScore: 300,
+    maxScore: 599,
     color: "#C0C0C0",
     gradient: "linear-gradient(135deg, #C0C0C0, #A8A8A8)",
-    requiredGames: 15,
-    canMintNFT: true, // First NFT milestone!
-    nftReward: "Silver Ninja NFT",
+    requiredGames: 4,
+    canMintNFT: true,
+    nftType: "achievement",
+    nftReward: "Silver Rank NFT",
+    nftDescription: "Reached Silver tier! You're becoming a skilled ninja.",
     rewards: {
-      title: "Skilled Slicer",
-      badge: "⚔️"
+      title: "Silver Ninja",
+      badge: "🥈",
+      bonus: 200
     }
   },
   {
     id: 4,
-    name: "Gold Blade",
+    name: "Gold",
     icon: "🥇",
-    minScore: 2500,
-    maxScore: 4999,
+    minScore: 600,
+    maxScore: 999,
     color: "#FFD700",
     gradient: "linear-gradient(135deg, #FFD700, #FFA500)",
-    requiredGames: 30,
-    canMintNFT: false,
+    requiredGames: 6,
+    canMintNFT: true,
+    nftType: "achievement",
+    nftReward: "Gold Champion NFT",
+    nftDescription: "Gold tier achieved! Your blade shines brighter than ever.",
     rewards: {
-      title: "Master Slasher",
-      badge: "👑"
+      title: "Gold Ninja",
+      badge: "🥇",
+      bonus: 300
     }
   },
   {
     id: 5,
-    name: "Platinum Blade",
+    name: "Platinum",
     icon: "💎",
-    minScore: 5000,
-    maxScore: 9999,
+    minScore: 1000,
+    maxScore: 1999,
     color: "#E5E4E2",
     gradient: "linear-gradient(135deg, #E5E4E2, #B9F2FF)",
-    requiredGames: 50,
-    canMintNFT: true, // Second NFT milestone!
-    nftReward: "Platinum Ninja NFT",
+    requiredGames: 10,
+    canMintNFT: true,
+    nftType: "achievement",
+    nftReward: "Platinum Elite NFT",
+    nftDescription: "Elite tier achieved! You're among the top ninjas.",
     rewards: {
-      title: "Elite Ninja",
-      badge: "💎"
+      title: "Platinum Elite",
+      badge: "💎",
+      bonus: 500
     }
   },
   {
     id: 6,
-    name: "Diamond Blade",
+    name: "Diamond",
     icon: "💠",
-    minScore: 10000,
-    maxScore: 19999,
+    minScore: 2000,
+    maxScore: 3999,
     color: "#B9F2FF",
     gradient: "linear-gradient(135deg, #B9F2FF, #00CED1)",
-    requiredGames: 100,
-    canMintNFT: false,
+    requiredGames: 20,
+    canMintNFT: true,
+    nftType: "achievement",
+    nftReward: "Diamond Master NFT",
+    nftDescription: "Diamond tier! Your skills are unmatched by most.",
     rewards: {
-      title: "Diamond Warrior",
-      badge: "💠"
+      title: "Diamond Master",
+      badge: "💠",
+      bonus: 750
     }
   },
   {
     id: 7,
-    name: "Legendary Blade",
+    name: "Master",
     icon: "⚡",
-    minScore: 20000,
-    maxScore: 49999,
-    color: "#FF1493",
-    gradient: "linear-gradient(135deg, #FF1493, #FF69B4)",
-    requiredGames: 200,
-    canMintNFT: true, // Third NFT milestone!
-    nftReward: "Legendary Ninja NFT",
+    minScore: 4000,
+    maxScore: 7999,
+    color: "#9B59B6",
+    gradient: "linear-gradient(135deg, #9B59B6, #8E44AD)",
+    requiredGames: 40,
+    canMintNFT: true,
+    nftType: "achievement",
+    nftReward: "Master Ninja NFT",
+    nftDescription: "Master tier! You've proven exceptional skill and dedication.",
     rewards: {
-      title: "Legendary Ninja",
-      badge: "⚡"
+      title: "Master Ninja",
+      badge: "⚡",
+      bonus: 1000
     }
   },
   {
     id: 8,
-    name: "Mythic Blade",
+    name: "Grandmaster",
     icon: "🔥",
-    minScore: 50000,
-    maxScore: 99999,
+    minScore: 8000,
+    maxScore: 14999,
     color: "#FF4500",
-    gradient: "linear-gradient(135deg, #FF4500, #FFD700)",
-    requiredGames: 500,
-    canMintNFT: false,
+    gradient: "linear-gradient(135deg, #FF4500, #FF6347)",
+    requiredGames: 75,
+    canMintNFT: true,
+    nftType: "achievement",
+    nftReward: "Grandmaster NFT",
+    nftDescription: "Grandmaster tier! Only the elite reach this level.",
     rewards: {
-      title: "Mythic Slayer",
-      badge: "🔥"
+      title: "Grandmaster",
+      badge: "🔥",
+      bonus: 1500
     }
   },
   {
     id: 9,
-    name: "Godlike Blade",
+    name: "Legendary",
     icon: "👑",
-    minScore: 100000,
+    minScore: 15000,
     maxScore: Infinity,
-    color: "#9400D3",
-    gradient: "linear-gradient(135deg, #9400D3, #FF1493, #FFD700)",
-    requiredGames: 1000,
-    canMintNFT: true, // Final NFT milestone!
-    nftReward: "Godlike Ninja NFT (Ultra Rare)",
+    color: "#FFD700",
+    gradient: "linear-gradient(135deg, #FFD700, #FFA500, #FF1493)",
+    requiredGames: 100,
+    canMintNFT: true,
+    nftType: "legendary",
+    nftReward: "Legendary Ninja NFT (Ultra Rare)",
+    nftDescription: "Legendary status achieved! You are a true ninja master.",
     rewards: {
-      title: "God of Ninjas",
-      badge: "👑✨"
+      title: "Legendary Ninja",
+      badge: "👑✨",
+      bonus: 2500
     }
   }
 ];
@@ -156,7 +189,7 @@ export const getTierByScore = (totalScore) => {
 export const getProgressToNextTier = (totalScore) => {
   const currentTier = getTierByScore(totalScore);
   const currentIndex = TIERS.findIndex(t => t.id === currentTier.id);
-  
+
   if (currentIndex === TIERS.length - 1) {
     // Already at max tier
     return {
@@ -167,13 +200,13 @@ export const getProgressToNextTier = (totalScore) => {
       scoreInCurrentTier: totalScore - currentTier.minScore
     };
   }
-  
+
   const nextTier = TIERS[currentIndex + 1];
   const scoreInCurrentTier = totalScore - currentTier.minScore;
   const tierRange = nextTier.minScore - currentTier.minScore;
   const progress = (scoreInCurrentTier / tierRange) * 100;
   const scoreNeeded = nextTier.minScore - totalScore;
-  
+
   return {
     currentTier,
     nextTier,
@@ -184,9 +217,9 @@ export const getProgressToNextTier = (totalScore) => {
 };
 
 // Check if player can mint NFT at current tier
-export const canMintNFTAtTier = (totalScore, gamesPlayed) => {
+export const canMintNFTAtTier = (totalScore, gamesPlayed, mintedNFTs = []) => {
   const currentTier = getTierByScore(totalScore);
-  
+
   if (!currentTier.canMintNFT) {
     return {
       canMint: false,
@@ -194,7 +227,39 @@ export const canMintNFTAtTier = (totalScore, gamesPlayed) => {
       tier: currentTier
     };
   }
-  
+
+  // Special handling for welcome NFT (first game completion)
+  if (currentTier.nftType === 'welcome' && gamesPlayed >= 1) {
+    // Check if welcome NFT already minted
+    if (mintedNFTs.includes('welcome') || mintedNFTs.includes(currentTier.id)) {
+      return {
+        canMint: false,
+        reason: "Welcome NFT already minted",
+        tier: currentTier,
+        alreadyMinted: true
+      };
+    }
+
+    return {
+      canMint: true,
+      tier: currentTier,
+      nftReward: currentTier.nftReward,
+      nftType: 'welcome',
+      isWelcomeNFT: true,
+      nftDescription: currentTier.nftDescription
+    };
+  }
+
+  // Check if NFT for this tier already minted
+  if (mintedNFTs.includes(currentTier.id) || mintedNFTs.includes(currentTier.nftType)) {
+    return {
+      canMint: false,
+      reason: "NFT for this tier already minted",
+      tier: currentTier,
+      alreadyMinted: true
+    };
+  }
+
   if (gamesPlayed < currentTier.requiredGames) {
     return {
       canMint: false,
@@ -203,11 +268,13 @@ export const canMintNFTAtTier = (totalScore, gamesPlayed) => {
       tier: currentTier
     };
   }
-  
+
   return {
     canMint: true,
     tier: currentTier,
-    nftReward: currentTier.nftReward
+    nftReward: currentTier.nftReward,
+    nftType: currentTier.nftType || 'achievement',
+    nftDescription: currentTier.nftDescription
   };
 };
 
@@ -220,14 +287,14 @@ export const getNFTMilestones = () => {
 export const calculatePlayerStats = (totalScore, gamesPlayed, bestScore) => {
   const tierInfo = getProgressToNextTier(totalScore);
   const nftInfo = canMintNFTAtTier(totalScore, gamesPlayed);
-  
+
   // Calculate additional stats
   const averageScore = gamesPlayed > 0 ? Math.floor(totalScore / gamesPlayed) : 0;
   const nftMilestones = getNFTMilestones();
   const unlockedNFTs = nftMilestones.filter(
     tier => totalScore >= tier.minScore && gamesPlayed >= tier.requiredGames
   );
-  
+
   return {
     totalScore,
     gamesPlayed,
@@ -241,28 +308,126 @@ export const calculatePlayerStats = (totalScore, gamesPlayed, bestScore) => {
   };
 };
 
-// Achievement system for extra motivation
+// Achievement system for extra motivation (industry-standard milestones)
 const calculateAchievements = (totalScore, gamesPlayed, bestScore) => {
   const achievements = [];
-  
-  // Score-based achievements
-  if (totalScore >= 1000) achievements.push({ name: "Slice Master", icon: "🎯", description: "Reach 1,000 total score" });
-  if (totalScore >= 5000) achievements.push({ name: "Score Hunter", icon: "🏆", description: "Reach 5,000 total score" });
-  if (totalScore >= 25000) achievements.push({ name: "Point Crusher", icon: "💪", description: "Reach 25,000 total score" });
-  if (totalScore >= 100000) achievements.push({ name: "Score God", icon: "👑", description: "Reach 100,000 total score" });
-  
-  // Game count achievements
-  if (gamesPlayed >= 10) achievements.push({ name: "Dedicated", icon: "🔄", description: "Play 10 games" });
-  if (gamesPlayed >= 50) achievements.push({ name: "Addicted", icon: "🎮", description: "Play 50 games" });
-  if (gamesPlayed >= 100) achievements.push({ name: "No Life", icon: "😅", description: "Play 100 games" });
-  if (gamesPlayed >= 500) achievements.push({ name: "Ninja Legend", icon: "🥷", description: "Play 500 games" });
-  
-  // Best score achievements
-  if (bestScore >= 500) achievements.push({ name: "Half K Club", icon: "⭐", description: "Score 500+ in one game" });
-  if (bestScore >= 1000) achievements.push({ name: "1K Club", icon: "🌟", description: "Score 1,000+ in one game" });
-  if (bestScore >= 2500) achievements.push({ name: "Elite Scorer", icon: "✨", description: "Score 2,500+ in one game" });
-  if (bestScore >= 5000) achievements.push({ name: "Unstoppable", icon: "💫", description: "Score 5,000+ in one game" });
-  
+
+  // Welcome achievements
+  if (gamesPlayed >= 1) achievements.push({
+    name: "First Steps",
+    icon: "🎮",
+    description: "Complete your first game",
+    tier: "common"
+  });
+
+  // Score-based achievements (progressive milestones)
+  if (totalScore >= 100) achievements.push({
+    name: "Century",
+    icon: "💯",
+    description: "Reach 100 total score",
+    tier: "common"
+  });
+  if (totalScore >= 300) achievements.push({
+    name: "Silver Path",
+    icon: "🥈",
+    description: "Reach 300 total score",
+    tier: "uncommon"
+  });
+  if (totalScore >= 1000) achievements.push({
+    name: "Platinum Journey",
+    icon: "💎",
+    description: "Reach 1,000 total score",
+    tier: "rare"
+  });
+  if (totalScore >= 2500) achievements.push({
+    name: "Diamond Mind",
+    icon: "💠",
+    description: "Reach 2,500 total score",
+    tier: "epic"
+  });
+  if (totalScore >= 5000) achievements.push({
+    name: "Master's Path",
+    icon: "⚡",
+    description: "Reach 5,000 total score",
+    tier: "legendary"
+  });
+  if (totalScore >= 10000) achievements.push({
+    name: "Score Legend",
+    icon: "👑",
+    description: "Reach 10,000 total score",
+    tier: "legendary"
+  });
+
+  // Game count achievements (engagement milestones)
+  if (gamesPlayed >= 5) achievements.push({
+    name: "Getting Started",
+    icon: "🔄",
+    description: "Play 5 games",
+    tier: "common"
+  });
+  if (gamesPlayed >= 10) achievements.push({
+    name: "Dedicated Player",
+    icon: "🎯",
+    description: "Play 10 games",
+    tier: "uncommon"
+  });
+  if (gamesPlayed >= 25) achievements.push({
+    name: "Regular Ninja",
+    icon: "🥷",
+    description: "Play 25 games",
+    tier: "rare"
+  });
+  if (gamesPlayed >= 50) achievements.push({
+    name: "Committed Warrior",
+    icon: "🎮",
+    description: "Play 50 games",
+    tier: "epic"
+  });
+  if (gamesPlayed >= 100) achievements.push({
+    name: "Century Club",
+    icon: "💯",
+    description: "Play 100 games",
+    tier: "legendary"
+  });
+  if (gamesPlayed >= 250) achievements.push({
+    name: "Ninja Legend",
+    icon: "🌟",
+    description: "Play 250 games",
+    tier: "legendary"
+  });
+
+  // Best score achievements (skill milestones)
+  if (bestScore >= 50) achievements.push({
+    name: "Half Century",
+    icon: "⭐",
+    description: "Score 50+ in one game",
+    tier: "common"
+  });
+  if (bestScore >= 100) achievements.push({
+    name: "Centurion",
+    icon: "🌟",
+    description: "Score 100+ in one game",
+    tier: "uncommon"
+  });
+  if (bestScore >= 200) achievements.push({
+    name: "Double Century",
+    icon: "✨",
+    description: "Score 200+ in one game",
+    tier: "rare"
+  });
+  if (bestScore >= 500) achievements.push({
+    name: "High Scorer",
+    icon: "💫",
+    description: "Score 500+ in one game",
+    tier: "epic"
+  });
+  if (bestScore >= 1000) achievements.push({
+    name: "Unstoppable",
+    icon: "🚀",
+    description: "Score 1,000+ in one game",
+    tier: "legendary"
+  });
+
   return achievements;
 };
 
@@ -277,16 +442,16 @@ export const getSessionMultiplier = (consecutiveGames) => {
 // Daily login bonus (encourages daily return)
 export const getDailyBonus = (lastLoginDate) => {
   if (!lastLoginDate) return { bonus: 100, streak: 1 };
-  
+
   const today = new Date().toDateString();
   const lastLogin = new Date(lastLoginDate).toDateString();
-  
+
   if (today === lastLogin) {
     return { bonus: 0, streak: 0, alreadyClaimed: true };
   }
-  
+
   const daysDiff = Math.floor((new Date(today) - new Date(lastLogin)) / (1000 * 60 * 60 * 24));
-  
+
   if (daysDiff === 1) {
     // Consecutive day - increase streak
     const streak = (localStorage.getItem('loginStreak') || 0) + 1;

@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS multiplayer_games (
   -- Player 2 (joiner)
   player2_address TEXT REFERENCES players(wallet_address) ON DELETE CASCADE,
   player2_tx_hash TEXT,
+  join_transaction_hash TEXT,
   player2_score INTEGER,
   player2_events JSONB,
   player2_finished_at TIMESTAMP WITH TIME ZONE,

@@ -14,6 +14,25 @@ export const ONECHAIN_CONFIG = {
   apiUrl: process.env.ONECHAIN_API || 'https://api.onelabs.cc'
 };
 
+// Deployed Contract Addresses
+export const PACKAGE_ID = process.env.PACKAGE_ID;
+export const GAME_LOBBY_ID = process.env.GAME_LOBBY_ID;
+export const STATS_REGISTRY_ID = process.env.STATS_REGISTRY_ID;
+
+// Validate contract configuration
+export function validateContractConfig() {
+  if (!PACKAGE_ID || !GAME_LOBBY_ID || !STATS_REGISTRY_ID) {
+    console.warn('⚠️  Contract addresses not fully configured in backend .env');
+    return false;
+  }
+  console.log('✅ Contract configuration validated:', {
+    packageId: PACKAGE_ID.substring(0, 10) + '...',
+    gameLobbyId: GAME_LOBBY_ID.substring(0, 10) + '...',
+    statsRegistryId: STATS_REGISTRY_ID.substring(0, 10) + '...'
+  });
+  return true;
+}
+
 // Token decimals (OCT uses 9 decimals like SUI)
 export const OCT_DECIMALS = 9;
 export const MIST_PER_OCT = 1_000_000_000;

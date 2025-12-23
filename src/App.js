@@ -5,6 +5,7 @@ import ResultsScreen from './components/ResultsScreen';
 import ParticleContainer from './components/ParticleContainer';
 import LandingPage from './components/LandingPage';
 import ModeSelection from './components/ModeSelection';
+import BladeCursor from './components/BladeCursor';
 import { useGameState } from './hooks/useGameState';
 import { useTaskbarControls } from './hooks/useTaskbarControls';
 import { useOneChain } from './hooks/useOneChain';
@@ -14,6 +15,9 @@ import { Analytics } from "@vercel/analytics/react"
 import MultiplayerLobby from './components/MultiplayerLobby';
 
 function App() {
+  // OneChain wallet and blockchain integration - must be first to get wallet address
+  const onechain = useOneChain();
+
   const {
     gameState,
     startGame,
@@ -25,25 +29,22 @@ function App() {
     togglePause,
     createScreenFlash,
     decrementTimer
-  } = useGameState();
-
-  // OneChain wallet and blockchain integration
-  const onechain = useOneChain();
+  } = useGameState(onechain?.walletAddress); // Pass wallet address for wallet-scoped storage
   const [particles, setParticles] = useState([]);
   const [showLanding, setShowLanding] = useState(true);
   const [showMultiplayer, setShowMultiplayer] = useState(false);
   const [showModeSelection, setShowModeSelection] = useState(false);
   const [multiplayerGameId, setMultiplayerGameId] = useState(null);
 
-  // Add taskbar controls
-  useTaskbarControls(gameState, togglePause);
+  // Add taskbar controls (pass multiplayer flag to disable pause in multiplayer)
+  useTaskbarControls(gameState, togglePause, multiplayerGameId);
 
   const handleCreateParticles = useCallback((x, y, color, count) => {
     const newParticles = [];
     // Create fewer, token-based particles
-    const tokenEmojis =  ['⭐', '✨', '💰'];
+    const tokenEmojis = ['⭐', '✨', '💰'];
     const tokenCount = Math.min(count, 8); // Limit to 8 tokens max
-    
+
     for (let i = 0; i < tokenCount; i++) {
       const angle = (Math.PI * 2 * i) / tokenCount;
       const velocity = 2 + Math.random() * 3;
@@ -167,11 +168,12 @@ function App() {
   if (showMultiplayer) {
     return (
       <div className="App">
+        <BladeCursor />
         <div className="beta-tag">
           <span className="beta-text">BETA v0.1</span>
         </div>
-        
-        <MultiplayerLobby 
+
+        <MultiplayerLobby
           walletAddress={onechain.walletAddress}
           onechain={onechain}
           onStartGame={handleStartMultiplayerGame}
@@ -186,10 +188,11 @@ function App() {
   if (showModeSelection) {
     return (
       <div className="App">
+        <BladeCursor />
         <div className="beta-tag">
           <span className="beta-text">BETA v0.1</span>
         </div>
-        
+
         <ModeSelection
           onSelectMode={handleModeSelect}
           onBack={handleBackToLanding}
@@ -208,12 +211,13 @@ function App() {
   if (showLanding) {
     return (
       <div className="App">
+        <BladeCursor />
         {/* Beta Version Tag */}
         <div className="beta-tag">
           <span className="beta-text">BETA v0.1</span>
         </div>
-        
-        <LandingPage 
+
+        <LandingPage
           onStartGame={handleStartFromLanding}
           onMultiplayer={handleShowMultiplayer}
           onechain={onechain}
@@ -226,6 +230,7 @@ function App() {
 
   return (
     <div className="App">
+      <BladeCursor />
       {renderScreen()}
       <ParticleContainer particles={particles} />
       <SpeedInsights />

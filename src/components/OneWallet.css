@@ -30,11 +30,11 @@
 
 .wallet-trigger-button.connected {
   background: rgba(20, 30, 20, 0.9);
-  border-color: rgba(76, 175, 80, 0.3);
+  border-color: rgba(70, 125, 255, 0.3);
 }
 
 .wallet-trigger-button.connected:hover {
-  border-color: rgba(76, 175, 80, 0.5);
+  border-color: rgba(70, 125, 255, 0.5);
   background: rgba(25, 35, 25, 0.95);
 }
 
@@ -45,7 +45,7 @@
   right: 0;
   background: rgba(10, 10, 15, 0.98);
   backdrop-filter: blur(24px);
-  border: 2px solid rgba(76, 175, 80, 0.3);
+  border: 2px solid rgba(70, 125, 255, 0.3);
   border-radius: 12px;
   padding: 18px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
@@ -98,7 +98,7 @@
 }
 
 .connect-button {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  background: linear-gradient(135deg, #467DFF 0%, #BFC1FF 100%);
   color: #FFFFFF;
   border: none;
   padding: 11px 20px;
@@ -116,8 +116,8 @@
 
 .connect-button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
-  background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+  box-shadow: 0 4px 16px rgba(70, 125, 255, 0.4);
+  background: linear-gradient(135deg, #BFC1FF 0%, #467DFF 100%);
 }
 
 .connect-button:disabled {
@@ -154,14 +154,14 @@
 }
 
 .wallet-help a {
-  color: #4CAF50;
+  color: #467DFF;
   text-decoration: none;
   transition: color 0.2s;
   font-weight: 500;
 }
 
 .wallet-help a:hover {
-  color: #66BB6A;
+  color: #BFC1FF;
   text-decoration: underline;
 }
 
@@ -180,7 +180,7 @@
   padding: 14px;
   border-radius: 8px;
   margin-bottom: 12px;
-  border: 1px solid rgba(76, 175, 80, 0.2);
+  border: 1px solid rgba(70, 125, 255, 0.2);
 }
 
 .address-section {
@@ -211,8 +211,8 @@
 }
 
 .copy-button {
-  background: rgba(76, 175, 80, 0.15);
-  border: 1px solid rgba(76, 175, 80, 0.3);
+  background: rgba(70, 125, 255, 0.15);
+  border: 1px solid rgba(70, 125, 255, 0.3);
   padding: 5px 10px;
   border-radius: 5px;
   cursor: pointer;
@@ -222,8 +222,8 @@
 }
 
 .copy-button:hover {
-  background: rgba(76, 175, 80, 0.25);
-  border-color: rgba(76, 175, 80, 0.5);
+  background: rgba(70, 125, 255, 0.25);
+  border-color: rgba(70, 125, 255, 0.5);
   color: #FFFFFF;
   transform: translateY(-1px);
 }
@@ -257,7 +257,7 @@
   padding: 12px;
   border-radius: 7px;
   margin: 10px 0;
-  border: 1px solid rgba(76, 175, 80, 0.2);
+  border: 1px solid rgba(70, 125, 255, 0.2);
 }
 
 .balance-item {
@@ -280,7 +280,7 @@
   color: #66BB6A;
   font-size: 18px;
   font-family: 'SF Mono', monospace;
-  text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+  text-shadow: 0 0 10px rgba(70, 125, 255, 0.3);
 }
 
 /* Stats Section */
@@ -312,7 +312,7 @@
 }
 
 .trophy-icon {
-  color: #4CAF50;
+  color: #467DFF;
   font-size: 18px;
 }
 
@@ -513,13 +513,13 @@
   gap: 4px;
   margin-top: 6px;
   font-size: 10px;
-  color: #4CAF50;
+  color: #467DFF;
   font-weight: 500;
 }
 
 .check-icon {
   font-size: 12px;
-  color: #4CAF50;
+  color: #467DFF;
 }
 
 
@@ -585,7 +585,7 @@
 
 .wallet-icon-large {
   font-size: 48px;
-  color: #4CAF50;
+  color: #467DFF;
   margin-bottom: 16px;
 }
 
@@ -605,7 +605,7 @@
 
 .install-button {
   display: inline-block;
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  background: linear-gradient(135deg, #467DFF 0%, #BFC1FF 100%);
   color: #FFFFFF;
   padding: 11px 24px;
   border-radius: 7px;
@@ -618,13 +618,13 @@
 
 .install-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-  background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+  box-shadow: 0 6px 20px rgba(70, 125, 255, 0.5);
+  background: linear-gradient(135deg, #BFC1FF 0%, #467DFF 100%);
 }
 
 .view-on-explorer {
   display: block;
-  color: #4CAF50;
+  color: #467DFF;
   font-size: 10px;
   margin-top: 6px;
   text-decoration: none;
@@ -651,7 +651,7 @@
 }
 
 .profile-icon {
-  color: #4CAF50;
+  color: #467DFF;
   font-size: 16px;
 }
 
@@ -668,7 +668,7 @@
 }
 
 .wallet-help a {
-  color: #4CAF50;
+  color: #467DFF;
   text-decoration: none;
   font-weight: 500;
 }

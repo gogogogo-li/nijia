@@ -14,6 +14,7 @@ html, body {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
+  cursor: none !important;
 }
 
 #root {
@@ -24,6 +25,7 @@ html, body {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  cursor: none !important;
 }
 
 code {

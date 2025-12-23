@@ -1,21 +1,19 @@
-import { useState, useCallback, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 
 export const useBladeTrail = () => {
-  const [bladeTrail, setBladeTrail] = useState([]);
-  const [isSlashing, setIsSlashing] = useState(false);
+  const isSlashingRef = useRef(false);
   const trailRef = useRef([]);
+  const animationTimeRef = useRef(0);
 
   const addTrailPoint = useCallback((x, y, timestamp = Date.now()) => {
     const point = { x, y, timestamp, alpha: 1.0 };
     
     trailRef.current.push(point);
     
-    // Keep only the last 20 points for performance
-    if (trailRef.current.length > 20) {
+    // Keep only the last 12 points for better performance
+    if (trailRef.current.length > 12) {
       trailRef.current.shift();
     }
-    
-    setBladeTrail([...trailRef.current]);
   }, []);
 
   const updateTrail = useCallback(() => {
@@ -29,68 +27,128 @@ export const useBladeTrail = () => {
       }))
       .filter(point => point.alpha > 0);
     
-    setBladeTrail([...trailRef.current]);
+    animationTimeRef.current = now;
   }, []);
 
   const clearTrail = useCallback(() => {
     trailRef.current = [];
-    setBladeTrail([]);
   }, []);
 
   const startSlashing = useCallback(() => {
-    setIsSlashing(true);
+    isSlashingRef.current = true;
     clearTrail();
   }, [clearTrail]);
 
   const stopSlashing = useCallback(() => {
-    setIsSlashing(false);
-    // Don't clear trail immediately, let it fade out
+    isSlashingRef.current = false;
   }, []);
 
   const renderBladeTrail = useCallback((ctx) => {
-    if (bladeTrail.length < 2) return;
+    const trail = trailRef.current;
+    if (trail.length < 2) return;
 
-    ctx.save();
+    const now = animationTimeRef.current;
     
-    // Create gradient for the blade
-    for (let i = 1; i < bladeTrail.length; i++) {
-      const currentPoint = bladeTrail[i];
-      const prevPoint = bladeTrail[i - 1];
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    // Single-pass rendering with path batching for better performance
+    const baseWidth = 7;
+    
+    // Render outer glow layer
+    ctx.shadowColor = '#467DFF';
+    ctx.shadowBlur = 25;
+    ctx.beginPath();
+    for (let i = 1; i < trail.length; i++) {
+      const point = trail[i];
+      const prevPoint = trail[i - 1];
+      if (point.alpha <= 0) continue;
       
-      if (currentPoint.alpha <= 0) continue;
+      const progress = i / trail.length;
+      const width = baseWidth * (1 - progress * 0.4) * point.alpha;
       
-      // Calculate line width based on position in trail
-      const progress = i / bladeTrail.length;
-      const baseWidth = 4.6; // Increased by 15% (4 * 1.15 = 4.6) for more visible blade
-      const width = baseWidth * (1 - progress * 0.5) * currentPoint.alpha;
+      if (i === 1) {
+        ctx.moveTo(prevPoint.x, prevPoint.y);
+      }
+      ctx.lineTo(point.x, point.y);
+      ctx.strokeStyle = `rgba(70, 125, 255, ${point.alpha * 0.3})`;
+      ctx.lineWidth = width * 2.5;
+    }
+    ctx.stroke();
+    
+    // Render mid-layer
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    for (let i = 1; i < trail.length; i++) {
+      const point = trail[i];
+      const prevPoint = trail[i - 1];
+      if (point.alpha <= 0) continue;
       
-      // Draw the blade segment
-      ctx.beginPath();
-      ctx.moveTo(prevPoint.x, prevPoint.y);
-      ctx.lineTo(currentPoint.x, currentPoint.y);
+      const progress = i / trail.length;
+      const width = baseWidth * (1 - progress * 0.4) * point.alpha;
       
-      // Create a glowing effect
-      ctx.shadowColor = '#32b8c6';
-      ctx.shadowBlur = 15 * currentPoint.alpha;
-      ctx.strokeStyle = `rgba(50, 184, 198, ${currentPoint.alpha * 0.9})`;
-      ctx.lineWidth = width;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke();
+      if (i === 1) {
+        ctx.moveTo(prevPoint.x, prevPoint.y);
+      }
+      ctx.lineTo(point.x, point.y);
+      ctx.strokeStyle = `rgba(135, 206, 250, ${point.alpha * 0.6})`;
+      ctx.lineWidth = width * 1.2;
+    }
+    ctx.stroke();
+    
+    // Render core
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    for (let i = 1; i < trail.length; i++) {
+      const point = trail[i];
+      const prevPoint = trail[i - 1];
+      if (point.alpha <= 0) continue;
       
-      // Add inner bright line
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = `rgba(135, 206, 235, ${currentPoint.alpha * 1.0})`;
+      const progress = i / trail.length;
+      const width = baseWidth * (1 - progress * 0.4) * point.alpha;
+      
+      if (i === 1) {
+        ctx.moveTo(prevPoint.x, prevPoint.y);
+      }
+      ctx.lineTo(point.x, point.y);
+      ctx.strokeStyle = `rgba(240, 248, 255, ${point.alpha * 0.95})`;
       ctx.lineWidth = width * 0.4;
-      ctx.stroke();
+    }
+    ctx.stroke();
+    
+    // Simplified particle effects - only at trail end for performance
+    if (trail.length > 0) {
+      const lastPoint = trail[trail.length - 1];
+      if (lastPoint.alpha > 0.5) {
+        const rotation = now * 0.0005;
+        
+        ctx.save();
+        ctx.translate(lastPoint.x, lastPoint.y);
+        
+        // Simple ice sparkles
+        const numSparkles = 6;
+        for (let s = 0; s < numSparkles; s++) {
+          const angle = (s / numSparkles) * Math.PI * 2 + rotation;
+          const distance = 8;
+          const x = Math.cos(angle) * distance;
+          const y = Math.sin(angle) * distance;
+          const size = 2 * lastPoint.alpha;
+          
+          ctx.fillStyle = `rgba(240, 248, 255, ${lastPoint.alpha * 0.8})`;
+          ctx.fillRect(x - size, y - size, size * 2, size * 2);
+        }
+        
+        ctx.restore();
+      }
     }
     
     ctx.restore();
-  }, [bladeTrail]);
+  }, []);
 
   return {
-    bladeTrail,
-    isSlashing,
+    bladeTrail: trailRef.current,
+    isSlashing: isSlashingRef.current,
     addTrailPoint,
     updateTrail,
     clearTrail,

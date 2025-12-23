@@ -9,24 +9,26 @@ const router = express.Router();
 
 /**
  * GET /api/multiplayer/games/available
- * Get list of available games waiting for players
+ * Get list of available PUBLIC games waiting for players
  */
 router.get('/games/available', optionalAuth, asyncHandler(async (req, res) => {
   const { betTier } = req.query;
   const tier = betTier ? parseInt(betTier) : null;
-  
-  const games = global.gameManager.getAvailableGames(tier);
-  
+
+  // Only return public games
+  const allGames = global.gameManager.getAvailableGames(tier);
+  const publicGames = allGames.filter(g => g.room_type !== 'private');
+
   res.json({
     success: true,
-    games,
-    count: games.length
+    games: publicGames,
+    count: publicGames.length
   });
 }));
 
 /**
  * POST /api/multiplayer/games/create
- * Create a new multiplayer game
+ * Create a new multiplayer game (public or private)
  */
 router.post('/games/create',
   authenticateWallet,
@@ -35,22 +37,31 @@ router.post('/games/create',
     validations.transactionHash()
   ]),
   asyncHandler(async (req, res) => {
-    const { betTierId, transactionHash } = req.body;
+    const { betTierId, transactionHash, roomType = 'public' } = req.body;
     const player1Address = req.walletAddress;
-    
+
+    // Validate roomType
+    if (roomType !== 'public' && roomType !== 'private') {
+      return res.status(400).json({
+        success: false,
+        error: 'roomType must be "public" or "private"'
+      });
+    }
+
     const result = await global.gameManager.createGame({
       player1Address,
       betTierId,
-      transactionHash
+      transactionHash,
+      roomType
     });
-    
+
     res.json(result);
   })
 );
 
 /**
  * POST /api/multiplayer/games/:gameId/join
- * Join an existing game
+ * Join an existing game by game ID
  */
 router.post('/games/:gameId/join',
   authenticateWallet,
@@ -62,15 +73,42 @@ router.post('/games/:gameId/join',
     const { gameId } = req.params;
     const { transactionHash } = req.body;
     const player2Address = req.walletAddress;
-    
+
     logger.info(`Join game request: ${gameId} by ${player2Address}`);
-    
+
     const result = await global.gameManager.joinGame({
       gameId,
       player2Address,
       transactionHash
     });
-    
+
+    res.json(result);
+  })
+);
+
+/**
+ * POST /api/multiplayer/games/join-code/:code
+ * Join a private game using join code
+ */
+router.post('/games/join-code/:code',
+  authenticateWallet,
+  validate([
+    param('code').isString().isLength({ min: 6, max: 6 }),
+    validations.transactionHash()
+  ]),
+  asyncHandler(async (req, res) => {
+    const { code } = req.params;
+    const { transactionHash } = req.body;
+    const player2Address = req.walletAddress;
+
+    logger.info(`Join by code request: ${code} by ${player2Address}`);
+
+    const result = await global.gameManager.joinByCode({
+      joinCode: code,
+      player2Address,
+      transactionHash
+    });
+
     res.json(result);
   })
 );
@@ -82,7 +120,7 @@ router.post('/games/:gameId/join',
 router.post('/games/:gameId/score',
   authenticateWallet,
   validate([
-    param('gameId').isUUID(),
+    param('gameId').isString(),
     validations.score(),
     validations.gameEvents()
   ]),
@@ -90,14 +128,39 @@ router.post('/games/:gameId/score',
     const { gameId } = req.params;
     const { finalScore, gameEvents } = req.body;
     const playerAddress = req.walletAddress;
-    
+
     const result = await global.gameManager.submitScore({
       gameId,
       playerAddress,
       gameEvents,
       finalScore
     });
-    
+
+    res.json(result);
+  })
+);
+
+/**
+ * POST /api/multiplayer/games/:gameId/lives
+ * NEW: Update player lives in real-time
+ */
+router.post('/games/:gameId/lives',
+  authenticateWallet,
+  validate([
+    param('gameId').isString()
+  ]),
+  asyncHandler(async (req, res) => {
+    const { gameId } = req.params;
+    const { lives, score } = req.body;
+    const playerAddress = req.walletAddress;
+
+    const result = await global.gameManager.updatePlayerLives({
+      gameId,
+      playerAddress,
+      lives,
+      score
+    });
+
     res.json(result);
   })
 );
@@ -108,37 +171,37 @@ router.post('/games/:gameId/score',
  */
 router.post('/games/:gameId/cancel',
   validate([
-    param('gameId').isUUID()
+    param('gameId').isString()
   ]),
   asyncHandler(async (req, res) => {
     const { gameId } = req.params;
     const playerAddress = req.walletAddress;
-    
+
     const game = global.gameManager.activeGames.get(gameId);
-    
+
     if (!game) {
       return res.status(404).json({
         success: false,
         error: 'Game not found'
       });
     }
-    
+
     if (game.player1 !== playerAddress) {
       return res.status(403).json({
         success: false,
         error: 'Only game creator can cancel'
       });
     }
-    
+
     if (game.state !== 'waiting') {
       return res.status(400).json({
         success: false,
         error: 'Can only cancel waiting games'
       });
     }
-    
+
     await global.gameManager.cancelGame(gameId, 'player_cancelled');
-    
+
     res.json({
       success: true,
       message: 'Game cancelled'
@@ -152,13 +215,13 @@ router.post('/games/:gameId/cancel',
  */
 router.get('/games/:gameId',
   validate([
-    param('gameId').isUUID()
+    param('gameId').isString()
   ]),
   asyncHandler(async (req, res) => {
     const { gameId } = req.params;
-    
+
     const game = global.gameManager.activeGames.get(gameId);
-    
+
     if (!game) {
       // Try to fetch from database
       const { data, error } = await global.gameManager.supabase
@@ -166,20 +229,20 @@ router.get('/games/:gameId',
         .select('*')
         .eq('game_id', gameId)
         .single();
-      
+
       if (error || !data) {
         return res.status(404).json({
           success: false,
           error: 'Game not found'
         });
       }
-      
+
       return res.json({
         success: true,
         game: data
       });
     }
-    
+
     res.json({
       success: true,
       game
@@ -197,12 +260,12 @@ router.get('/player/:address/games',
   ]),
   asyncHandler(async (req, res) => {
     const { address } = req.params;
-    
+
     const gameIds = global.gameManager.playerGames.get(address) || [];
     const games = gameIds
       .map(id => global.gameManager.activeGames.get(id))
       .filter(Boolean);
-    
+
     res.json({
       success: true,
       games,
@@ -230,13 +293,13 @@ router.get('/stats', asyncHandler(async (req, res) => {
   const activeGames = global.gameManager.activeGames.size;
   const waitingGames = global.gameManager.getAvailableGames().length;
   const activePlayers = global.gameManager.playerGames.size;
-  
+
   // Get completed games count from database
   const { count: completedGames } = await global.gameManager.supabase
     .from('multiplayer_games')
     .select('*', { count: 'exact', head: true })
     .eq('state', 'completed');
-  
+
   res.json({
     success: true,
     stats: {

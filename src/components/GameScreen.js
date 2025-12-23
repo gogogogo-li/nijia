@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { useSlashDetection } from '../hooks/useSlashDetection';
 import { useBladeTrail } from '../hooks/useBladeTrail';
@@ -7,12 +7,13 @@ import { usePointPopups } from '../hooks/usePointPopups';
 import { useMissedTokenNotifications } from '../hooks/useMissedTokenNotifications';
 import multiplayerService from '../services/multiplayerService';
 import PointPopup from './PointPopup';
+import { GiTrophyCup, GiCrossedSwords } from 'react-icons/gi';
 
-const GameScreen = ({ 
-  gameState, 
-  onEndGame, 
-  onUpdateScore, 
-  onLoseLife, 
+const GameScreen = ({
+  gameState,
+  onEndGame,
+  onUpdateScore,
+  onLoseLife,
   onLoseLiveFromMissedToken,
   onTogglePause,
   onCreateParticles,
@@ -27,17 +28,28 @@ const GameScreen = ({
   const ctxRef = useRef(null);
   const isVisible = useVisibility();
   const wasVisibleRef = useRef(isVisible);
-  
+
   const { popups, addPopup, removePopup, clearAllPopups } = usePointPopups();
-  const { 
-    clearAllMissedNotifications 
+  const {
+    clearAllMissedNotifications
   } = useMissedTokenNotifications();
 
-  // Listen for multiplayer events - RACE MODE
+  // Animation state for win/loss overlay
+  const [showOutcomeAnimation, setShowOutcomeAnimation] = useState(false);
+  const [gameOutcome, setGameOutcome] = useState(null); // 'won', 'lost', 'draw'
+
+  // Listen for multiplayer events - RACE MODE + LIFE-BASED END
   useEffect(() => {
     if (!multiplayerGameId) return;
 
-    // Handle opponent finishing their game first
+    // CRITICAL: Ensure socket is connected for multiplayer games
+    // The lobby disconnects on unmount, so we need to reconnect here
+    if (!multiplayerService.isConnected()) {
+      console.log('🔌 Reconnecting socket for multiplayer game...');
+      multiplayerService.connect(onechain?.walletAddress);
+    }
+
+    // Handle opponent finishing their game first (race mode)
     const handleOpponentFinishedFirst = (data) => {
       console.log('🚨 OPPONENT FINISHED FIRST! Ending my game immediately:', data);
       console.log(`   Opponent: ${data.opponent}`);
@@ -46,12 +58,57 @@ const GameScreen = ({
       onEndGame();
     };
 
-    multiplayerService.listeners.onOpponentFinishedFirst = handleOpponentFinishedFirst;
+    // Handle game completion from server (when any player loses all lives)
+    const handleGameCompleted = (game) => {
+      const completedGameId = game.game_id || game.gameId;
+      if (String(completedGameId) === String(multiplayerGameId)) {
+        console.log('🏁 GAME COMPLETED - Showing win/loss animation!', game);
+        console.log(`   Winner: ${game.winner}`);
+        console.log(`   My address: ${onechain?.walletAddress}`);
+
+        // Determine if we won or lost
+        const isWinner = game.winner &&
+          game.winner.toLowerCase() === onechain?.walletAddress?.toLowerCase();
+        const isDraw = !game.winner;
+
+        console.log(`   Is winner: ${isWinner}, Is draw: ${isDraw}`);
+
+        // Show animation
+        setGameOutcome(isDraw ? 'draw' : isWinner ? 'won' : 'lost');
+        setShowOutcomeAnimation(true);
+
+        // After 2.5 seconds, transition to results
+        setTimeout(() => {
+          setShowOutcomeAnimation(false);
+          onEndGame();
+        }, 2500);
+      }
+    };
+
+    // Handle lives update to check if opponent lost all lives
+    const handleLivesUpdate = (data) => {
+      if (String(data.game_id) === String(multiplayerGameId)) {
+        // Check if either player lost all lives
+        if (data.player1_lives === 0 || data.player2_lives === 0) {
+          console.log('💀 A player lost all lives! Game should end...');
+          console.log(`   P1 Lives: ${data.player1_lives}, P2 Lives: ${data.player2_lives}`);
+          // Don't call onEndGame here - wait for server's game:completed event
+        }
+      }
+    };
+
+    // Set the listeners using the service's setListeners method
+    multiplayerService.setListeners({
+      onOpponentFinishedFirst: handleOpponentFinishedFirst,
+      onGameCompleted: handleGameCompleted,
+      onLivesUpdate: handleLivesUpdate
+    });
 
     return () => {
-      multiplayerService.listeners.onOpponentFinishedFirst = null;
+      // Don't disconnect socket on cleanup - keep it connected for results screen
+      multiplayerService.setListeners({});
     };
-  }, [multiplayerGameId, onEndGame]);
+  }, [multiplayerGameId, onEndGame, onechain?.walletAddress]);
 
   // Handle missed fruit without notification
   const handleMissedFruit = useCallback(() => {
@@ -59,9 +116,9 @@ const GameScreen = ({
     // Removed addMissedNotification() to disable popup
   }, [onLoseLiveFromMissedToken]);
 
-  const { 
-    items, 
-    slashTrail, 
+  const {
+    items,
+    slashTrail,
     particles,
     spawnItem,
     updateGame,
@@ -69,7 +126,7 @@ const GameScreen = ({
     cleanupExcessItems,
     showComboMessage,
     itemCount
-  } = useGameLoop(canvasRef, gameState, onEndGame, updateParticles, handleMissedFruit);
+  } = useGameLoop(canvasRef, gameState, onEndGame, updateParticles, handleMissedFruit, 1, multiplayerGameId);
 
   const {
     isSlashing,
@@ -135,18 +192,18 @@ const GameScreen = ({
       updateGame();
       updateTrail(); // Update blade trail
     }, 16);
-    
+
     // Fruit Ninja style progressive spawning - starts very slow, gradually increases
     let lastSpawn = Date.now();
     const dynamicSpawner = setInterval(() => {
       const now = Date.now();
       if (!gameState.gameStartTime) return;
-      
+
       const elapsed = now - gameState.gameStartTime;
-      
+
       // Progressive difficulty system (Fruit Ninja algorithm - very gentle start)
       let waveSize, spawnInterval, staggerDelay;
-      
+
       if (elapsed < 15000) {
         // First 15 seconds - VERY slow tutorial, 1 token at a time
         waveSize = 1;
@@ -179,13 +236,13 @@ const GameScreen = ({
         spawnInterval = 1500;
         staggerDelay = 100;
       }
-      
+
       if (now - lastSpawn >= spawnInterval) {
         // Spawn wave with staggered timing
         for (let i = 0; i < waveSize; i++) {
           setTimeout(() => spawnItem(), i * staggerDelay);
         }
-        
+
         lastSpawn = now;
       }
     }, 50); // Check every 50ms for precise timing
@@ -197,7 +254,10 @@ const GameScreen = ({
   }, [gameState.isGameRunning, gameState.isPaused, gameState.gameStartTime, updateGame, spawnItem, updateTrail, isVisible]);
 
   // Auto-pause when tab becomes invisible, resume when visible again
+  // DISABLED for multiplayer - game continues even if tab is hidden
   useEffect(() => {
+    if (multiplayerGameId) return; // No auto-pause in multiplayer
+
     if (wasVisibleRef.current !== isVisible && gameState.isGameRunning) {
       if (!isVisible && !gameState.isPaused) {
         // Tab became invisible and game was running - auto pause
@@ -205,7 +265,7 @@ const GameScreen = ({
       }
     }
     wasVisibleRef.current = isVisible;
-  }, [isVisible, gameState.isGameRunning, gameState.isPaused, onTogglePause]);
+  }, [isVisible, gameState.isGameRunning, gameState.isPaused, onTogglePause, multiplayerGameId]);
 
   // Clean up excess items periodically
   useEffect(() => {
@@ -227,11 +287,11 @@ const GameScreen = ({
     if (!gameState.isGameRunning || gameState.isPaused || gameState.timeRemaining === null) {
       return;
     }
-    
+
     const timerInterval = setInterval(() => {
       onDecrementTimer();
     }, 1000); // Decrease every second
-    
+
     return () => clearInterval(timerInterval);
   }, [gameState.isGameRunning, gameState.isPaused, gameState.timeRemaining, onDecrementTimer]);
 
@@ -277,6 +337,202 @@ const GameScreen = ({
 
   return (
     <div className="screen game-screen fullscreen">
+      {/* Win/Loss Animation Overlay */}
+      {showOutcomeAnimation && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10001,
+          background: gameOutcome === 'won'
+            ? 'radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.4) 0%, rgba(0, 255, 136, 0.25) 40%, rgba(0, 0, 0, 0.98) 100%)'
+            : gameOutcome === 'lost'
+              ? 'radial-gradient(circle at 50% 50%, rgba(255, 71, 87, 0.4) 0%, rgba(139, 0, 0, 0.25) 40%, rgba(0, 0, 0, 0.98) 100%)'
+              : 'radial-gradient(circle at 50% 50%, rgba(70, 125, 255, 0.4) 0%, rgba(30, 60, 150, 0.25) 40%, rgba(0, 0, 0, 0.98) 100%)',
+          overflow: 'hidden'
+        }}>
+          {/* Confetti for winner */}
+          {gameOutcome === 'won' && [...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                width: `${Math.random() * 12 + 8}px`,
+                height: `${Math.random() * 12 + 8}px`,
+                background: ['#ffd700', '#ff6b6b', '#00ff88', '#467DFF', '#ff00ff', '#00ffff'][Math.floor(Math.random() * 6)],
+                left: `${Math.random() * 100}%`,
+                top: `-20px`,
+                borderRadius: Math.random() > 0.5 ? '50%' : '0',
+                animation: `confettiFall ${2 + Math.random() * 2}s ease-out forwards`,
+                animationDelay: `${Math.random() * 0.5}s`,
+                transform: `rotate(${Math.random() * 360}deg)`,
+                boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)'
+              }}
+            />
+          ))}
+
+          {/* Rain effect for loser */}
+          {gameOutcome === 'lost' && [...Array(30)].map((_, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                width: '2px',
+                height: `${20 + Math.random() * 30}px`,
+                background: 'linear-gradient(transparent, rgba(255, 71, 87, 0.6))',
+                left: `${Math.random() * 100}%`,
+                top: `-50px`,
+                animation: `rainFall ${1 + Math.random()}s linear infinite`,
+                animationDelay: `${Math.random() * 2}s`
+              }}
+            />
+          ))}
+
+          <div style={{
+            textAlign: 'center',
+            zIndex: 10
+          }}>
+            {gameOutcome === 'won' && (
+              <>
+                <div style={{
+                  animation: 'bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55)'
+                }}>
+                  <GiTrophyCup style={{
+                    fontSize: '180px',
+                    color: '#ffd700',
+                    marginBottom: '20px',
+                    filter: 'drop-shadow(0 0 60px rgba(255, 215, 0, 0.9))',
+                    animation: 'trophyPulse 0.5s ease-in-out infinite alternate'
+                  }} />
+                </div>
+                <h1 style={{
+                  fontSize: '120px',
+                  fontWeight: '900',
+                  background: 'linear-gradient(135deg, #ffd700 0%, #ffaa00 30%, #00ff88 70%, #00ffaa 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  margin: 0,
+                  letterSpacing: '8px',
+                  textShadow: '0 0 80px rgba(255, 215, 0, 0.8)',
+                  animation: 'textGlow 0.4s ease-in-out infinite alternate'
+                }}>VICTORY!</h1>
+                <p style={{
+                  fontSize: '40px',
+                  color: '#00ff88',
+                  marginTop: '25px',
+                  fontWeight: '800',
+                  letterSpacing: '6px',
+                  textShadow: '0 0 30px rgba(0, 255, 136, 0.7)',
+                  animation: 'pulseGlow 0.8s ease-in-out infinite'
+                }}>+0.196 OCT 💰</p>
+              </>
+            )}
+            {gameOutcome === 'lost' && (
+              <>
+                <div style={{
+                  animation: 'shakeIn 0.6s ease'
+                }}>
+                  <GiCrossedSwords style={{
+                    fontSize: '160px',
+                    color: '#ff4757',
+                    marginBottom: '20px',
+                    filter: 'drop-shadow(0 0 40px rgba(255, 71, 87, 0.8))',
+                    opacity: 0.9
+                  }} />
+                </div>
+                <h1 style={{
+                  fontSize: '100px',
+                  fontWeight: '900',
+                  background: 'linear-gradient(135deg, #ff4757 0%, #ff6b6b 50%, #8b0000 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  margin: 0,
+                  letterSpacing: '8px',
+                  animation: 'fadeInScale 0.5s ease'
+                }}>DEFEAT</h1>
+                <p style={{
+                  fontSize: '28px',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  marginTop: '25px',
+                  fontWeight: '600',
+                  letterSpacing: '3px'
+                }}>Better luck next time! 💪</p>
+              </>
+            )}
+            {gameOutcome === 'draw' && (
+              <>
+                <GiCrossedSwords style={{
+                  fontSize: '150px',
+                  color: '#467DFF',
+                  marginBottom: '20px',
+                  filter: 'drop-shadow(0 0 40px rgba(70, 125, 255, 0.6))'
+                }} />
+                <h1 style={{
+                  fontSize: '100px',
+                  fontWeight: '900',
+                  background: 'linear-gradient(135deg, #467DFF 0%, #00d4ff 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  margin: 0,
+                  letterSpacing: '10px'
+                }}>DRAW!</h1>
+                <p style={{
+                  fontSize: '32px',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  marginTop: '20px',
+                  fontWeight: '700',
+                  letterSpacing: '4px'
+                }}>Stakes returned</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CSS Keyframes - injected via style tag */}
+      <style>{`
+        @keyframes confettiFall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        @keyframes rainFall {
+          0% { transform: translateY(-50px); opacity: 0; }
+          10% { opacity: 1; }
+          100% { transform: translateY(100vh); opacity: 0; }
+        }
+        @keyframes bounceIn {
+          0% { transform: scale(0); }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); }
+        }
+        @keyframes shakeIn {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+          20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+        @keyframes trophyPulse {
+          0% { transform: scale(1) rotate(-3deg); }
+          100% { transform: scale(1.1) rotate(3deg); }
+        }
+        @keyframes textGlow {
+          0% { filter: brightness(1) drop-shadow(0 0 20px rgba(255, 215, 0, 0.5)); }
+          100% { filter: brightness(1.2) drop-shadow(0 0 40px rgba(255, 215, 0, 0.8)); }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.9; transform: scale(1.05); }
+        }
+        @keyframes fadeInScale {
+          0% { opacity: 0; transform: scale(0.8); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+
       {/* Top UI Layout: Score on left, Lives on right */}
       <div style={{
         position: 'absolute',
@@ -291,7 +547,7 @@ const GameScreen = ({
         pointerEvents: 'none'
       }}>
         {/* Left Side: Cool Score Display */}
-                {/* Left Side: Score */}
+        {/* Left Side: Score */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.08)',
           backdropFilter: 'blur(20px) saturate(180%)',
@@ -325,13 +581,13 @@ const GameScreen = ({
             }}>SCORE</span>
             <span>{gameState.score}</span>
           </div>
-          
+
           {/* Combo Display */}
           {gameState.combo > 1 && (() => {
             const timeSinceLastSlash = Date.now() - gameState.lastSlashTime;
             const comboTimeLeft = Math.max(0, 2000 - timeSinceLastSlash);
             const isComboWarning = comboTimeLeft < 500 && comboTimeLeft > 0;
-            
+
             return (
               <div style={{
                 display: 'flex',
@@ -345,22 +601,22 @@ const GameScreen = ({
                   gap: '6px',
                   fontSize: '1.3rem',
                   fontWeight: '800',
-                  backgroundImage: isComboWarning 
-                    ? 'linear-gradient(45deg, #ff4444, #ff6600)' 
+                  backgroundImage: isComboWarning
+                    ? 'linear-gradient(45deg, #ff4444, #ff6600)'
                     : 'linear-gradient(45deg, #EC796B, #FF6B9D)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
                   textShadow: 'none', // Removed glow
-                  filter: isComboWarning 
-                    ? 'drop-shadow(0 2px 4px rgba(255, 68, 68, 0.4))' 
+                  filter: isComboWarning
+                    ? 'drop-shadow(0 2px 4px rgba(255, 68, 68, 0.4))'
                     : 'drop-shadow(0 2px 4px rgba(236, 121, 107, 0.3))', // Reduced shadow
                   animation: gameState.combo > 5 || isComboWarning ? 'comboFlash 0.4s ease-in-out infinite alternate' : 'comboPulse 1s ease-in-out infinite'
                 }}>
                   <span style={{
                     fontSize: '0.7rem',
-                    backgroundImage: isComboWarning 
-                      ? 'linear-gradient(45deg, #ff6600, #ff8800)' 
+                    backgroundImage: isComboWarning
+                      ? 'linear-gradient(45deg, #ff6600, #ff8800)'
                       : 'linear-gradient(45deg, #EC796B, #FF6B9D)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
@@ -375,7 +631,7 @@ const GameScreen = ({
                     textShadow: '0 2px 4px rgba(0, 0, 0, 0.4)' // Reduced shadow
                   }}>{gameState.combo}x</span>
                 </div>
-                
+
                 {/* Combo timer bar */}
                 <div style={{
                   width: '80px',
@@ -389,12 +645,12 @@ const GameScreen = ({
                   <div style={{
                     width: `${(comboTimeLeft / 2000) * 100}%`,
                     height: '100%',
-                    backgroundImage: isComboWarning 
+                    backgroundImage: isComboWarning
                       ? 'linear-gradient(90deg, #ff4444, #ff6600)'
                       : 'linear-gradient(90deg, #EC796B, #FF6B9D)',
                     transition: 'width 0.1s ease-out',
                     borderRadius: '2px',
-                    boxShadow: isComboWarning 
+                    boxShadow: isComboWarning
                       ? '0 0 6px rgba(255, 68, 68, 0.4)'
                       : '0 0 4px rgba(236, 121, 107, 0.3)', // Reduced glow
                     animation: isComboWarning ? 'timerFlash 0.2s ease-in-out infinite' : 'none'
@@ -404,33 +660,6 @@ const GameScreen = ({
             );
           })()}
 
-          {/* Difficulty Level Indicator */}
-          {gameState.gameStartTime && (() => {
-            const elapsed = Date.now() - gameState.gameStartTime;
-            const diffLevel = Math.floor(elapsed / 10000) + 1;
-            if (elapsed > 10000) {
-              return (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  gap: '4px',
-                  fontSize: '0.9rem',
-                  fontWeight: '500',
-                  color: diffLevel > 3 ? '#5C4FFF' : '#EC796B'
-                }}>
-                  <span style={{
-                    fontSize: '0.6rem',
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    textTransform: 'uppercase'
-                  }}>LVL</span>
-                  <span>{diffLevel}</span>
-                  {diffLevel > 5 && <span style={{ fontSize: '0.7rem' }}>🔥</span>}
-                </div>
-              );
-            }
-            return null;
-          })()}
-          
           {/* Timer Display for Arcade and Zen modes */}
           {gameState.timeRemaining !== null && (
             <div style={{
@@ -452,7 +681,7 @@ const GameScreen = ({
               <span>{gameState.timeRemaining}s</span>
             </div>
           )}
-          
+
           {/* Best Score */}
           <div style={{
             display: 'flex',
@@ -472,7 +701,7 @@ const GameScreen = ({
             <span>{gameState.bestScore}</span>
           </div>
         </div>
-        
+
         {/* Right Side: Lives */}
         <div style={{
           display: 'flex',
@@ -494,7 +723,7 @@ const GameScreen = ({
               const heartIndex = i - 1;
               const heartHealth = gameState.heartHealth ? gameState.heartHealth[heartIndex] : 100;
               const isActiveHeart = heartHealth > 0;
-              
+
               return (
                 <span
                   key={i}
@@ -513,15 +742,15 @@ const GameScreen = ({
           </div>
         </div>
       </div>
-      
+
       {/* Floating UI Elements */}
       <div className="game-ui-overlay">
-        
+
         {itemCount > 10 && (
           <div className="performance-warning">
-            <div style={{ 
-              color: '#EC796B', 
-              fontSize: '12px', 
+            <div style={{
+              color: '#EC796B',
+              fontSize: '12px',
               fontWeight: 'bold',
               textShadow: '0 0 10px rgba(236, 121, 107, 0.8)'
             }}>
@@ -529,17 +758,20 @@ const GameScreen = ({
             </div>
           </div>
         )}
-        
-        <button 
-          className="btn btn--outline pause-btn-overlay" 
-          type="button"
-          onClick={onTogglePause}
-        >
-          <span>{gameState.isPaused ? '▶️' : '⏸️'}</span>
-        </button>
-        
-        {/* Keyboard Shortcuts Hint - Only show when game is running */}
-        {gameState.isGameRunning && (
+
+        {/* Pause button - HIDDEN in multiplayer mode */}
+        {!multiplayerGameId && (
+          <button
+            className="btn btn--outline pause-btn-overlay"
+            type="button"
+            onClick={onTogglePause}
+          >
+            <span>{gameState.isPaused ? '▶️' : '⏸️'}</span>
+          </button>
+        )}
+
+        {/* Keyboard Shortcuts Hint - Only show when game is running and NOT multiplayer */}
+        {gameState.isGameRunning && !multiplayerGameId && (
           <div className="keyboard-shortcuts-hint">
             <div className="shortcut-hint">
               <span className="key-indicator">Space</span> or <span className="key-indicator">P</span> to pause
@@ -547,9 +779,9 @@ const GameScreen = ({
           </div>
         )}
       </div>
-      
+
       {/* Full Screen Canvas */}
-      <canvas 
+      <canvas
         ref={canvasRef}
         className="game-canvas fullscreen-canvas"
         onMouseDown={handleMouseDown}
@@ -559,10 +791,10 @@ const GameScreen = ({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       />
-      
+
       {/* Point Popups */}
       <PointPopup popups={popups} onRemovePopup={removePopup} />
-      
+
       {/* Missed Token Notifications - Disabled */}
       {/* <MissedTokenNotification 
         notifications={missedNotifications} 
@@ -590,7 +822,7 @@ const GameScreen = ({
             backdropFilter: 'blur(20px)',
             borderRadius: '20px',
             padding: '3rem 2.5rem',
-            border: '2px solid rgba(46, 216, 167, 0.3)',
+            border: '2px solid rgba(70, 125, 255, 0.3)',
             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
             textAlign: 'center',
             minWidth: '320px',
@@ -599,14 +831,14 @@ const GameScreen = ({
             <h2 style={{
               fontFamily: 'Orbitron, sans-serif',
               fontSize: '2.5rem',
-              color: '#2ED8A7',
+              color: '#467DFF',
               margin: '0 0 2rem 0',
-              textShadow: '0 0 20px rgba(46, 216, 167, 0.5)',
+              textShadow: '0 0 20px rgba(70, 125, 255, 0.5)',
               fontWeight: 900,
               textTransform: 'uppercase',
               letterSpacing: '0.1em'
             }}>Paused</h2>
-            
+
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -617,7 +849,7 @@ const GameScreen = ({
                 style={{
                   fontFamily: 'Orbitron, sans-serif',
                   padding: '1rem 2rem',
-                  background: 'linear-gradient(135deg, #2ED8A7, #26C799)',
+                  background: 'linear-gradient(135deg, #467DFF, #BFC1FF)',
                   border: 'none',
                   borderRadius: '50px',
                   color: 'white',
@@ -625,22 +857,22 @@ const GameScreen = ({
                   fontWeight: 700,
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 6px 20px rgba(46, 216, 167, 0.4)',
+                  boxShadow: '0 6px 20px rgba(70, 125, 255, 0.4)',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em'
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.transform = 'translateY(-3px) scale(1.05)';
-                  e.target.style.boxShadow = '0 8px 25px rgba(46, 216, 167, 0.6)';
+                  e.target.style.boxShadow = '0 8px 25px rgba(70, 125, 255, 0.6)';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.transform = 'translateY(0) scale(1)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(46, 216, 167, 0.4)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(70, 125, 255, 0.4)';
                 }}
               >
                 ▶ Resume Game
               </button>
-              
+
               <button
                 onClick={onBackToHome}
                 style={{
@@ -672,7 +904,7 @@ const GameScreen = ({
                   e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
                 }}
               >
-                 Back to Home
+                Back to Home
               </button>
             </div>
 
@@ -682,13 +914,13 @@ const GameScreen = ({
               fontSize: '0.9rem',
               fontWeight: 500
             }}>
-              Press <span style={{ 
+              Press <span style={{
                 color: '#EC796B',
                 fontWeight: 700,
                 padding: '0.2rem 0.5rem',
                 background: 'rgba(236, 121, 107, 0.1)',
                 borderRadius: '4px'
-              }}>Space</span> or <span style={{ 
+              }}>Space</span> or <span style={{
                 color: '#EC796B',
                 fontWeight: 700,
                 padding: '0.2rem 0.5rem',

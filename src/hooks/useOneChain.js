@@ -17,13 +17,13 @@ export const useOneChain = () => {
       try {
         // Try to restore previous session
         const restored = await onechainService.restoreSession();
-        
+
         if (restored) {
           setWalletAddress(onechainService.walletAddress);
           setIsConnected(true);
           setUserProfile(onechainService.userProfile);
           console.log('✅ Wallet session restored');
-          
+
           // Load balance
           const balanceData = await onechainService.getBalance();
           setBalance(balanceData);
@@ -43,7 +43,7 @@ export const useOneChain = () => {
         console.log('Wallet not auto-connected:', err);
       }
     };
-    
+
     checkConnection();
 
     // Set up event listeners
@@ -80,27 +80,46 @@ export const useOneChain = () => {
   // Connect wallet
   const connectWallet = useCallback(async () => {
     if (isConnecting) return;
-    
+
     setIsConnecting(true);
     setError(null);
 
     try {
       console.log('🔵 Initiating wallet connection...');
       const result = await onechainService.connectWallet();
-      
+
       if (result.success) {
         setWalletAddress(result.address);
         setIsConnected(true);
         setUserProfile(result.profile);
-        
-        // Load balance after connection
-        try {
-          const balanceData = await onechainService.getBalance();
-          setBalance(balanceData);
-        } catch (balErr) {
-          console.warn('Failed to load balance:', balErr);
-        }
-        
+
+        // Load balance after connection with retry logic
+        const loadBalance = async (attempt = 1) => {
+          try {
+            console.log(`💰 Loading balance (attempt ${attempt})...`);
+            // Small delay to ensure wallet state is fully synchronized
+            if (attempt === 1) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            const balanceData = await onechainService.getBalance();
+            console.log('✅ Balance loaded:', balanceData);
+            setBalance(balanceData);
+            return balanceData;
+          } catch (balErr) {
+            console.warn(`Failed to load balance (attempt ${attempt}):`, balErr.message);
+            if (attempt < 3) {
+              console.log(`   Retrying in ${attempt * 1000}ms...`);
+              await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+              return loadBalance(attempt + 1);
+            }
+            console.error('❌ All balance fetch attempts failed');
+            setBalance({ amount: '0.0000', symbol: 'OCT', error: 'Failed to fetch' });
+            return null;
+          }
+        };
+
+        loadBalance();
+
         console.log('✅ Wallet connected in hook:', result.address);
         return result;
       } else {
@@ -171,7 +190,7 @@ export const useOneChain = () => {
 
     try {
       const result = await onechainService.mintGameNFT(gameStats);
-      
+
       if (result.success) {
         setMintedNFT(result);
         // Refresh balance after minting (gas was spent)
@@ -179,7 +198,7 @@ export const useOneChain = () => {
       } else {
         setError(result.error);
       }
-      
+
       return result;
     } catch (err) {
       const errorMsg = err.message || 'Failed to mint NFT';
@@ -198,17 +217,17 @@ export const useOneChain = () => {
     error,
     userProfile,
     balance,
-    
+
     // Wallet actions
     connectWallet,
     disconnectWallet,
     refreshBalance,
-    
+
     // NFT minting
     isMinting,
     mintedNFT,
     mintGameNFT,
-    
+
     // Game actions
     startGameSession,
     recordSlash,

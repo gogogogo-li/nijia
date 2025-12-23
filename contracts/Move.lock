@@ -2,7 +2,7 @@
 
 [move]
 version = 3
-manifest_digest = "49E71CCD29B412ACFC1DE9EB2C8CAF582F4FA8D56E4026D7556E5ADED1293488"
+manifest_digest = "A77F7C66EB30AE10A3879A1FA60C12F7E1B1EA38201EB89BBA4B21FF246B8710"
 deps_digest = "F8BBB0CCB2491CA29A3DF03D6F92277A4F3574266507ACD77214D37ECA3F3082"
 dependencies = [
   { id = "One", name = "One" },
@@ -10,7 +10,7 @@ dependencies = [
 
 [[move.package]]
 id = "MoveStdlib"
-source = { git = "https://github.com/one-chain-labs/onechain.git", rev = "main", subdir = "crates\\sui-framework\\packages\\move-stdlib" }
+source = { git = "https://github.com/one-chain-labs/onechain.git", rev = "main", subdir = "crates/sui-framework/packages/move-stdlib" }
 
 [[move.package]]
 id = "One"
@@ -24,3 +24,11 @@ dependencies = [
 compiler-version = "1.0.1"
 edition = "2024.beta"
 flavor = "one"
+
+[env]
+
+[env.testnet]
+chain-id = "1bd5c965"
+original-published-id = "0xefbf58fa278a268ca39cd656fecc57bde056088f9eeaaa25db171459732c5ace"
+latest-published-id = "0xefbf58fa278a268ca39cd656fecc57bde056088f9eeaaa25db171459732c5ace"
+published-version = "1"
