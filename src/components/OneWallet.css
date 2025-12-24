@@ -42,7 +42,7 @@
 .wallet-dropdown {
   position: absolute;
   top: calc(100% + 10px);
-  right: 0;
+  left: 0;
   background: rgba(10, 10, 15, 0.98);
   backdrop-filter: blur(24px);
   border: 2px solid rgba(70, 125, 255, 0.3);

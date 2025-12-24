@@ -169,9 +169,6 @@ function App() {
     return (
       <div className="App">
         <BladeCursor />
-        <div className="beta-tag">
-          <span className="beta-text">BETA v0.1</span>
-        </div>
 
         <MultiplayerLobby
           walletAddress={onechain.walletAddress}
@@ -189,9 +186,6 @@ function App() {
     return (
       <div className="App">
         <BladeCursor />
-        <div className="beta-tag">
-          <span className="beta-text">BETA v0.1</span>
-        </div>
 
         <ModeSelection
           onSelectMode={handleModeSelect}
@@ -212,10 +206,6 @@ function App() {
     return (
       <div className="App">
         <BladeCursor />
-        {/* Beta Version Tag */}
-        <div className="beta-tag">
-          <span className="beta-text">BETA v0.1</span>
-        </div>
 
         <LandingPage
           onStartGame={handleStartFromLanding}
