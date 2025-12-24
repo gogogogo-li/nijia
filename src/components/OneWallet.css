@@ -61,6 +61,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -135,7 +136,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .wallet-hint {
@@ -171,8 +174,15 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .wallet-info {
@@ -371,6 +381,7 @@
     opacity: 0;
     transform: translateX(100%);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -424,6 +435,7 @@
   grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
   gap: 8px;
 }
+
 .nft-card {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -578,48 +590,74 @@
   border: 1px solid rgba(239, 68, 68, 0.3);
   font-weight: 500;
 }
+
 .wallet-install-prompt {
   text-align: center;
-  padding: 20px 16px;
+  padding: 32px 28px;
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(70, 125, 255, 0.08) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  max-width: 320px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .wallet-icon-large {
-  font-size: 48px;
+  font-size: 56px;
   color: #467DFF;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 0 12px rgba(70, 125, 255, 0.5));
 }
 
 .wallet-install-prompt h3 {
-  font-size: 15px;
-  margin: 10px 0;
-  color: #E5E7EB;
-  font-weight: 500;
+  font-size: 18px;
+  margin: 0;
+  color: #F5F5F5;
+  font-weight: 600;
+  letter-spacing: -0.3px;
 }
 
 .wallet-install-prompt p {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.6);
-  margin: 8px 0;
-  line-height: 1.5;
+  margin: 0;
+  line-height: 1.6;
+  max-width: 260px;
 }
 
 .install-button {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(135deg, #467DFF 0%, #BFC1FF 100%);
   color: #FFFFFF;
-  padding: 11px 24px;
-  border-radius: 7px;
+  padding: 14px 32px;
+  border-radius: 10px;
   text-decoration: none;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-top: 12px;
+  margin-top: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .install-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(70, 125, 255, 0.5);
-  background: linear-gradient(135deg, #BFC1FF 0%, #467DFF 100%);
+  box-shadow: 0 6px 24px rgba(70, 125, 255, 0.5);
+  background: linear-gradient(135deg, #5a8fff 0%, #d0d2ff 100%);
 }
 
 .view-on-explorer {
