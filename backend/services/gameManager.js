@@ -448,6 +448,21 @@ export class GameManager {
         logger.warn('   Game joined in memory but database update failed');
       }
 
+      // ⛓️ ON-CHAIN: Register game on-chain so it can be settled later
+      // This creates the game in IN_PROGRESS state on the contract
+      logger.info(`⛓️  Registering game ${numericGameId} on-chain...`);
+      const registrationResult = await onChainSettlement.registerGame(game);
+      if (registrationResult.success) {
+        game.onchain_tx = registrationResult.digest;
+        logger.info(`   ✅ Game registered on-chain: ${registrationResult.digest}`);
+        this.activeGames.set(numericGameId, game);
+      } else {
+        logger.warn(`   ⚠️  On-chain registration failed: ${registrationResult.reason}`);
+        logger.warn(`      Game will proceed off-chain only`);
+        game.onchain_registration_error = registrationResult.reason;
+        this.activeGames.set(numericGameId, game);
+      }
+
       // Notify both players directly
       logger.info(`Notifying players - Player1: ${game.player1}, Player2: ${player2Address}`);
 
@@ -952,7 +967,10 @@ export class GameManager {
 
       // ⛓️ ON-CHAIN SETTLEMENT: Transfer winnings to winner
       // This calls the smart contract to actually move funds
-      if (reason === 'forfeit' || reason === 'disconnect') {
+      // Guard: Skip if already settled on-chain
+      if (game.settlement_tx) {
+        logger.info(`⛓️  Game ${gameId} already settled on-chain (tx: ${game.settlement_tx}), skipping`);
+      } else if (reason === 'forfeit' || reason === 'disconnect') {
         // Use forfeit_game for forfeits/disconnects
         const forfeiter = reason === 'forfeit' ? game.forfeit_by :
           (game.player1 === game.winner ? game.player2 : game.player1);
@@ -970,7 +988,10 @@ export class GameManager {
           game.settlement_tx = settlementResult.digest;
           logger.info(`⛓️  On-chain settlement complete: ${settlementResult.digest}`);
         } else {
+          // Log but don't fail - game completes off-chain even if on-chain fails
           logger.warn(`⚠️  On-chain settlement failed: ${settlementResult.reason}`);
+          // Store failure reason for debugging
+          game.settlement_error = settlementResult.reason;
         }
       }
 

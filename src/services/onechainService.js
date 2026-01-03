@@ -274,26 +274,31 @@ class OneChainService {
       if (window.onechain.providers && typeof window.onechain.providers === 'object') {
         console.log('   Available providers:', Object.keys(window.onechain.providers));
 
-        // Look for OneChain provider
+        // Look for OneChain provider first (highest priority)
         if (window.onechain.providers.onechain && typeof window.onechain.providers.onechain.connect === 'function') {
-          console.log('   Using OneChain provider from providers object');
-          return { provider: window.onechain.providers.onechain, name: 'OneWallet' };
+          console.log('   ✅ Using OneChain provider from providers object');
+          return { provider: window.onechain.providers.onechain, name: 'OneWallet', chain: 'onechain' };
         }
       }
 
-      // Fallback: check if window.onechain has connect directly
+      // Check TOP-LEVEL for onechain provider FIRST (before sui)
+      if (window.onechain.onechain && typeof window.onechain.onechain.connect === 'function') {
+        console.log('   ✅ Using window.onechain.onechain provider (native OneChain)');
+        return { provider: window.onechain.onechain, name: 'OneWallet', chain: 'onechain' };
+      }
+
+      // Check if window.onechain has connect directly (this IS the OneChain provider)
       if (typeof window.onechain.connect === 'function') {
-        console.log('   Using direct OneWallet provider');
-        return { provider: window.onechain, name: 'OneWallet' };
+        console.log('   ✅ Using direct window.onechain provider (OneChain native)');
+        return { provider: window.onechain, name: 'OneWallet', chain: 'onechain' };
       }
 
-      // Last resort: check common chain providers that might support OneChain
-      const chainOrder = ['ethereum', 'cosmos', 'sui', 'bitcoin'];
-      for (const chain of chainOrder) {
-        if (window.onechain[chain] && typeof window.onechain[chain].connect === 'function') {
-          console.log(`   Using ${chain} provider as fallback`);
-          return { provider: window.onechain[chain], name: 'OneWallet' };
-        }
+      // Last resort: use sui-compatible provider with chain override
+      // OneChain is built on Sui's framework, so we use sui provider but specify onechain network
+      if (window.onechain.sui && typeof window.onechain.sui.connect === 'function') {
+        console.log('   ⚠️ Using window.onechain.sui provider (Sui-compatible)');
+        console.log('      IMPORTANT: Will specify chain: onechain:testnet in all transactions');
+        return { provider: window.onechain.sui, name: 'OneWallet', chain: 'sui' };
       }
 
       console.log('❌ No compatible provider found in OneWallet');
@@ -704,10 +709,8 @@ class OneChainService {
             console.log('   Provider all balances result:', JSON.stringify(result));
 
             if (result && result.length > 0) {
-              // Look for OCT coin type first, then fallback to SUI
-              const octBalance = result.find(b => b.coinType && b.coinType.includes('::oct::OCT'));
-              const suiBalance = result.find(b => b.coinType === '0x2::sui::SUI');
-              const targetBalance = octBalance || suiBalance;
+              // Only look for OCT coin - do NOT fallback to SUI
+              const targetBalance = result.find(b => b.coinType && b.coinType.includes('::oct::OCT'));
 
               if (targetBalance && targetBalance.totalBalance) {
                 const balanceInOCT = (Number(targetBalance.totalBalance) / 1_000_000_000).toFixed(4);
@@ -834,8 +837,11 @@ class OneChainService {
     try {
       console.log('🎨 Minting Game NFT on OneChain...', gameStats);
 
-      // Get NFT package ID from environment config
-      const nftPackageId = process.env.REACT_APP_NFT_PACKAGE_ID || this.ONECHAIN_CONFIG.nftCollectionAddress;
+      // Get NFT package ID from environment config and sanitize (remove trailing ~ or whitespace)
+      let nftPackageId = process.env.REACT_APP_NFT_PACKAGE_ID || this.ONECHAIN_CONFIG.nftCollectionAddress;
+      if (nftPackageId) {
+        nftPackageId = nftPackageId.trim().replace(/[~]+$/, ''); // Remove trailing ~ and whitespace
+      }
 
       console.log('📦 NFT Package ID:', nftPackageId);
 
@@ -1325,12 +1331,26 @@ class OneChainService {
 
       let result;
 
+      // Get account for transaction signing
+      let account = null;
+      if (typeof wallet.provider.account === 'function') {
+        account = await wallet.provider.account();
+      } else if (typeof wallet.provider.getAccount === 'function') {
+        account = await wallet.provider.getAccount();
+      } else if (wallet.provider.accounts && wallet.provider.accounts.length > 0) {
+        account = wallet.provider.accounts[0];
+      }
+
+      console.log('   Using account:', account?.address || account);
+
       // Try different methods based on what the wallet supports
       if (typeof wallet.provider.signAndExecuteTransaction === 'function') {
-        // Newer Sui wallet standard
-        console.log('   Using signAndExecuteTransaction...');
+        // Newer wallet standard
+        console.log('   Using signAndExecuteTransaction with chain: onechain:testnet...');
         result = await wallet.provider.signAndExecuteTransaction({
           transaction: tx,
+          account: account,
+          chain: 'onechain:testnet', // CRITICAL: Specify OneChain network
           options: {
             showEffects: true,
             showEvents: true,
@@ -1338,8 +1358,8 @@ class OneChainService {
           }
         });
       } else if (typeof wallet.provider.signAndExecuteTransactionBlock === 'function') {
-        // Older Sui wallet standard - serialize the transaction first
-        console.log('   Using signAndExecuteTransactionBlock...');
+        // Older wallet standard - serialize the transaction first
+        console.log('   Using signAndExecuteTransactionBlock with chain: onechain:testnet...');
 
         // Build the transaction bytes first using the API client
         try {
@@ -1351,6 +1371,8 @@ class OneChainService {
 
           result = await wallet.provider.signAndExecuteTransactionBlock({
             transactionBlock: txBytes,
+            account: account,
+            chain: 'onechain:testnet', // CRITICAL: Specify OneChain network
             options: {
               showEffects: true,
               showEvents: true,
@@ -1363,6 +1385,8 @@ class OneChainService {
           // Last resort: try passing the transaction directly
           result = await wallet.provider.signAndExecuteTransactionBlock({
             transactionBlock: tx,
+            account: account,
+            chain: 'onechain:testnet', // CRITICAL: Specify OneChain network
             options: {
               showEffects: true,
               showEvents: true,
@@ -1468,7 +1492,7 @@ class OneChainService {
         result = await provider.signAndExecuteTransaction({
           transaction: transaction,
           account: account, // Add account parameter for OneWallet
-          chain: 'sui:testnet', // Specify chain for multi-chain wallets
+          chain: 'onechain:testnet', // Specify OneChain network for multi-chain wallets
           options: {
             showEffects: true,
             showEvents: true,
@@ -1489,7 +1513,8 @@ class OneChainService {
 
           result = await provider.signAndExecuteTransactionBlock({
             transactionBlock: txBytes,
-            account: account, // Add account parameter
+            account: account,
+            chain: 'onechain:testnet', // CRITICAL: Specify OneChain network
             options: {
               showEffects: true,
               showEvents: true,
@@ -1504,7 +1529,8 @@ class OneChainService {
           console.log('   Trying direct Transaction object...');
           result = await provider.signAndExecuteTransactionBlock({
             transactionBlock: transaction,
-            account: account, // Add account parameter
+            account: account,
+            chain: 'onechain:testnet', // CRITICAL: Specify OneChain network
             options: {
               showEffects: true,
               showEvents: true,

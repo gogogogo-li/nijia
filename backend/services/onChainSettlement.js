@@ -86,6 +86,74 @@ class OnChainSettlement {
     }
 
     /**
+     * Register a game on-chain (called when game starts with both players)
+     * This creates the game in IN_PROGRESS state on the contract
+     * @param {Object} game - Game object with player addresses and bet amount
+     */
+    async registerGame(game) {
+        if (!this.isEnabled()) {
+            logger.warn('⚠️  On-chain registration disabled, game will be off-chain only:', game.game_id);
+            return { success: false, reason: 'settlement_disabled' };
+        }
+
+        try {
+            logger.info(`⛓️  Registering game ${game.game_id} on-chain...`);
+            logger.info(`   Player1: ${game.player1}`);
+            logger.info(`   Player2: ${game.player2}`);
+            logger.info(`   Bet Amount: ${game.bet_amount}`);
+
+            const tx = new Transaction();
+            tx.setSender(this.adminAddress);
+
+            // Call admin_register_game function on the contract
+            tx.moveCall({
+                target: `${PACKAGE_ID}::multiplayer_game::admin_register_game`,
+                typeArguments: [OCT_COIN_TYPE],
+                arguments: [
+                    tx.object(GAME_LOBBY_ID),           // lobby: &mut GameLobby
+                    tx.pure.u64(game.game_id),          // game_id: u64
+                    tx.pure.address(game.player1),      // player1: address
+                    tx.pure.address(game.player2),      // player2: address
+                    tx.pure.u64(game.bet_amount || 0),  // bet_amount: u64
+                    tx.object(CLOCK_OBJECT),            // clock: &Clock
+                ],
+            });
+
+            // Execute the transaction
+            const result = await suiClient.signAndExecuteTransaction({
+                transaction: tx,
+                signer: this.adminKeypair,
+                options: {
+                    showEffects: true,
+                    showEvents: true,
+                }
+            });
+
+            if (result.effects?.status?.status === 'success') {
+                logger.info(`✅ Game ${game.game_id} registered on-chain!`);
+                logger.info(`   Transaction: ${result.digest}`);
+                return {
+                    success: true,
+                    digest: result.digest,
+                    effects: result.effects
+                };
+            } else {
+                logger.error(`❌ Registration failed for game ${game.game_id}`);
+                logger.error(`   Status: ${result.effects?.status?.status}`);
+                logger.error(`   Error: ${result.effects?.status?.error}`);
+                return {
+                    success: false,
+                    reason: result.effects?.status?.error || 'unknown_error'
+                };
+            }
+
+        } catch (error) {
+            logger.error(`❌ On-chain registration error for game ${game.game_id}:`, error.message);
+            return { success: false, reason: error.message };
+        }
+    }
+
+    /**
      * Submit game scores on-chain and transfer winnings to winner
      * @param {Object} game - Game object with player addresses and scores
      */

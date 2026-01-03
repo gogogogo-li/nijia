@@ -236,9 +236,6 @@ const OneWallet = ({ onechain }) => {
               <FaWallet className="wallet-icon" />
               <span>OneWallet</span>
             </div>
-            {onechain.isConnected && (
-              <FaCheckCircle style={{ color: '#00FF88', marginLeft: 'auto' }} title="Connected" />
-            )}
           </div>
 
           <div className="wallet-content">
@@ -325,23 +322,22 @@ const OneWallet = ({ onechain }) => {
                     </div>
                   </div>
 
-                  {/* Disconnect Button */}
-                  <button className="disconnect-button" onClick={() => {
-                    handleDisconnect();
-                    setIsOpen(false);
-                  }}>
-                    <FaSignOutAlt /> Disconnect
-                  </button>
-                </div>
-
-                <div className="stats-toggle">
-                  <button
-                    className="toggle-button"
-                    onClick={() => setShowStats(!showStats)}
-                    title={showStats ? 'Hide Achievements' : 'Show Achievements'}
-                  >
-                    <FaTrophy className="trophy-icon" />
-                  </button>
+                  {/* Action Buttons Row */}
+                  <div className="wallet-actions">
+                    <button
+                      className="toggle-button"
+                      onClick={() => setShowStats(!showStats)}
+                      title={showStats ? 'Hide Achievements' : 'Show Achievements'}
+                    >
+                      <FaTrophy className="trophy-icon" />
+                    </button>
+                    <button className="disconnect-button" onClick={() => {
+                      handleDisconnect();
+                      setIsOpen(false);
+                    }}>
+                      <FaSignOutAlt /> Disconnect
+                    </button>
+                  </div>
                 </div>
 
                 {showStats && (
@@ -432,9 +428,9 @@ const OneWallet = ({ onechain }) => {
               </div>
             )}
           </div>
-        </div>
+        </div >
       )}
-    </div>
+    </div >
   );
 };
 

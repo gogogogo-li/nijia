@@ -157,6 +157,60 @@ module ninja_addr::multiplayer_game {
         });
     }
 
+    /// Admin function to register a game that was created off-chain (backend-managed)
+    /// This puts the game directly into IN_PROGRESS state for later settlement via submit_score
+    /// NOTE: This creates a game with zero escrow - OCT transfers are handled separately by backend
+    /// The admin is responsible for ensuring players have deposited funds before calling this
+    public fun admin_register_game<T>(
+        lobby: &mut GameLobby,
+        game_id: u64,
+        player1: address,
+        player2: address,
+        bet_amount: u64,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ) {
+        let admin = tx_context::sender(ctx);
+        assert!(admin == lobby.admin, E_NOT_ADMIN);
+        
+        // Ensure this game_id doesn't already exist
+        assert!(!df::exists_(&lobby.id, game_id), E_GAME_ALREADY_STARTED);
+        
+        // Update next_game_id if necessary
+        if (game_id >= lobby.next_game_id) {
+            lobby.next_game_id = game_id + 1;
+        };
+        
+        // Create game directly in IN_PROGRESS state with empty escrow
+        // The bet_amount is tracked for record-keeping but actual OCT is managed externally
+        let game = MultiplayerGame<T> {
+            id: object::new(ctx),
+            game_id,
+            bet_amount,
+            player1,
+            player2,
+            player1_score: 0,
+            player2_score: 0,
+            winner: @0x0,
+            state: STATE_IN_PROGRESS,
+            created_at: clock::timestamp_ms(clock),
+            joined_at: clock::timestamp_ms(clock),
+            finished_at: 0,
+            escrow: balance::zero<T>(), // Empty escrow - OCT handled by backend
+        };
+        
+        df::add(&mut lobby.id, game_id, game);
+        
+        // Update lobby stats
+        lobby.total_volume = lobby.total_volume + (bet_amount * 2);
+        
+        event::emit(GameJoinedEvent {
+            game_id,
+            player: player2,
+            bet_amount,
+        });
+    }
+
     public fun create_game<T>(
         lobby: &mut GameLobby,
         bet_tier: u64,

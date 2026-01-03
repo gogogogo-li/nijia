@@ -7,8 +7,12 @@
   overflow-y: auto;
   overflow-x: hidden;
   background: radial-gradient(circle at top, #467DFF 0%, #BFC1FF 30%, #1a1a2e 70%, #16213e 100%);
-  padding: 20px;
+  padding: 30px 20px 60px 20px;
+  /* Top padding prevents title cut-off */
   animation: resultsSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 @keyframes resultsSlideUp {
@@ -16,6 +20,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -35,7 +40,6 @@
   z-index: 1;
 }
 
-/* Results Container */
 .results-container {
   width: 100%;
   max-width: 1000px;
@@ -44,7 +48,8 @@
   padding: 10px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  /* Center all child elements */
   gap: 16px;
 }
 
@@ -53,6 +58,7 @@
     opacity: 0;
     transform: translateY(50px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -71,6 +77,7 @@
     transform: scale(0.8);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
@@ -92,10 +99,12 @@
 }
 
 @keyframes titleGlow {
+
   0%,
   100% {
     filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
   }
+
   50% {
     filter: drop-shadow(0 0 35px rgba(255, 215, 0, 0.9));
   }
@@ -116,10 +125,12 @@
 }
 
 @keyframes badgeBounce {
+
   0%,
   100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -136,6 +147,7 @@
     opacity: 0;
     transform: scale(0.8);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -164,12 +176,10 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 215, 0, 0.2),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 215, 0, 0.2),
+      transparent);
   animation: scoreShine 3s ease-in-out infinite;
 }
 
@@ -177,6 +187,7 @@
   0% {
     left: -100%;
   }
+
   50%,
   100% {
     left: 100%;
@@ -203,10 +214,12 @@
 }
 
 @keyframes scorePulse {
+
   0%,
   100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
@@ -226,6 +239,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -249,9 +263,11 @@
 .stats-row .stat:nth-child(1) {
   animation-delay: 0.45s;
 }
+
 .stats-row .stat:nth-child(2) {
   animation-delay: 0.5s;
 }
+
 .stats-row .stat:nth-child(3) {
   animation-delay: 0.55s;
 }
@@ -296,6 +312,9 @@
 
 /* Tier Section */
 .tier-section {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
   margin-bottom: 24px;
   animation: tierFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s backwards;
 }
@@ -305,6 +324,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -322,6 +342,7 @@
     opacity: 0;
     transform: translateY(30px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -342,9 +363,11 @@
     transform: scale(0.9);
     opacity: 0;
   }
+
   50% {
     transform: scale(1.02);
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -362,13 +385,16 @@
 }
 
 @keyframes celebrateIcon {
+
   0%,
   100% {
     transform: rotate(0deg) scale(1);
   }
+
   25% {
     transform: rotate(-15deg) scale(1.2);
   }
+
   75% {
     transform: rotate(15deg) scale(1.2);
   }
@@ -588,6 +614,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -668,13 +695,14 @@
 /* Responsive */
 @media (max-width: 768px) {
   .results-screen {
-    padding: 16px;
+    padding: 40px 16px 60px 16px;
+    /* Increased top padding */
     justify-content: flex-start;
-    padding-top: 20px;
-    overflow-y: scroll !important;
+    overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: #2ed8a7 rgba(255, 255, 255, 0.1);
+    scrollbar-color: #467DFF rgba(255, 255, 255, 0.1);
   }
 
   .results-screen::-webkit-scrollbar {
@@ -688,7 +716,7 @@
   }
 
   .results-screen::-webkit-scrollbar-thumb {
-    background: #2ed8a7;
+    background: #467DFF;
     border-radius: 10px;
     border: 2px solid rgba(0, 0, 0, 0.3);
   }
@@ -766,10 +794,13 @@
 
 @media (max-width: 480px) {
   .results-screen {
-    overflow-y: scroll !important;
+    padding: 35px 12px 50px 12px;
+    /* Increased top padding for small screens */
+    overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: #2ed8a7 rgba(255, 255, 255, 0.1);
+    scrollbar-color: #467DFF rgba(255, 255, 255, 0.1);
   }
 
   .results-screen::-webkit-scrollbar {
@@ -783,7 +814,7 @@
   }
 
   .results-screen::-webkit-scrollbar-thumb {
-    background: #2ed8a7;
+    background: #467DFF;
     border-radius: 10px;
     border: 1px solid rgba(0, 0, 0, 0.3);
   }
@@ -846,6 +877,7 @@
 
 /* Touch device optimizations */
 @media (hover: none) and (pointer: coarse) {
+
   .stats-row .stat:hover,
   .button-row .unified-button:hover {
     transform: none;
@@ -884,6 +916,7 @@
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -897,9 +930,12 @@
 }
 
 @keyframes welcomeIconBounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -932,15 +968,15 @@
   .welcome-nft-banner {
     padding: 20px;
   }
-  
+
   .welcome-icon {
     font-size: 48px;
   }
-  
+
   .welcome-nft-banner h3 {
     font-size: 20px;
   }
-  
+
   .welcome-nft-banner p {
     font-size: 14px;
   }
@@ -951,15 +987,15 @@
     padding: 16px;
     margin-bottom: 12px;
   }
-  
+
   .welcome-icon {
     font-size: 40px;
   }
-  
+
   .welcome-nft-banner h3 {
     font-size: 18px;
   }
-  
+
   .welcome-nft-banner p {
     font-size: 13px;
   }

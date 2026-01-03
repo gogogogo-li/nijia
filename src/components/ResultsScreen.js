@@ -27,6 +27,11 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
     }
   }, [onechain?.walletAddress]);
 
+  // Scroll to top when screen loads or minting status changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [mintingStatus]);
+
   // Check tier and NFT eligibility
   const nftEligibility = canMintNFTAtTier(gameState.totalScore, gameState.gamesPlayed, mintedNFTs);
   const currentTier = getTierByScore(gameState.totalScore);

@@ -880,9 +880,9 @@ const GameScreen = ({
                   padding: '1rem 2rem',
                   background: 'rgba(255, 255, 255, 0.1)',
                   backdropFilter: 'blur(10px)',
-                  border: '2px solid rgba(236, 121, 107, 0.3)',
+                  border: '2px solid rgba(70, 125, 255, 0.3)',
                   borderRadius: '50px',
-                  color: '#EC796B',
+                  color: '#467DFF',
                   fontSize: '1.1rem',
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -892,14 +892,14 @@ const GameScreen = ({
                   letterSpacing: '0.05em'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = 'rgba(236, 121, 107, 0.15)';
-                  e.target.style.borderColor = 'rgba(236, 121, 107, 0.5)';
+                  e.target.style.background = 'rgba(70, 125, 255, 0.15)';
+                  e.target.style.borderColor = 'rgba(70, 125, 255, 0.5)';
                   e.target.style.transform = 'translateY(-3px) scale(1.05)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(236, 121, 107, 0.3)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(70, 125, 255, 0.3)';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.background = 'rgba(255, 255, 255, 0.1)';
-                  e.target.style.borderColor = 'rgba(236, 121, 107, 0.3)';
+                  e.target.style.borderColor = 'rgba(70, 125, 255, 0.3)';
                   e.target.style.transform = 'translateY(0) scale(1)';
                   e.target.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
                 }}
@@ -915,16 +915,16 @@ const GameScreen = ({
               fontWeight: 500
             }}>
               Press <span style={{
-                color: '#EC796B',
+                color: '#467DFF',
                 fontWeight: 700,
                 padding: '0.2rem 0.5rem',
-                background: 'rgba(236, 121, 107, 0.1)',
+                background: 'rgba(70, 125, 255, 0.1)',
                 borderRadius: '4px'
               }}>Space</span> or <span style={{
-                color: '#EC796B',
+                color: '#467DFF',
                 fontWeight: 700,
                 padding: '0.2rem 0.5rem',
-                background: 'rgba(236, 121, 107, 0.1)',
+                background: 'rgba(70, 125, 255, 0.1)',
                 borderRadius: '4px'
               }}>P</span> to resume
             </p>

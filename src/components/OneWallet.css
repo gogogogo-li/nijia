@@ -47,7 +47,7 @@
   backdrop-filter: blur(24px);
   border: 2px solid rgba(70, 125, 255, 0.3);
   border-radius: 12px;
-  padding: 18px;
+  padding: 20px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
   color: #F5F5F5;
   min-width: 320px;
@@ -187,9 +187,9 @@
 
 .wallet-info {
   background: rgba(10, 10, 15, 0.95);
-  padding: 14px;
-  border-radius: 8px;
-  margin-bottom: 12px;
+  padding: 16px;
+  border-radius: 10px;
+  margin: 8px 0 14px 0;
   border: 1px solid rgba(70, 125, 255, 0.2);
 }
 
@@ -238,6 +238,20 @@
   transform: translateY(-1px);
 }
 
+.copy-button svg {
+  color: inherit;
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.wallet-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .disconnect-button {
   background: rgba(239, 68, 68, 0.08);
   border: 1px solid rgba(239, 68, 68, 0.2);
@@ -252,8 +266,7 @@
   gap: 6px;
   font-size: 12px;
   font-weight: 500;
-  width: 100%;
-  margin-top: 8px;
+  flex: 1;
 }
 
 .disconnect-button:hover {
@@ -294,17 +307,13 @@
 }
 
 /* Stats Section */
-.stats-toggle {
-  margin: 0;
-  padding: 0;
-}
 
 .toggle-button {
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #D1D5DB;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 215, 0, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  color: #FFD700;
   padding: 0;
   border-radius: 8px;
   cursor: pointer;
@@ -312,37 +321,49 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  margin-top: 8px;
 }
 
 .toggle-button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.4);
   transform: translateY(-1px);
 }
 
+.toggle-button svg,
 .trophy-icon {
-  color: #467DFF;
-  font-size: 18px;
+  color: #FFD700;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
 }
 
 .refresh-button {
+  width: 36px;
+  height: 36px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: #9CA3AF;
-  padding: 6px;
-  border-radius: 5px;
+  padding: 0;
+  border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .refresh-button:hover {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
   color: #D1D5DB;
   transform: rotate(180deg);
+}
+
+.refresh-button svg {
+  color: inherit;
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 .balance-info {
@@ -361,19 +382,35 @@
 }
 
 .stats-panel {
-  position: fixed;
+  position: absolute;
+  left: 0;
   right: 0;
   top: 0;
-  height: 50vh;
-  width: 20vw;
-  background: rgba(18, 18, 24, 0.98);
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  background: rgba(18, 18, 24, 0.99);
   backdrop-filter: blur(20px);
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 12px;
   padding: 20px;
   overflow-y: auto;
-  z-index: 10000;
-  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  animation: fadeIn 0.2s ease-out;
+  box-shadow: none;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes slideInRight {
@@ -719,16 +756,158 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .wallet-dropdown {
-    left: 0;
-    right: 0;
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    top: 60px;
     min-width: unset;
+    max-width: none;
+    padding: 16px;
+    z-index: 10001;
+  }
+
+  .wallet-trigger-button {
+    padding: 8px 14px;
+    font-size: 12px;
+    min-width: 120px;
+    gap: 6px;
   }
 
   .wallet-title {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .nft-grid {
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .stats-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    padding: 14px;
+    border-radius: 12px;
+    z-index: 100;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .wallet-info {
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+
+  .address-section {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .address-text {
+    font-size: 11px;
+    word-break: break-all;
+  }
+
+  .balance-value {
+    font-size: 16px;
+  }
+
+  .nft-card {
+    padding: 8px;
+  }
+
+  .nft-image {
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+
+  .nft-name {
+    font-size: 10px;
+  }
+
+  .gallery-title {
+    font-size: 12px;
+  }
+
+  .connect-button {
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+
+  .wallet-install-prompt {
+    padding: 24px 20px;
+    max-width: 280px;
+  }
+
+  .wallet-icon-large {
+    font-size: 48px;
+  }
+
+  .wallet-install-prompt h3 {
+    font-size: 16px;
+  }
+
+  .wallet-install-prompt p {
+    font-size: 12px;
+  }
+
+  .install-button {
+    padding: 12px 24px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .wallet-dropdown {
+    left: 5px;
+    right: 5px;
+    top: 50px;
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .wallet-trigger-button {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-width: 100px;
+    gap: 4px;
+  }
+
+  .stats-panel {
+    width: 100vw;
+    max-width: none;
+    padding: 14px;
+  }
+
+  .nft-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .nft-image {
+    font-size: 24px;
+  }
+
+  .balance-section {
+    padding: 10px;
+  }
+
+  .balance-value {
+    font-size: 14px;
+  }
+
+  .copy-button {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .disconnect-button {
+    padding: 8px 14px;
+    font-size: 11px;
   }
 }
