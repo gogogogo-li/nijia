@@ -124,7 +124,8 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
     let randomToken = getRandomToken();
 
     // Calculate progressive difficulty based on elapsed time (Fruit Ninja style)
-    let speedMultiplier = 1;
+    // Also apply difficultyLevel from solo games (1.0 = normal, 1.3 = medium, etc.)
+    let speedMultiplier = difficultyLevel;
 
     if (gameState.gameStartTime) {
       const elapsed = Date.now() - gameState.gameStartTime;
@@ -260,7 +261,7 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
     };
 
     setItems(prev => [...prev, item]);
-  }, [gameState.isGameRunning, gameState.isPaused, gameState.gameStartTime, gameState.mode, canvasRef, isVisible, items.length, multiplayerGameId]);
+  }, [gameState.isGameRunning, gameState.isPaused, gameState.gameStartTime, gameState.mode, canvasRef, isVisible, items.length, multiplayerGameId, difficultyLevel]);
 
   const updateGame = useCallback(() => {
     if (!gameState.isGameRunning || gameState.isPaused || !canvasRef.current) return;

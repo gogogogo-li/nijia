@@ -236,9 +236,10 @@ export const useGameState = (walletAddress = null) => {
     const timestamp = Date.now();
     console.log(`🚨 loseLiveFromMissedToken() CALLED at ${timestamp} - This should be called ONLY ONCE per missed fruit!`);
 
-    // Debounce: Prevent calls within 1000ms of each other
-    if (timestamp - lastPenaltyTime.current < 1000) {
-      console.log(`🛡️ DEBOUNCED! Last penalty was ${timestamp - lastPenaltyTime.current}ms ago. Ignoring this call.`);
+    // Debounce: Prevent duplicate calls for the same miss (100ms is enough)
+    // Reduced from 1000ms to allow legitimate rapid successive misses
+    if (timestamp - lastPenaltyTime.current < 100) {
+      console.log(`🛡️ DEBOUNCED! Last penalty was ${timestamp - lastPenaltyTime.current}ms ago. Ignoring duplicate call.`);
       return;
     }
 

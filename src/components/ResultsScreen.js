@@ -7,7 +7,7 @@ import '../styles/unified-design.css';
 import './ResultsScreen.css';
 import { GiTrophyCup, GiCrossedSwords } from 'react-icons/gi';
 
-const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, multiplayerGameId, onBackToMultiplayer }) => {
+const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, multiplayerGameId, onBackToMultiplayer, soloGameData }) => {
   const isNewBest = gameState.score > gameState.bestScore;
   const [mintingStatus, setMintingStatus] = useState(null); // null, 'minting', 'success', 'error'
   const [transactionHash, setTransactionHash] = useState(null);
@@ -79,6 +79,70 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
   return (
     <div className="unified-screen results-screen">
       <div className="unified-container results-container">
+        {/* Solo Game Win/Lose Banner */}
+        {soloGameData && (
+          <div className="solo-result-banner" style={{
+            padding: '20px',
+            marginTop: '20px',
+            marginBottom: '20px',
+            borderRadius: '16px',
+            background: gameState.score >= soloGameData.target
+              ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.2))'
+              : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.2))',
+            border: `2px solid ${gameState.score >= soloGameData.target ? '#22c55e' : '#ef4444'}`,
+            textAlign: 'center'
+          }}>
+            <div style={{
+              fontSize: '3rem',
+              marginBottom: '10px',
+              color: gameState.score >= soloGameData.target ? '#4ade80' : '#f87171'
+            }}>
+              {gameState.score >= soloGameData.target ? <GiTrophyCup /> : <GiCrossedSwords />}
+            </div>
+            <h2 style={{
+              fontSize: '2rem',
+              fontWeight: 900,
+              color: gameState.score >= soloGameData.target ? '#4ade80' : '#f87171',
+              margin: '0 0 10px 0',
+              textTransform: 'uppercase',
+              letterSpacing: '2px'
+            }}>
+              {gameState.score >= soloGameData.target ? 'YOU WIN!' : 'YOU LOSE'}
+            </h2>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '30px',
+              marginTop: '15px',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>YOUR SCORE</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff' }}>{gameState.score}</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>TARGET</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fbbf24' }}>{soloGameData.target}</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+                  {gameState.score >= soloGameData.target ? 'PAYOUT' : 'STAKE LOST'}
+                </div>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontWeight: 700,
+                  color: gameState.score >= soloGameData.target ? '#4ade80' : '#f87171'
+                }}>
+                  {gameState.score >= soloGameData.target
+                    ? `+${(soloGameData.stake * 2 * 0.98).toFixed(2)} OCT`
+                    : `-${soloGameData.stake} OCT`
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Simple Game Over Title */}
         <div className="game-over-title">
           <h1 className="unified-title">
@@ -334,7 +398,7 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
                 className="unified-button back-home"
                 onClick={onShowStartScreen}
               >
-                🏠 Home
+                Home
               </button>
             </>
           ) : (
@@ -343,7 +407,7 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
                 className="unified-button play-again"
                 onClick={onStartGame}
               >
-                🔄 Replay
+                Replay
               </button>
               <button
                 className="unified-button unified-button-secondary back-home"

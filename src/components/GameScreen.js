@@ -22,7 +22,8 @@ const GameScreen = ({
   updateParticles,
   onBackToHome,
   onechain,
-  multiplayerGameId
+  multiplayerGameId,
+  soloGameData
 }) => {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
@@ -126,7 +127,7 @@ const GameScreen = ({
     cleanupExcessItems,
     showComboMessage,
     itemCount
-  } = useGameLoop(canvasRef, gameState, onEndGame, updateParticles, handleMissedFruit, 1, multiplayerGameId);
+  } = useGameLoop(canvasRef, gameState, onEndGame, updateParticles, handleMissedFruit, soloGameData?.speed || 1, multiplayerGameId);
 
   const {
     isSlashing,
@@ -691,15 +692,67 @@ const GameScreen = ({
             fontWeight: '500',
             color: 'rgba(255, 255, 255, 0.8)'
           }}>
-            <span style={{
-              fontSize: '0.65rem',
-              color: 'rgba(255, 255, 255, 0.5)',
-              fontWeight: '500',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>BEST</span>
+            <span>BEST</span>
             <span>{gameState.bestScore}</span>
           </div>
+
+          {/* Solo Game Target Progress */}
+          {soloGameData && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              padding: '8px 12px',
+              background: 'rgba(0, 0, 0, 0.4)',
+              borderRadius: '10px',
+              border: '1px solid rgba(74, 222, 128, 0.3)',
+              marginTop: '8px'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '0.75rem',
+                color: 'rgba(255, 255, 255, 0.7)'
+              }}>
+                <span>TARGET</span>
+                <span style={{
+                  color: gameState.score >= soloGameData.target ? '#4ade80' : '#fbbf24',
+                  fontWeight: 700
+                }}>
+                  {gameState.score} / {soloGameData.target}
+                </span>
+              </div>
+              <div style={{
+                width: '120px',
+                height: '6px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '3px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${Math.min((gameState.score / soloGameData.target) * 100, 100)}%`,
+                  height: '100%',
+                  background: gameState.score >= soloGameData.target
+                    ? 'linear-gradient(90deg, #4ade80, #22c55e)'
+                    : 'linear-gradient(90deg, #fbbf24, #f59e0b)',
+                  borderRadius: '3px',
+                  transition: 'width 0.3s ease, background 0.3s ease'
+                }} />
+              </div>
+              {gameState.score >= soloGameData.target && (
+                <div style={{
+                  fontSize: '0.7rem',
+                  color: '#4ade80',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  animation: 'pulse 1s infinite'
+                }}>
+                  WIN! Keep scoring for bonus!
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Right Side: Lives */}

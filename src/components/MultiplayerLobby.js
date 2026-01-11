@@ -246,10 +246,10 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
       }
 
       const betAmountOCT = parseFloat(game.bet_amount) / 100000000; // Convert from MIST to OCT
-      const betTierId = game.bet_tier; // Use 0-indexed tier (0-3) as stored in database
+      const betTierId = game.bet_tier + 1; // Convert 0-indexed (database) to 1-indexed (contract)
 
       showNotification(`Joining game with ${betAmountOCT} OCT stake...`, 'info');
-      console.log(`🎮 Joining game ${gameId} with bet tier ${betTierId}`);
+      console.log(`🎮 Joining game ${gameId} with bet tier ${betTierId} (${betAmountOCT} OCT)`);
 
       // Check balance
       const balanceResult = await onechainService.getBalance();

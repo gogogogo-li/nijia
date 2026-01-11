@@ -14,6 +14,18 @@ module ninja_addr::multiplayer_game {
     const BET_TIER_3: u64 = 1000000000;   // 1 OCT
     const BET_TIER_4: u64 = 5000000000;   // 5 OCT
 
+    // Solo game difficulty tiers (stake amounts in MIST)
+    const SOLO_EASY_STAKE: u64 = 500000000;      // 0.5 OCT
+    const SOLO_MEDIUM_STAKE: u64 = 1000000000;   // 1 OCT
+    const SOLO_HARD_STAKE: u64 = 2000000000;     // 2 OCT
+    const SOLO_EXTREME_STAKE: u64 = 5000000000;  // 5 OCT
+
+    // Solo game target scores
+    const SOLO_EASY_TARGET: u64 = 100;
+    const SOLO_MEDIUM_TARGET: u64 = 200;
+    const SOLO_HARD_TARGET: u64 = 350;
+    const SOLO_EXTREME_TARGET: u64 = 500;
+
     // Game states
     const STATE_WAITING: u8 = 0;
     const STATE_IN_PROGRESS: u8 = 1;
@@ -24,11 +36,14 @@ module ninja_addr::multiplayer_game {
     const E_GAME_ALREADY_STARTED: u64 = 4;
     const E_NOT_YOUR_GAME: u64 = 5;
     const E_GAME_NOT_IN_PROGRESS: u64 = 6;
+    const E_INVALID_DIFFICULTY: u64 = 7;
     const E_INVALID_BET_TIER: u64 = 8;
     const E_INSUFFICIENT_BALANCE: u64 = 9;
     const E_GAME_FULL: u64 = 10;
     const E_CANNOT_JOIN_OWN_GAME: u64 = 11;
     const E_NOT_ADMIN: u64 = 12;
+    const E_SOLO_GAME_NOT_FOUND: u64 = 13;
+    const E_SOLO_GAME_ALREADY_FINISHED: u64 = 14;
 
     // Structs
     public struct MultiplayerGame<phantom T> has key, store {
@@ -103,6 +118,51 @@ module ninja_addr::multiplayer_game {
         registry_id: ID,
     }
 
+    // ========== SOLO GAME STRUCTS ==========
+    
+    /// Single player game with OCT stake
+    public struct SoloGame<phantom T> has key, store {
+        id: UID,
+        game_id: u64,
+        player: address,
+        difficulty: u8,        // 0=Easy, 1=Medium, 2=Hard, 3=Extreme
+        stake_amount: u64,
+        target_score: u64,
+        final_score: u64,
+        won: bool,
+        state: u8,             // 0=waiting, 1=in_progress, 2=finished
+        created_at: u64,
+        finished_at: u64,
+        escrow: Balance<T>,
+    }
+
+    /// Tracks all solo games
+    public struct SoloGameLobby has key {
+        id: UID,
+        next_solo_game_id: u64,
+        total_solo_games: u64,
+        total_solo_volume: u64,
+        admin: address,
+    }
+
+    // Solo Game Events
+    public struct SoloGameCreatedEvent has copy, drop {
+        game_id: u64,
+        player: address,
+        difficulty: u8,
+        stake_amount: u64,
+        target_score: u64,
+    }
+
+    public struct SoloGameCompletedEvent has copy, drop {
+        game_id: u64,
+        player: address,
+        final_score: u64,
+        won: bool,
+        payout: u64,
+    }
+
+
     // View helpers for tests/clients
     public fun get_available_games(lobby: &GameLobby): vector<u64> {
         lobby.available_games
@@ -148,8 +208,18 @@ module ninja_addr::multiplayer_game {
         let lobby_id = object::uid_to_inner(&lobby.id);
         let reg_id = object::uid_to_inner(&stats_registry.id);
 
+        // Create solo game lobby
+        let solo_lobby = SoloGameLobby {
+            id: object::new(ctx),
+            next_solo_game_id: 0,
+            total_solo_games: 0,
+            total_solo_volume: 0,
+            admin,
+        };
+
         transfer::share_object(lobby);
         transfer::share_object(stats_registry);
+        transfer::share_object(solo_lobby);
 
         event::emit(ContractDeployed {
             lobby_id: lobby_id,
@@ -652,6 +722,170 @@ module ninja_addr::multiplayer_game {
             winner: game.winner,
             prize: prize_amount,
         });
+    }
+
+    // ========== SOLO GAME FUNCTIONS ==========
+
+    /// Create a solo game - player stakes OCT to play
+    /// difficulty: 0=Easy(0.5 OCT), 1=Medium(1 OCT), 2=Hard(2 OCT), 3=Extreme(5 OCT)
+    public fun create_solo_game<T>(
+        solo_lobby: &mut SoloGameLobby,
+        difficulty: u8,
+        payment: Coin<T>,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ) {
+        let player_addr = tx_context::sender(ctx);
+        
+        assert!(difficulty <= 3, E_INVALID_DIFFICULTY);
+        
+        // Get stake amount and target score based on difficulty
+        let (stake_amount, target_score) = if (difficulty == 0) {
+            (SOLO_EASY_STAKE, SOLO_EASY_TARGET)
+        } else if (difficulty == 1) {
+            (SOLO_MEDIUM_STAKE, SOLO_MEDIUM_TARGET)
+        } else if (difficulty == 2) {
+            (SOLO_HARD_STAKE, SOLO_HARD_TARGET)
+        } else {
+            (SOLO_EXTREME_STAKE, SOLO_EXTREME_TARGET)
+        };
+        
+        // Verify payment matches stake
+        assert!(coin::value(&payment) >= stake_amount, E_INSUFFICIENT_BALANCE);
+        
+        let game_id = solo_lobby.next_solo_game_id;
+        solo_lobby.next_solo_game_id = solo_lobby.next_solo_game_id + 1;
+        
+        // Create solo game
+        let game = SoloGame<T> {
+            id: object::new(ctx),
+            game_id,
+            player: player_addr,
+            difficulty,
+            stake_amount,
+            target_score,
+            final_score: 0,
+            won: false,
+            state: STATE_IN_PROGRESS,
+            created_at: clock::timestamp_ms(clock),
+            finished_at: 0,
+            escrow: coin::into_balance(payment),
+        };
+        
+        // Store game in lobby
+        df::add(&mut solo_lobby.id, game_id, game);
+        
+        // Update stats
+        solo_lobby.total_solo_volume = solo_lobby.total_solo_volume + stake_amount;
+        
+        event::emit(SoloGameCreatedEvent {
+            game_id,
+            player: player_addr,
+            difficulty,
+            stake_amount,
+            target_score,
+        });
+    }
+
+    /// Admin completes a solo game - called by backend after game ends
+    /// If player reached target score, they win 2x stake (minus platform fee)
+    /// If player failed, they lose their stake
+    public fun complete_solo_game<T>(
+        solo_lobby: &mut SoloGameLobby,
+        stats_registry: &mut StatsRegistry,
+        game_id: u64,
+        final_score: u64,
+        clock: &Clock,
+        ctx: &mut TxContext
+    ) {
+        let admin = tx_context::sender(ctx);
+        assert!(admin == solo_lobby.admin, E_NOT_ADMIN);
+        assert!(df::exists_(&solo_lobby.id, game_id), E_SOLO_GAME_NOT_FOUND);
+        
+        let game: &mut SoloGame<T> = df::borrow_mut(&mut solo_lobby.id, game_id);
+        assert!(game.state == STATE_IN_PROGRESS, E_SOLO_GAME_ALREADY_FINISHED);
+        
+        game.final_score = final_score;
+        game.state = STATE_FINISHED;
+        game.finished_at = clock::timestamp_ms(clock);
+        
+        // Check if player won (reached target score)
+        let won = final_score >= game.target_score;
+        game.won = won;
+        
+        let player_addr = game.player;
+        let stake = game.stake_amount;
+        
+        // Initialize player stats if needed
+        initialize_player_stats(stats_registry, player_addr, ctx);
+        
+        // Update player stats
+        {
+            let player_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, player_addr);
+            player_stats.games_played = player_stats.games_played + 1;
+            player_stats.total_wagered = player_stats.total_wagered + stake;
+            
+            if (won) {
+                player_stats.games_won = player_stats.games_won + 1;
+            };
+        };
+        
+        let payout: u64;
+        
+        if (won) {
+            // Winner gets 2x stake minus 2% platform fee
+            // Platform keeps the 2% of winnings
+            let total_payout = stake * 2;
+            let platform_fee = total_payout * 2 / 100; // 2%
+            payout = total_payout - platform_fee;
+            
+            // Transfer winnings to player
+            let winnings_balance = balance::split(&mut game.escrow, stake); // Original stake
+            let winnings_coin = coin::from_balance(winnings_balance, ctx);
+            transfer::public_transfer(winnings_coin, player_addr);
+            
+            // Platform fee (remaining escrow)
+            let fee_balance = balance::withdraw_all(&mut game.escrow);
+            if (balance::value(&fee_balance) > 0) {
+                let fee_coin = coin::from_balance(fee_balance, ctx);
+                transfer::public_transfer(fee_coin, solo_lobby.admin);
+            } else {
+                balance::destroy_zero(fee_balance);
+            };
+            
+            // Update stats
+            {
+                let player_stats: &mut PlayerStats = df::borrow_mut(&mut stats_registry.id, player_addr);
+                player_stats.total_winnings = player_stats.total_winnings + payout;
+            };
+        } else {
+            // Loser: platform takes all stake
+            payout = 0;
+            let lost_balance = balance::withdraw_all(&mut game.escrow);
+            let lost_coin = coin::from_balance(lost_balance, ctx);
+            transfer::public_transfer(lost_coin, solo_lobby.admin);
+        };
+        
+        solo_lobby.total_solo_games = solo_lobby.total_solo_games + 1;
+        
+        event::emit(SoloGameCompletedEvent {
+            game_id,
+            player: player_addr,
+            final_score,
+            won,
+            payout,
+        });
+    }
+
+    /// Get solo game info
+    public fun get_solo_game_state<T>(solo_lobby: &SoloGameLobby, game_id: u64): (address, u8, u64, u64, u8) {
+        let game: &SoloGame<T> = df::borrow(&solo_lobby.id, game_id);
+        (game.player, game.difficulty, game.stake_amount, game.target_score, game.state)
+    }
+
+    /// Get solo lobby stats
+    public fun get_solo_lobby_stats(solo_lobby: &SoloGameLobby): (u64, u64) {
+        (solo_lobby.total_solo_games, solo_lobby.total_solo_volume)
     }
 
     #[test_only]

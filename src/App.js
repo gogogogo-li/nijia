@@ -5,6 +5,7 @@ import ResultsScreen from './components/ResultsScreen';
 import ParticleContainer from './components/ParticleContainer';
 import LandingPage from './components/LandingPage';
 import ModeSelection from './components/ModeSelection';
+import SoloModeSelect from './components/SoloModeSelect';
 import BladeCursor from './components/BladeCursor';
 import { useGameState } from './hooks/useGameState';
 import { useTaskbarControls } from './hooks/useTaskbarControls';
@@ -34,6 +35,8 @@ function App() {
   const [showLanding, setShowLanding] = useState(true);
   const [showMultiplayer, setShowMultiplayer] = useState(false);
   const [showModeSelection, setShowModeSelection] = useState(false);
+  const [showSoloMode, setShowSoloMode] = useState(false);
+  const [soloGameData, setSoloGameData] = useState(null);
   const [multiplayerGameId, setMultiplayerGameId] = useState(null);
 
   // Add taskbar controls (pass multiplayer flag to disable pause in multiplayer)
@@ -105,6 +108,7 @@ function App() {
             onBackToHome={handleBackToLanding}
             onechain={onechain}
             multiplayerGameId={multiplayerGameId}
+            soloGameData={soloGameData}
           />
         );
       case 'results':
@@ -116,6 +120,7 @@ function App() {
             onechain={onechain}
             multiplayerGameId={multiplayerGameId}
             onBackToMultiplayer={handleBackToMultiplayerLobby}
+            soloGameData={soloGameData}
           />
         );
       default:
@@ -142,7 +147,9 @@ function App() {
     setShowLanding(true);
     setShowMultiplayer(false);
     setShowModeSelection(false);
+    setShowSoloMode(false);
     setMultiplayerGameId(null);
+    setSoloGameData(null);
   };
 
   const handleShowMultiplayer = () => {
@@ -165,6 +172,59 @@ function App() {
     setShowMultiplayer(true);
   };
 
+  // Solo Mode Handlers
+  const handleShowSoloMode = () => {
+    if (!onechain.isConnected) {
+      alert('Please connect your OneWallet to play staked solo games!');
+      return;
+    }
+    setShowModeSelection(false);
+    setShowSoloMode(true);
+  };
+
+  const handleSoloDifficultySelect = async (difficulty) => {
+    console.log('Starting solo game with difficulty:', difficulty);
+
+    try {
+      // 1. Create game on-chain (stake OCT)
+      console.log('📝 Creating game on-chain...');
+      const txResult = await onechain.createSoloGame(difficulty.id);
+
+      if (!txResult.success) {
+        throw new Error(txResult.error || 'Failed to create game on-chain');
+      }
+
+      console.log('✅ On-chain game created:', txResult.transactionHash);
+
+      // 2. Store solo game data with transaction info
+      const gameData = {
+        difficulty: difficulty.id,
+        stake: difficulty.stake,
+        target: difficulty.target,
+        speed: parseFloat(difficulty.speed),
+        txHash: txResult.transactionHash,
+        gameId: txResult.gameId,
+        isDevelopmentMode: txResult.isDevelopmentMode
+      };
+
+      setSoloGameData(gameData);
+      setShowSoloMode(false);
+
+      // 3. Start the game
+      startGame('classic');
+
+      // 4. Track game start with blockchain session
+      if (onechain.isConnected) {
+        onechain.startGameSession();
+      }
+
+      console.log('🎮 Solo game started successfully!');
+    } catch (error) {
+      console.error('❌ Failed to start solo game:', error);
+      alert(`Failed to start game: ${error.message}`);
+    }
+  };
+
   if (showMultiplayer) {
     return (
       <div className="App">
@@ -182,6 +242,23 @@ function App() {
     );
   }
 
+  if (showSoloMode) {
+    return (
+      <div className="App">
+        <BladeCursor />
+
+        <SoloModeSelect
+          onSelectDifficulty={handleSoloDifficultySelect}
+          onBack={() => { setShowSoloMode(false); setShowModeSelection(true); }}
+          onechain={onechain}
+          octBalance={onechain.octBalance || 0}
+        />
+        <SpeedInsights />
+        <Analytics />
+      </div>
+    );
+  }
+
   if (showModeSelection) {
     return (
       <div className="App">
@@ -190,6 +267,7 @@ function App() {
         <ModeSelection
           onSelectMode={handleModeSelect}
           onBack={handleBackToLanding}
+          onSoloStakes={handleShowSoloMode}
           bestScores={{
             classic: gameState.bestScoreClassic,
             arcade: gameState.bestScoreArcade,

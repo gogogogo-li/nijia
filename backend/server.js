@@ -11,9 +11,11 @@ import gamesRouter from './routes/games.js';
 import playersRouter from './routes/players.js';
 import multiplayerRouter from './routes/multiplayer.js';
 import rpcRouter from './routes/rpc.js';
+import createSoloRouter from './routes/solo.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { authenticateWallet } from './middleware/auth.js';
 import { GameManager } from './services/gameManager.js';
+import SoloGameManager from './services/soloGameManager.js';
 import { supabase } from './config/supabase.js';
 import { validateContractConfig } from './config/onechain.js';
 
@@ -101,8 +103,16 @@ app.use((req, res, next) => {
 // Initialize Game Manager
 const gameManager = new GameManager(io, supabase);
 
+// Initialize Solo Game Manager (uses same admin keypair from gameManager after init)
+const soloGameManager = new SoloGameManager(supabase, null);
+// We'll set the admin keypair after on-chain settlement initializes
+gameManager.onSettlementInit = (adminKeypair) => {
+  soloGameManager.adminKeypair = adminKeypair;
+};
+
 // Make gameManager and io accessible globally
 global.gameManager = gameManager;
+global.soloGameManager = soloGameManager;
 global.io = io;
 
 // Health check
@@ -125,6 +135,7 @@ app.get('/', (req, res) => {
       games: '/api/games',
       players: '/api/players',
       multiplayer: '/api/multiplayer',
+      solo: '/api/solo',
       rpc: '/api/rpc',
       health: '/health'
     }
@@ -136,6 +147,7 @@ app.use('/api/games', gamesRouter);
 app.use('/api/players', playersRouter);
 app.use('/api/multiplayer', multiplayerRouter);
 app.use('/api/rpc', rpcRouter);
+app.use('/api/solo', createSoloRouter(soloGameManager));
 
 // Socket.IO authentication and event handling
 io.use(async (socket, next) => {

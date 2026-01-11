@@ -1222,35 +1222,57 @@ export class GameManager {
 
       logger.info(`   Querying blockchain for tx: ${txHash.substring(0, 20)}...`);
 
-      const tx = await suiClient.getTransactionBlock({
-        digest: txHash,
-        options: {
-          showInput: true,
-          showEffects: true,
-          showEvents: true
+      // Retry logic for blockchain indexing delay
+      const maxRetries = 3;
+      const retryDelay = 2000; // 2 seconds
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const tx = await suiClient.getTransactionBlock({
+            digest: txHash,
+            options: {
+              showInput: true,
+              showEffects: true,
+              showEvents: true
+            }
+          });
+
+          if (!tx) {
+            if (attempt < maxRetries) {
+              logger.info(`   Transaction not indexed yet, retrying in ${retryDelay / 1000}s... (attempt ${attempt}/${maxRetries})`);
+              await new Promise(resolve => setTimeout(resolve, retryDelay));
+              continue;
+            }
+            logger.warn(`   Transaction not found on chain after ${maxRetries} attempts`);
+            return false;
+          }
+
+          // Verify sender matches
+          const sender = tx.transaction?.data?.sender;
+          if (sender !== expectedSender) {
+            logger.warn(`   Sender mismatch: expected ${expectedSender}, got ${sender}`);
+            return false;
+          }
+
+          // Verify transaction was successful
+          if (tx.effects?.status?.status !== 'success') {
+            logger.warn(`   Transaction status: ${tx.effects?.status?.status || 'unknown'}`);
+            return false;
+          }
+
+          logger.info(`   Transaction verified: sender=${sender}, status=success`);
+          return true;
+        } catch (err) {
+          if (err.message.includes('Could not find') && attempt < maxRetries) {
+            logger.info(`   Transaction not indexed yet, retrying in ${retryDelay / 1000}s... (attempt ${attempt}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
+          }
+          throw err;
         }
-      });
-
-      if (!tx) {
-        logger.warn(`   Transaction not found on chain`);
-        return false;
       }
 
-      // Verify sender matches
-      const sender = tx.transaction?.data?.sender;
-      if (sender !== expectedSender) {
-        logger.warn(`   Sender mismatch: expected ${expectedSender}, got ${sender}`);
-        return false;
-      }
-
-      // Verify transaction was successful
-      if (tx.effects?.status?.status !== 'success') {
-        logger.warn(`   Transaction status: ${tx.effects?.status?.status || 'unknown'}`);
-        return false;
-      }
-
-      logger.info(`   Transaction verified: sender=${sender}, status=success`);
-      return true;
+      return false;
     } catch (error) {
       // Don't throw - just log and return false
       logger.warn(`   Transaction verification error: ${error.message}`);

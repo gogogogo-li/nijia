@@ -1462,6 +1462,10 @@ class OneChainService {
       // This is required for the wallet to sign the transaction
       transaction.setSender(this.walletAddress);
 
+      // Set a reasonable gas budget if not already set
+      // This prevents "all endpoints failed" error in wallet dry run
+      transaction.setGasBudget(50000000); // 0.05 OCT for gas
+
       let result;
       const provider = wallet.provider;
 

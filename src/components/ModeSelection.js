@@ -18,7 +18,7 @@ import {
 import { FaTrophy, FaPlay, FaArrowLeft } from "react-icons/fa";
 import { IoIosFlash } from "react-icons/io";
 
-const ModeSelection = ({ onSelectMode, onBack, bestScores = {} }) => {
+const ModeSelection = ({ onSelectMode, onBack, onSoloStakes, bestScores = {} }) => {
   const modes = [
     {
       id: "classic",
@@ -63,6 +63,22 @@ const ModeSelection = ({ onSelectMode, onBack, bestScores = {} }) => {
         <GiPear key="p1" />,
         <GiStrawberry key="p2" />,
         <GiGrapes key="p3" />,
+      ],
+    },
+    {
+      id: "solo_stakes",
+      name: "SOLO STAKES",
+      emoji: <GiCherry />,
+      background: "linear-gradient(135deg, #f7971e 0%, #ffd200 100%)",
+      shadow: "0 0 40px rgba(255, 210, 0, 0.6)",
+      description: "STAKE OCT • WIN DOUBLE",
+      subtitle: "PLAY FOR REAL REWARDS",
+      bestScore: 0,
+      isSoloStakes: true,
+      particles: [
+        <GiCherry key="p1" />,
+        <GiOrange key="p2" />,
+        <GiLemon key="p3" />,
       ],
     },
   ];
@@ -122,7 +138,7 @@ const ModeSelection = ({ onSelectMode, onBack, bestScores = {} }) => {
           <div
             key={mode.id}
             className="game-mode-card"
-            onClick={() => onSelectMode(mode.id)}
+            onClick={() => mode.isSoloStakes && onSoloStakes ? onSoloStakes() : onSelectMode(mode.id)}
             style={{
               animationDelay: `${index * 0.1}s`,
             }}

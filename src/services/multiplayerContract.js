@@ -15,7 +15,7 @@ const IS_DEV_MODE = !PACKAGE_ID || !GAME_LOBBY_ID;
 
 // OneChain constants
 const CLOCK_OBJECT = '0x6'; // Standard clock object on Sui/OneChain
-const OCT_COIN_TYPE = '0x2::oct::OCT'; // OCT coin type on OneChain
+const OCT_COIN_TYPE = process.env.REACT_APP_OCT_COIN_TYPE || '0x2::oct::OCT'; // OCT coin type on OneChain
 
 // Bet tier mapping (matching contract)
 const BET_TIERS = {

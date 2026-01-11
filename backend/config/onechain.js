@@ -18,6 +18,7 @@ export const ONECHAIN_CONFIG = {
 export const PACKAGE_ID = process.env.PACKAGE_ID;
 export const GAME_LOBBY_ID = process.env.GAME_LOBBY_ID;
 export const STATS_REGISTRY_ID = process.env.STATS_REGISTRY_ID;
+export const SOLO_GAME_LOBBY_ID = process.env.SOLO_GAME_LOBBY_ID;
 
 // Validate contract configuration
 export function validateContractConfig() {

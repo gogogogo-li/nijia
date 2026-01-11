@@ -12,8 +12,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding: 20px;
+  padding-top: 80px;
+  padding-bottom: 40px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -42,42 +43,49 @@
   animation-delay: 0s;
   animation-duration: 12s;
 }
+
 .fruit-2 {
   top: 20%;
   left: 80%;
   animation-delay: 2s;
   animation-duration: 14s;
 }
+
 .fruit-3 {
   top: 70%;
   left: 15%;
   animation-delay: 4s;
   animation-duration: 16s;
 }
+
 .fruit-4 {
   top: 80%;
   left: 75%;
   animation-delay: 1s;
   animation-duration: 13s;
 }
+
 .fruit-5 {
   top: 40%;
   left: 5%;
   animation-delay: 3s;
   animation-duration: 15s;
 }
+
 .fruit-6 {
   top: 30%;
   left: 90%;
   animation-delay: 5s;
   animation-duration: 11s;
 }
+
 .fruit-7 {
   top: 60%;
   left: 85%;
   animation-delay: 2.5s;
   animation-duration: 14.5s;
 }
+
 .fruit-8 {
   top: 15%;
   left: 50%;
@@ -86,16 +94,20 @@
 }
 
 @keyframes floatFruit {
+
   0%,
   100% {
     transform: translate(0, 0) rotate(0deg) scale(1);
   }
+
   25% {
     transform: translate(30px, -50px) rotate(90deg) scale(1.2);
   }
+
   50% {
     transform: translate(-20px, -100px) rotate(180deg) scale(0.8);
   }
+
   75% {
     transform: translate(-50px, -50px) rotate(270deg) scale(1.1);
   }
@@ -160,6 +172,7 @@
     opacity: 0;
     transform: translateY(-50px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -188,10 +201,12 @@
 }
 
 @keyframes titleGlow {
+
   0%,
   100% {
     filter: drop-shadow(0 0 20px rgba(70, 125, 255, 0.6));
   }
+
   50% {
     filter: drop-shadow(0 0 40px rgba(191, 193, 255, 0.9));
   }
@@ -210,11 +225,13 @@
 }
 
 @keyframes slashSlide {
+
   0%,
   100% {
     left: -10%;
     opacity: 0;
   }
+
   50% {
     left: 110%;
     opacity: 1;
@@ -233,11 +250,11 @@
 /* Modes Container */
 .modes-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
-  max-width: 1400px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  max-width: 1000px;
   width: 100%;
-  padding: 0 40px;
+  padding: 0 20px;
   z-index: 5;
   flex-shrink: 0;
 }
@@ -245,11 +262,12 @@
 /* Game Mode Card */
 .game-mode-card {
   position: relative;
-  aspect-ratio: 3/4;
   cursor: pointer;
   transform-style: preserve-3d;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   animation: cardFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  min-height: 352px;
+  max-height: 418px;
 }
 
 @keyframes cardFadeIn {
@@ -257,6 +275,7 @@
     opacity: 0;
     transform: translateY(50px) rotateX(20deg);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) rotateX(0deg);
@@ -308,11 +327,13 @@
   top: 10%;
   animation-delay: 0s;
 }
+
 .particle:nth-child(2) {
   left: 60%;
   top: 20%;
   animation-delay: 1s;
 }
+
 .particle:nth-child(3) {
   left: 80%;
   top: 60%;
@@ -320,11 +341,13 @@
 }
 
 @keyframes particleFloat {
+
   0%,
   100% {
     opacity: 0;
     transform: translateY(0) rotate(0deg);
   }
+
   50% {
     opacity: 0.6;
     transform: translateY(-30px) rotate(180deg);
@@ -385,10 +408,12 @@
 }
 
 @keyframes emojiFloat {
+
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
   }
+
   50% {
     transform: translateY(-10px) rotate(10deg);
   }
@@ -404,11 +429,13 @@
 }
 
 @keyframes ringPulse {
+
   0%,
   100% {
     transform: scale(1);
     opacity: 0.3;
   }
+
   50% {
     transform: scale(1.2);
     opacity: 0.6;
@@ -480,11 +507,13 @@
 }
 
 @keyframes trophySpin {
+
   0%,
   90%,
   100% {
     transform: rotate(0deg);
   }
+
   95% {
     transform: rotate(20deg);
   }
@@ -568,12 +597,10 @@
   left: -100%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(70, 125, 255, 0.4),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(70, 125, 255, 0.4),
+      transparent);
   transform: skewX(-20deg);
   transition: left 0.6s ease;
   pointer-events: none;
@@ -647,7 +674,7 @@
   }
 
   .mode-title-container {
-    margin-top: 380px;
+    margin-top: 20px;
     margin-bottom: 30px;
   }
 
@@ -933,10 +960,12 @@
   }
 
   @keyframes floatFruit {
+
     0%,
     100% {
       transform: translate(0, 0) rotate(0deg);
     }
+
     50% {
       transform: translate(20px, -50px) rotate(180deg);
     }
@@ -1039,6 +1068,7 @@
 
 /* Touch device optimizations */
 @media (hover: none) and (pointer: coarse) {
+
   /* Disable hover animations on touch devices */
   .game-mode-card:hover {
     transform: none;
@@ -1082,6 +1112,7 @@
   }
 
   @keyframes titleGlow {
+
     /* Simplified animation */
     0%,
     100% {
@@ -1090,6 +1121,7 @@
   }
 
   @keyframes emojiFloat {
+
     /* Simplified animation */
     0%,
     100% {
@@ -1098,6 +1130,7 @@
   }
 
   @keyframes ringPulse {
+
     /* Simplified animation */
     0%,
     100% {

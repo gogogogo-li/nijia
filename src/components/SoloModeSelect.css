@@ -1,0 +1,600 @@
+/* Solo Mode Selection Screen */
+.solo-mode-selection-screen {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    padding-bottom: 100px;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0f0f2f 100%);
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Background Animation */
+.solo-bg-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.solo-floating-fruit {
+    position: absolute;
+    font-size: 2rem;
+    opacity: 0.15;
+    animation: soloFloatAround 20s infinite ease-in-out;
+}
+
+.solo-floating-fruit.fruit-1 {
+    left: 5%;
+    top: 10%;
+    animation-delay: 0s;
+    color: #ff6b6b;
+}
+
+.solo-floating-fruit.fruit-2 {
+    left: 90%;
+    top: 20%;
+    animation-delay: -3s;
+    color: #ffa502;
+}
+
+.solo-floating-fruit.fruit-3 {
+    left: 15%;
+    top: 70%;
+    animation-delay: -6s;
+    color: #ffd93d;
+}
+
+.solo-floating-fruit.fruit-4 {
+    left: 85%;
+    top: 60%;
+    animation-delay: -9s;
+    color: #9b59b6;
+}
+
+.solo-floating-fruit.fruit-5 {
+    left: 50%;
+    top: 15%;
+    animation-delay: -12s;
+    color: #f1c40f;
+}
+
+.solo-floating-fruit.fruit-6 {
+    left: 30%;
+    top: 85%;
+    animation-delay: -15s;
+    color: #ff9f43;
+}
+
+.solo-floating-fruit.fruit-7 {
+    left: 70%;
+    top: 80%;
+    animation-delay: -18s;
+    color: #27ae60;
+}
+
+.solo-floating-fruit.fruit-8 {
+    left: 10%;
+    top: 40%;
+    animation-delay: -5s;
+    color: #e74c3c;
+}
+
+@keyframes soloFloatAround {
+
+    0%,
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    25% {
+        transform: translate(20px, -30px) rotate(90deg);
+    }
+
+    50% {
+        transform: translate(-15px, 20px) rotate(180deg);
+    }
+
+    75% {
+        transform: translate(30px, 10px) rotate(270deg);
+    }
+}
+
+/* Header */
+.solo-header {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.solo-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.solo-back-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(-5px);
+}
+
+.solo-back-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.solo-balance {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: rgba(255, 215, 0, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    color: #ffd700;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.balance-icon {
+    font-size: 1.2rem;
+}
+
+/* Title Section */
+.solo-title-container {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.solo-ninja-icon {
+    font-size: 3rem;
+    color: #fff;
+    margin-bottom: 10px;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+}
+
+.solo-main-title {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin: 0;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.solo-subtitle {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 10px;
+    letter-spacing: 2px;
+}
+
+/* Error Message */
+.solo-error-message {
+    background: rgba(255, 107, 107, 0.2);
+    border: 1px solid rgba(255, 107, 107, 0.5);
+    color: #ff6b6b;
+    padding: 12px 24px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    z-index: 10;
+    animation: shakeError 0.5s ease;
+}
+
+@keyframes shakeError {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-10px);
+    }
+
+    75% {
+        transform: translateX(10px);
+    }
+}
+
+/* Difficulties Container */
+.solo-difficulties-container {
+    position: relative;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    max-width: 1200px;
+    width: 100%;
+    padding: 0 20px;
+}
+
+@media (max-width: 1100px) {
+    .solo-difficulties-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .solo-difficulties-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
+/* Difficulty Card */
+.solo-difficulty-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    animation: slideUp 0.6s ease forwards;
+    opacity: 0;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.solo-difficulty-card:hover:not(.disabled) {
+    transform: translateY(-10px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.solo-difficulty-card.selected {
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.solo-difficulty-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Card Glow */
+.solo-card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    opacity: 0.1;
+    border-radius: 50%;
+    filter: blur(60px);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.solo-difficulty-card:hover .solo-card-glow {
+    opacity: 0.2;
+}
+
+/* Card Particles */
+.solo-card-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.solo-particle {
+    position: absolute;
+    font-size: 1.2rem;
+    opacity: 0.3;
+    animation: soloParticleFloat 4s infinite ease-in-out;
+}
+
+.solo-particle:nth-child(1) {
+    top: 10%;
+    left: 10%;
+}
+
+.solo-particle:nth-child(2) {
+    top: 60%;
+    right: 10%;
+    animation-delay: -1.5s;
+}
+
+.solo-particle:nth-child(3) {
+    bottom: 10%;
+    left: 50%;
+    animation-delay: -3s;
+}
+
+@keyframes soloParticleFloat {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: translateY(-15px) scale(1.1);
+        opacity: 0.5;
+    }
+}
+
+/* Card Content */
+.solo-card-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex-grow: 1;
+}
+
+.solo-diff-emoji-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.solo-diff-emoji {
+    font-size: 3rem;
+    display: block;
+}
+
+.solo-emoji-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 70px;
+    height: 70px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: ringPulse 2s infinite ease-in-out;
+}
+
+@keyframes ringPulse {
+
+    0%,
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.2;
+    }
+}
+
+.solo-diff-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #fff;
+    margin: 0 0 5px 0;
+    letter-spacing: 2px;
+}
+
+.solo-diff-desc {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 15px 0;
+    letter-spacing: 1px;
+}
+
+/* Stakes Info */
+.solo-stakes-info {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 15px;
+}
+
+.solo-stake-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.solo-stake-row:last-child {
+    border-bottom: none;
+}
+
+.stake-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+}
+
+.stake-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.stake-value.target-score {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #60a5fa;
+}
+
+/* Speed Badge */
+.solo-speed-badge {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+}
+
+/* Play Button */
+.solo-play-btn {
+    width: 100%;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: auto;
+}
+
+.solo-play-btn:hover:not(:disabled) {
+    transform: scale(1.02);
+    filter: brightness(1.1);
+}
+
+.solo-play-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.processing-text {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Card Slash Effect */
+.solo-card-slash {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.5s ease;
+    pointer-events: none;
+}
+
+.solo-difficulty-card:hover .solo-card-slash {
+    left: 100%;
+}
+
+/* Info Banner */
+.solo-info-banner {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 30px;
+    padding: 15px 25px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    max-width: 600px;
+}
+
+.info-icon {
+    font-size: 1.2rem;
+}
+
+.info-text {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .solo-main-title {
+        font-size: 2rem;
+    }
+
+    .solo-ninja-icon {
+        font-size: 2.5rem;
+    }
+
+    .solo-difficulty-card {
+        padding: 20px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .solo-mode-selection-screen {
+        padding: 15px 10px;
+    }
+
+    .solo-main-title {
+        font-size: 1.5rem;
+    }
+
+    .solo-back-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .solo-balance {
+        padding: 10px 14px;
+        font-size: 0.9rem;
+    }
+}

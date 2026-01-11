@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import onechainService from '../services/onechainService';
+import { createSoloGameTransaction, getStakeAmountOCT } from '../services/soloContract';
 
 export const useOneChain = () => {
   const [walletAddress, setWalletAddress] = useState(onechainService.walletAddress);
@@ -209,6 +210,71 @@ export const useOneChain = () => {
     }
   }, [walletAddress, isConnected, refreshBalance]);
 
+  // Create and stake a solo game on-chain
+  const createSoloGame = useCallback(async (difficulty) => {
+    if (!walletAddress || !isConnected) {
+      return { success: false, error: 'Please connect your OneWallet first' };
+    }
+
+    try {
+      console.log('🎮 Creating solo game on-chain...');
+      console.log(`   Difficulty: ${difficulty}`);
+      console.log(`   Stake: ${getStakeAmountOCT(difficulty)} OCT`);
+
+      // Build the transaction
+      const tx = createSoloGameTransaction({ difficulty });
+
+      // Check if this is development mode
+      if (tx._isDevelopmentMode) {
+        console.log('⚠️  Development mode - simulating transaction');
+        return {
+          success: true,
+          transactionHash: `dev_tx_${Date.now()}`,
+          gameId: tx._mockGameId || Math.floor(Math.random() * 1000000),
+          isDevelopmentMode: true
+        };
+      }
+
+      // Execute the transaction via wallet
+      const result = await onechainService.executeTransaction(tx);
+
+      if (result.success) {
+        console.log('✅ Solo game created on-chain!');
+        console.log(`   TX Hash: ${result.transactionHash}`);
+
+        // Extract game ID from events if available
+        let gameId = null;
+        if (result.events) {
+          const createEvent = result.events.find(e =>
+            e.type && e.type.includes('SoloGameCreatedEvent')
+          );
+          if (createEvent && createEvent.parsedJson) {
+            gameId = createEvent.parsedJson.game_id;
+          }
+        }
+
+        // Refresh balance after stake
+        await refreshBalance();
+
+        return {
+          success: true,
+          transactionHash: result.transactionHash,
+          gameId,
+          events: result.events,
+          objectChanges: result.objectChanges
+        };
+      } else {
+        return { success: false, error: result.error || 'Transaction failed' };
+      }
+    } catch (error) {
+      console.error('❌ Failed to create solo game:', error);
+      return { success: false, error: error.message };
+    }
+  }, [walletAddress, isConnected, refreshBalance]);
+
+  // Compute OCT balance from balance object
+  const octBalance = balance ? parseFloat(balance.amount) : 0;
+
   return {
     // Wallet state
     walletAddress,
@@ -217,6 +283,7 @@ export const useOneChain = () => {
     error,
     userProfile,
     balance,
+    octBalance,
 
     // Wallet actions
     connectWallet,
@@ -231,6 +298,7 @@ export const useOneChain = () => {
     // Game actions
     startGameSession,
     recordSlash,
-    getBalance
+    getBalance,
+    createSoloGame
   };
 };
