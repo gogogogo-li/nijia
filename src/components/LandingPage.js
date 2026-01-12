@@ -1,9 +1,9 @@
 import React from 'react';
 import OneWallet from './OneWallet';
 import './LandingPage.css';
-import { GiCrossedSwords } from 'react-icons/gi';
+import { GiCrossedSwords, GiTrophyCup } from 'react-icons/gi';
 
-const LandingPage = ({ onStartGame, onMultiplayer, onechain }) => {
+const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain }) => {
   const handlePlayClick = (e) => {
     e.preventDefault();
     onStartGame();
@@ -12,6 +12,11 @@ const LandingPage = ({ onStartGame, onMultiplayer, onechain }) => {
   const handleMultiplayerClick = (e) => {
     e.preventDefault();
     onMultiplayer();
+  };
+
+  const handleLeaderboardClick = (e) => {
+    e.preventDefault();
+    if (onLeaderboard) onLeaderboard();
   };
 
   const handleVideoError = (e) => {
@@ -32,6 +37,10 @@ const LandingPage = ({ onStartGame, onMultiplayer, onechain }) => {
         <div className="wallet-container">
           <OneWallet onechain={onechain} />
         </div>
+        <button onClick={handleLeaderboardClick} className="nav-link leaderboard-btn">
+          <GiTrophyCup style={{ marginRight: '6px' }} />
+          Leaderboard
+        </button>
         <button onClick={handlePlayClick} className="nav-link play-btn">Play Now</button>
         <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="nav-link social-link" aria-label="Twitter">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

@@ -7,6 +7,7 @@ import LandingPage from './components/LandingPage';
 import ModeSelection from './components/ModeSelection';
 import SoloModeSelect from './components/SoloModeSelect';
 import BladeCursor from './components/BladeCursor';
+import FruitNinjaLeaderboard from './components/FruitNinjaLeaderboard';
 import { useGameState } from './hooks/useGameState';
 import { useTaskbarControls } from './hooks/useTaskbarControls';
 import { useOneChain } from './hooks/useOneChain';
@@ -36,6 +37,7 @@ function App() {
   const [showMultiplayer, setShowMultiplayer] = useState(false);
   const [showModeSelection, setShowModeSelection] = useState(false);
   const [showSoloMode, setShowSoloMode] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [soloGameData, setSoloGameData] = useState(null);
   const [multiplayerGameId, setMultiplayerGameId] = useState(null);
 
@@ -159,6 +161,14 @@ function App() {
     }
     setShowLanding(false);
     setShowMultiplayer(true);
+  };
+
+  const handleShowLeaderboard = () => {
+    setShowLeaderboard(true);
+  };
+
+  const handleCloseLeaderboard = () => {
+    setShowLeaderboard(false);
   };
 
   const handleStartMultiplayerGame = (gameId) => {
@@ -312,8 +322,15 @@ function App() {
         <LandingPage
           onStartGame={handleStartFromLanding}
           onMultiplayer={handleShowMultiplayer}
+          onLeaderboard={handleShowLeaderboard}
           onechain={onechain}
         />
+        {showLeaderboard && (
+          <FruitNinjaLeaderboard
+            onClose={handleCloseLeaderboard}
+            walletAddress={onechain.walletAddress}
+          />
+        )}
         <SpeedInsights />
         <Analytics />
       </div>

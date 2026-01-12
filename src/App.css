@@ -5,26 +5,33 @@
   text-align: center;
   overflow: hidden;
   height: 100vh;
-  cursor: none !important;
-  height: 100dvh; /* Dynamic viewport height for mobile */
+  height: 100dvh;
+  /* Dynamic viewport height for mobile */
   width: 100vw;
-  position: fixed; /* Prevent scrolling and bouncing on mobile */
+  position: fixed;
+  /* Prevent scrolling and bouncing on mobile */
   top: 0;
   left: 0;
-  touch-action: none; /* Prevent pull-to-refresh and scrolling */
+  touch-action: none;
+  /* Prevent pull-to-refresh and scrolling */
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: none; /* Prevent overscroll bounce */
+  overscroll-behavior: none;
+  /* Prevent overscroll bounce */
 }
 
-.App * {
-  cursor: none !important;
-}
-
-/* Only show pointer cursor on specific UI elements outside game */
+/* Show pointer cursor on all buttons and interactive elements */
 .App button,
-.App .clickable {
-  cursor: none !important;
+.App a,
+.App select,
+.App .clickable,
+.App .nav-link,
+.App .fn-tab,
+.App .fn-close-btn,
+.App .fn-refresh-btn,
+.App .fn-mode-select {
+  cursor: pointer !important;
 }
+
 
 /* Beta Version Tag */
 .beta-tag {
@@ -45,9 +52,12 @@
 }
 
 @keyframes betaFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-4px);
   }
@@ -59,12 +69,16 @@
 }
 
 @keyframes betaRotate {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: rotate(0deg);
   }
+
   25% {
     transform: rotate(-10deg);
   }
+
   75% {
     transform: rotate(10deg);
   }
@@ -86,10 +100,12 @@
     filter: drop-shadow(0 2px 4px rgba(31, 216, 204, 0.3));
     transform: scale(1);
   }
+
   50% {
     filter: drop-shadow(0 2px 6px rgba(31, 216, 204, 0.4));
     transform: scale(1.03);
   }
+
   100% {
     filter: drop-shadow(0 2px 4px rgba(31, 216, 204, 0.3));
     transform: scale(1);
@@ -101,6 +117,7 @@
     filter: drop-shadow(0 2px 6px rgba(255, 68, 68, 0.4));
     transform: scale(1);
   }
+
   100% {
     filter: drop-shadow(0 2px 8px rgba(255, 68, 68, 0.5));
     transform: scale(1.05);
@@ -108,10 +125,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.1);
     opacity: 0.8;
@@ -123,10 +143,12 @@
     box-shadow: 0 0 4px rgba(255, 68, 68, 0.4);
     opacity: 1;
   }
+
   50% {
     box-shadow: 0 0 6px rgba(255, 68, 68, 0.5);
     opacity: 0.8;
   }
+
   100% {
     box-shadow: 0 0 4px rgba(255, 68, 68, 0.4);
     opacity: 1;
@@ -219,7 +241,7 @@
     left: 10px;
     font-size: 11px;
   }
-  
+
   .key-indicator {
     font-size: 9px;
     padding: 1px 4px;
@@ -236,7 +258,7 @@
 .heart {
   font-size: 24px;
   color: #ff4444;
-  text-shadow: 
+  text-shadow:
     0 0 10px rgba(255, 68, 68, 0.8),
     0 0 20px rgba(255, 68, 68, 0.4);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
@@ -272,9 +294,17 @@
 
 /* Health bar animations */
 @keyframes healthPulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 .health-fill[style*="ff4444"] {
@@ -286,7 +316,7 @@
   .heart {
     font-size: 20px;
   }
-  
+
   .health-bar {
     width: 16px;
     height: 2px;
@@ -298,7 +328,7 @@
   .heart {
     font-size: 18px;
   }
-  
+
   .health-bar {
     width: 14px;
     height: 2px;
@@ -316,7 +346,8 @@
   }
 
   /* Prevent iOS Safari bounce/scroll */
-  html, body {
+  html,
+  body {
     position: fixed;
     overflow: hidden;
     width: 100%;
@@ -355,7 +386,9 @@
 }
 
 /* Prevent zoom on input focus (iOS Safari) */
-input, select, textarea {
+input,
+select,
+textarea {
   font-size: 16px !important;
 }
 
@@ -435,6 +468,7 @@ button {
   font-size: 15px !important;
   margin-top: 10px !important;
 }
+
 /* Subtle Token Shatter Effects */
 .scratch-mark {
   will-change: opacity;

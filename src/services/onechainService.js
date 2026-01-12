@@ -1051,14 +1051,48 @@ class OneChainService {
     return null;
   }
 
-  // Get leaderboard from OneChain using API SDK
-  async getLeaderboard(limit = 100) {
+  // Get leaderboard from backend with filters
+  async getLeaderboard(options = {}) {
+    const { period = 'all-time', mode = 'all', limit = 100 } = options;
     try {
-      return await this.apiClient.getLeaderboard(limit);
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+      const response = await fetch(
+        `${backendUrl}/api/games/leaderboard?period=${period}&mode=${mode}&limit=${limit}`
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch leaderboard');
+      }
+      const data = await response.json();
+      return data.leaderboard || [];
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
+      // Fallback to API client if backend is unavailable
+      try {
+        return await this.apiClient.getLeaderboard(limit);
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+        return [];
+      }
     }
-    return [];
+  }
+
+  // Get player's leaderboard stats
+  async getPlayerLeaderboardStats(address, options = {}) {
+    const { period = 'all-time', mode = 'all' } = options;
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+      const response = await fetch(
+        `${backendUrl}/api/games/leaderboard/player/${address}?period=${period}&mode=${mode}`
+      );
+      if (!response.ok) {
+        throw new Error('Failed to fetch player stats');
+      }
+      const data = await response.json();
+      return data.player || null;
+    } catch (error) {
+      console.error('Error fetching player leaderboard stats:', error);
+      return null;
+    }
   }
 
   // Get token price from OneDEX using API SDK

@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -28,13 +29,15 @@ html, body {
   cursor: none !important;
 }
 
+/* Hide native cursor globally */
+* {
+  box-sizing: border-box;
+  cursor: none !important;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 /* Combo pulse animation */
@@ -42,6 +45,7 @@ code {
   0% {
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
   }
+
   100% {
     text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.6);
   }
