@@ -200,7 +200,7 @@ function App() {
       let backendGameId = txResult.gameId;
       try {
         console.log('📝 Registering game with backend...');
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001'}/api/solo/games/create`, {
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'}/api/solo/games/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

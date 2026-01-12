@@ -91,7 +91,7 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
         console.log('🎮 Completing solo game:', soloGameData.gameId, 'Score:', gameState.score);
 
         try {
-          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001'}/api/solo/games/${soloGameData.gameId}/complete`, {
+          const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'}/api/solo/games/${soloGameData.gameId}/complete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
