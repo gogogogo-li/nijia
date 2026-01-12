@@ -1055,7 +1055,7 @@ class OneChainService {
   async getLeaderboard(options = {}) {
     const { period = 'all-time', mode = 'all', limit = 100 } = options;
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+      const backendUrl = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
       const response = await fetch(
         `${backendUrl}/api/games/leaderboard?period=${period}&mode=${mode}&limit=${limit}`
       );
@@ -1080,7 +1080,7 @@ class OneChainService {
   async getPlayerLeaderboardStats(address, options = {}) {
     const { period = 'all-time', mode = 'all' } = options;
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+      const backendUrl = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
       const response = await fetch(
         `${backendUrl}/api/games/leaderboard/player/${address}?period=${period}&mode=${mode}`
       );
