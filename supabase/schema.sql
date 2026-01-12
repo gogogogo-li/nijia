@@ -89,6 +89,30 @@ CREATE TABLE IF NOT EXISTS game_transactions (
   confirmed_at TIMESTAMP WITH TIME ZONE
 );
 
+-- Solo staked games table
+CREATE TABLE IF NOT EXISTS solo_games (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  game_id BIGINT UNIQUE NOT NULL,
+  player_address TEXT NOT NULL,
+  difficulty INTEGER NOT NULL CHECK (difficulty BETWEEN 0 AND 3),
+  stake_amount BIGINT NOT NULL,
+  target_score INTEGER NOT NULL,
+  final_score INTEGER,
+  won BOOLEAN,
+  payout BIGINT DEFAULT 0,
+  state TEXT NOT NULL CHECK (state IN ('in_progress', 'completed', 'cancelled')) DEFAULT 'in_progress',
+  tx_hash TEXT,
+  settlement_tx TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  completed_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Indexes for solo_games
+CREATE INDEX IF NOT EXISTS idx_solo_games_game_id ON solo_games(game_id);
+CREATE INDEX IF NOT EXISTS idx_solo_games_player ON solo_games(player_address);
+CREATE INDEX IF NOT EXISTS idx_solo_games_state ON solo_games(state);
+CREATE INDEX IF NOT EXISTS idx_solo_games_created_at ON solo_games(created_at DESC);
+
 -- Leaderboard view (for quick queries)
 CREATE OR REPLACE VIEW multiplayer_leaderboard AS
 SELECT 

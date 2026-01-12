@@ -581,7 +581,18 @@
 
 @media (max-width: 480px) {
     .solo-mode-selection-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
         padding: 15px 10px;
+        padding-bottom: 100px;
+        overflow-y: scroll !important;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
     }
 
     .solo-main-title {
@@ -596,5 +607,9 @@
     .solo-balance {
         padding: 10px 14px;
         font-size: 0.9rem;
+    }
+
+    .solo-difficulty-card {
+        min-height: auto;
     }
 }

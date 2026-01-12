@@ -103,12 +103,16 @@ app.use((req, res, next) => {
 // Initialize Game Manager
 const gameManager = new GameManager(io, supabase);
 
-// Initialize Solo Game Manager (uses same admin keypair from gameManager after init)
+// Initialize Solo Game Manager
 const soloGameManager = new SoloGameManager(supabase, null);
-// We'll set the admin keypair after on-chain settlement initializes
-gameManager.onSettlementInit = (adminKeypair) => {
-  soloGameManager.adminKeypair = adminKeypair;
-};
+// Initialize admin keypair for payouts
+soloGameManager.initialize().then(success => {
+  if (success) {
+    logger.info('✅ Solo Game Manager ready for payouts');
+  } else {
+    logger.warn('⚠️ Solo Game Manager running without payout capability');
+  }
+});
 
 // Make gameManager and io accessible globally
 global.gameManager = gameManager;

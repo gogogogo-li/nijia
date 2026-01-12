@@ -164,6 +164,19 @@ const GameScreen = ({
     showComboMessage
   );
 
+  // End game when target score is reached in solo stakes mode
+  useEffect(() => {
+    if (soloGameData && soloGameData.target && gameState.isGameRunning && !gameState.isPaused) {
+      if (gameState.score >= soloGameData.target) {
+        console.log(`🎯 Target reached! Score: ${gameState.score} >= Target: ${soloGameData.target}`);
+        // Small delay to let the last score update render
+        setTimeout(() => {
+          onEndGame();
+        }, 500);
+      }
+    }
+  }, [gameState.score, soloGameData, gameState.isGameRunning, gameState.isPaused, onEndGame]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;

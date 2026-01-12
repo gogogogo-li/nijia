@@ -13,6 +13,12 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
   const [transactionHash, setTransactionHash] = useState(null);
   const [multiplayerSubmitted, setMultiplayerSubmitted] = useState(false);
 
+  // Solo game payout state
+  const [soloPayoutStatus, setSoloPayoutStatus] = useState(null); // null, 'processing', 'success', 'failed'
+  const [soloPayoutTxHash, setSoloPayoutTxHash] = useState(null);
+  const [soloPayoutError, setSoloPayoutError] = useState(null);
+  const [soloGameCompleted, setSoloGameCompleted] = useState(false);
+
   // Minted NFTs state - initialize empty, load when wallet is ready
   const [mintedNFTs, setMintedNFTs] = useState([]);
 
@@ -76,60 +82,117 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
     submitMultiplayerScore();
   }, [multiplayerGameId, gameState.score, onechain.isConnected, multiplayerSubmitted]);
 
+  // Complete solo game and trigger payout when game ends
+  useEffect(() => {
+    const completeSoloGame = async () => {
+      if (soloGameData && soloGameData.gameId && onechain?.walletAddress && !soloGameCompleted) {
+        setSoloGameCompleted(true);
+        setSoloPayoutStatus('processing');
+        console.log('🎮 Completing solo game:', soloGameData.gameId, 'Score:', gameState.score);
+
+        try {
+          const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001'}/api/solo/games/${soloGameData.gameId}/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              playerAddress: onechain.walletAddress,
+              finalScore: gameState.score
+            })
+          });
+
+          const result = await response.json();
+
+          if (result.success && result.game) {
+            console.log('✅ Solo game completed:', result.game);
+
+            if (result.game.won && result.game.settlement_tx) {
+              setSoloPayoutStatus('success');
+              setSoloPayoutTxHash(result.game.settlement_tx);
+              console.log('💰 Payout sent! TX:', result.game.settlement_tx);
+            } else if (result.game.won && !result.game.settlement_tx) {
+              // Won but no payout transaction (maybe admin wallet issue)
+              setSoloPayoutStatus('failed');
+              setSoloPayoutError('Payout not processed - contact support');
+            } else {
+              // Player lost, no payout expected
+              setSoloPayoutStatus(null);
+            }
+          } else {
+            console.error('❌ Failed to complete solo game:', result.error);
+            setSoloPayoutStatus('failed');
+            setSoloPayoutError(result.error || 'Failed to process game');
+          }
+        } catch (error) {
+          console.error('❌ Error completing solo game:', error);
+          setSoloPayoutStatus('failed');
+          setSoloPayoutError(error.message);
+        }
+      }
+    };
+
+    completeSoloGame();
+  }, [soloGameData, gameState.score, onechain?.walletAddress, soloGameCompleted]);
+
   return (
     <div className="unified-screen results-screen">
       <div className="unified-container results-container">
         {/* Solo Game Win/Lose Banner */}
         {soloGameData && (
           <div className="solo-result-banner" style={{
-            padding: '20px',
-            marginTop: '20px',
+            padding: '24px 20px',
+            marginTop: '10px',
             marginBottom: '20px',
             borderRadius: '16px',
             background: gameState.score >= soloGameData.target
               ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(16, 185, 129, 0.2))'
-              : 'linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.2))',
-            border: `2px solid ${gameState.score >= soloGameData.target ? '#22c55e' : '#ef4444'}`,
-            textAlign: 'center'
+              : 'linear-gradient(135deg, rgba(139, 69, 69, 0.6), rgba(100, 40, 40, 0.5))',
+            border: `2px solid ${gameState.score >= soloGameData.target ? '#22c55e' : '#b45454'}`,
+            textAlign: 'center',
+            width: '100%',
+            maxWidth: '500px',
+            boxSizing: 'border-box',
+            boxShadow: gameState.score >= soloGameData.target
+              ? '0 4px 20px rgba(34, 197, 94, 0.3)'
+              : '0 4px 20px rgba(139, 69, 69, 0.4)'
           }}>
             <div style={{
-              fontSize: '3rem',
-              marginBottom: '10px',
+              fontSize: '2.5rem',
+              marginBottom: '8px',
               color: gameState.score >= soloGameData.target ? '#4ade80' : '#f87171'
             }}>
               {gameState.score >= soloGameData.target ? <GiTrophyCup /> : <GiCrossedSwords />}
             </div>
             <h2 style={{
-              fontSize: '2rem',
+              fontSize: '1.8rem',
               fontWeight: 900,
               color: gameState.score >= soloGameData.target ? '#4ade80' : '#f87171',
-              margin: '0 0 10px 0',
+              margin: '0 0 12px 0',
               textTransform: 'uppercase',
-              letterSpacing: '2px'
+              letterSpacing: '3px'
             }}>
               {gameState.score >= soloGameData.target ? 'YOU WIN!' : 'YOU LOSE'}
             </h2>
             <div style={{
               display: 'flex',
               justifyContent: 'center',
-              gap: '30px',
-              marginTop: '15px',
+              gap: '24px',
+              marginTop: '12px',
               flexWrap: 'wrap'
             }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>YOUR SCORE</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff' }}>{gameState.score}</div>
+              <div style={{ textAlign: 'center', minWidth: '70px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>YOUR SCORE</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fff' }}>{gameState.score}</div>
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>TARGET</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fbbf24' }}>{soloGameData.target}</div>
+              <div style={{ textAlign: 'center', minWidth: '70px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>TARGET</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#fbbf24' }}>{soloGameData.target}</div>
               </div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+              <div style={{ textAlign: 'center', minWidth: '70px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>
                   {gameState.score >= soloGameData.target ? 'PAYOUT' : 'STAKE LOST'}
                 </div>
                 <div style={{
-                  fontSize: '1.5rem',
+                  fontSize: '1.4rem',
                   fontWeight: 700,
                   color: gameState.score >= soloGameData.target ? '#4ade80' : '#f87171'
                 }}>
@@ -140,6 +203,54 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
                 </div>
               </div>
             </div>
+
+            {/* Payout Status */}
+            {soloPayoutStatus && (
+              <div style={{
+                marginTop: '16px',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                background: soloPayoutStatus === 'success' ? 'rgba(34, 197, 94, 0.15)' :
+                  soloPayoutStatus === 'processing' ? 'rgba(251, 191, 36, 0.15)' :
+                    'rgba(239, 68, 68, 0.15)',
+                border: `1px solid ${soloPayoutStatus === 'success' ? 'rgba(34, 197, 94, 0.4)' :
+                  soloPayoutStatus === 'processing' ? 'rgba(251, 191, 36, 0.4)' :
+                    'rgba(239, 68, 68, 0.4)'
+                  }`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                {soloPayoutStatus === 'processing' && (
+                  <>
+                    <span style={{ fontSize: '16px' }}>⏳</span>
+                    <span style={{ color: '#fbbf24', fontSize: '0.9rem' }}>Processing payout...</span>
+                  </>
+                )}
+                {soloPayoutStatus === 'success' && (
+                  <>
+                    <span style={{ fontSize: '16px' }}>✅</span>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ color: '#4ade80', fontSize: '0.9rem' }}>Payout sent! </span>
+                      <a
+                        href={`https://onescan.cc/testnet/transactionBlocksDetail?digest=${soloPayoutTxHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: '#60a5fa', fontSize: '0.85rem', textDecoration: 'underline' }}
+                      >
+                        View Transaction
+                      </a>
+                    </div>
+                  </>
+                )}
+                {soloPayoutStatus === 'failed' && (
+                  <>
+                    <span style={{ fontSize: '16px' }}>❌</span>
+                    <span style={{ color: '#f87171', fontSize: '0.9rem' }}>{soloPayoutError || 'Payout failed'}</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         )}
 

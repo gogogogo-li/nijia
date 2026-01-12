@@ -63,7 +63,7 @@ export const useGameState = (walletAddress = null) => {
     }
   }, [walletAddress]);
 
-  const startGame = useCallback(async (mode = 'classic') => {
+  const startGame = useCallback(async (mode = 'classic', options = {}) => {
     lastPenaltyTime.current = 0; // Reset debounce timer for new game
 
     // Mode-specific settings
@@ -76,6 +76,10 @@ export const useGameState = (walletAddress = null) => {
     } else if (mode === 'zen') {
       initialLives = 999; // Effectively unlimited in Zen mode
       initialTime = 90; // 90 seconds for Zen mode
+    } else if (mode === 'classic') {
+      initialLives = 3;
+      // For solo stakes games, use custom time limit from options
+      initialTime = options.timeLimit || null;
     }
 
     setGameState(prev => ({

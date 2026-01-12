@@ -4,6 +4,7 @@
  */
 
 import { Transaction } from '@onelabs/sui/transactions';
+import { Ed25519Keypair } from '@onelabs/sui/keypairs/ed25519';
 import { suiClient, PACKAGE_ID, SOLO_GAME_LOBBY_ID, STATS_REGISTRY_ID } from '../config/onechain.js';
 import logger from '../utils/logger.js';
 
@@ -24,6 +25,47 @@ class SoloGameManager {
         this.supabase = supabase;
         this.adminKeypair = adminKeypair;
         this.activeGames = new Map(); // gameId -> game data
+    }
+
+    /**
+     * Initialize admin keypair from environment variable
+     */
+    async initialize() {
+        const privateKey = process.env.ADMIN_PRIVATE_KEY;
+
+        if (!privateKey) {
+            logger.warn('⚠️  ADMIN_PRIVATE_KEY not configured - solo payouts disabled');
+            return false;
+        }
+
+        try {
+            let keypair;
+
+            if (privateKey.startsWith('suiprivkey')) {
+                // Handle suiprivkey bech32 format
+                const { decodeSuiPrivateKey } = await import('@onelabs/sui/cryptography');
+                const decoded = decodeSuiPrivateKey(privateKey);
+                keypair = Ed25519Keypair.fromSecretKey(decoded.secretKey);
+                logger.info('   Parsed suiprivkey format');
+            } else {
+                // Handle raw hex format (with or without 0x prefix)
+                const cleanKey = privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey;
+                const privateKeyBytes = Buffer.from(cleanKey, 'hex');
+                keypair = Ed25519Keypair.fromSecretKey(privateKeyBytes);
+                logger.info('   Parsed hex format');
+            }
+
+            this.adminKeypair = keypair;
+            const adminAddress = this.adminKeypair.getPublicKey().toSuiAddress();
+
+            logger.info('✅ Solo Game Manager initialized with admin keypair');
+            logger.info(`   Admin address: ${adminAddress}`);
+
+            return true;
+        } catch (error) {
+            logger.error('❌ Failed to initialize admin keypair:', error.message);
+            return false;
+        }
     }
 
     /**
@@ -257,14 +299,18 @@ class SoloGameManager {
         logger.info(`   Result: ${game.won ? '✅ WIN' : '❌ LOSE'}`);
         logger.info(`   Payout: ${game.payout_oct} OCT`);
 
-        // Settle on-chain
-        if (this.adminKeypair && SOLO_GAME_LOBBY_ID) {
+        // Settle via direct OCT transfer (no contract needed)
+        logger.info(`   🔐 Admin keypair configured: ${!!this.adminKeypair}`);
+        if (this.adminKeypair) {
             try {
                 await this.settleOnChain(game);
             } catch (error) {
-                logger.error(`   ❌ On-chain settlement failed: ${error.message}`);
+                logger.error(`   ❌ Payout transfer failed: ${error.message}`);
                 game.settlement_error = error.message;
             }
+        } else {
+            logger.warn(`   ⚠️ Admin keypair not configured - cannot send payout`);
+            game.settlement_error = 'Admin wallet not configured';
         }
 
         // Update database
@@ -290,40 +336,48 @@ class SoloGameManager {
     }
 
     /**
-     * Settle game on-chain by calling complete_solo_game
+     * Settle game by sending direct OCT transfer from admin wallet
+     * Used when contract doesn't have a payout function
      */
     async settleOnChain(game) {
-        logger.info(`⛓️  Settling solo game ${game.game_id} on-chain...`);
+        logger.info(`⛓️  Settling solo game ${game.game_id} via direct transfer...`);
 
-        const tx = new Transaction();
+        // Only send payout if player won
+        if (!game.won || game.payout <= 0) {
+            logger.info(`   No payout needed (player lost or payout is 0)`);
+            return null;
+        }
 
-        tx.moveCall({
-            target: `${PACKAGE_ID}::multiplayer_game::complete_solo_game`,
-            typeArguments: [OCT_COIN_TYPE],
-            arguments: [
-                tx.object(SOLO_GAME_LOBBY_ID),
-                tx.object(STATS_REGISTRY_ID),
-                tx.pure.u64(game.game_id),
-                tx.pure.u64(game.final_score),
-                tx.object(CLOCK_OBJECT),
-            ],
-        });
+        try {
+            const tx = new Transaction();
 
-        const result = await suiClient.signAndExecuteTransaction({
-            signer: this.adminKeypair,
-            transaction: tx,
-            options: {
-                showEffects: true,
-            },
-        });
+            // Split the payout amount from admin's gas coin
+            const [payoutCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(BigInt(game.payout))]);
 
-        if (result.effects?.status?.status === 'success') {
-            game.settlement_tx = result.digest;
-            logger.info(`   ✅ On-chain settlement complete: ${result.digest}`);
-            return result.digest;
-        } else {
-            const errorMsg = result.effects?.status?.error || 'Unknown error';
-            throw new Error(errorMsg);
+            // Transfer to player
+            tx.transferObjects([payoutCoin], tx.pure.address(game.player));
+
+            logger.info(`   Sending ${game.payout_oct} OCT to ${game.player}...`);
+
+            const result = await suiClient.signAndExecuteTransaction({
+                signer: this.adminKeypair,
+                transaction: tx,
+                options: {
+                    showEffects: true,
+                },
+            });
+
+            if (result.effects?.status?.status === 'success') {
+                game.settlement_tx = result.digest;
+                logger.info(`   ✅ Payout sent successfully: ${result.digest}`);
+                return result.digest;
+            } else {
+                const errorMsg = result.effects?.status?.error || 'Unknown error';
+                throw new Error(errorMsg);
+            }
+        } catch (error) {
+            logger.error(`   ❌ Payout failed: ${error.message}`);
+            throw error;
         }
     }
 

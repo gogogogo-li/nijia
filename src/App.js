@@ -196,24 +196,48 @@ function App() {
 
       console.log('✅ On-chain game created:', txResult.transactionHash);
 
-      // 2. Store solo game data with transaction info
+      // 2. Register game with backend for payout tracking
+      let backendGameId = txResult.gameId;
+      try {
+        console.log('📝 Registering game with backend...');
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001'}/api/solo/games/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            txHash: txResult.transactionHash,
+            playerAddress: onechain.walletAddress,
+            difficulty: difficulty.id
+          })
+        });
+        const registerResult = await response.json();
+        if (registerResult.success && registerResult.game) {
+          backendGameId = registerResult.game.game_id;
+          console.log('✅ Game registered with backend, ID:', backendGameId);
+        } else {
+          console.warn('⚠️ Backend registration failed:', registerResult.error);
+        }
+      } catch (err) {
+        console.warn('⚠️ Backend registration failed:', err.message);
+      }
+
+      // 3. Store solo game data with transaction info
       const gameData = {
         difficulty: difficulty.id,
         stake: difficulty.stake,
         target: difficulty.target,
         speed: parseFloat(difficulty.speed),
         txHash: txResult.transactionHash,
-        gameId: txResult.gameId,
+        gameId: backendGameId,
         isDevelopmentMode: txResult.isDevelopmentMode
       };
 
       setSoloGameData(gameData);
       setShowSoloMode(false);
 
-      // 3. Start the game
-      startGame('classic');
+      // 4. Start the game with 60-second timer for solo stakes
+      startGame('classic', { timeLimit: 60 });
 
-      // 4. Track game start with blockchain session
+      // 5. Track game start with blockchain session
       if (onechain.isConnected) {
         onechain.startGameSession();
       }

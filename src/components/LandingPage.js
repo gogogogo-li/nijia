@@ -25,7 +25,7 @@ const LandingPage = ({ onStartGame, onMultiplayer, onechain }) => {
 
   return (
     <div className="landing-page">
-      
+
       {/* Floating Navigation Buttons */}
       <div className="floating-nav-buttons">
         {/* OneWallet Component */}
@@ -35,7 +35,7 @@ const LandingPage = ({ onStartGame, onMultiplayer, onechain }) => {
         <button onClick={handlePlayClick} className="nav-link play-btn">Play Now</button>
         <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="nav-link social-link" aria-label="Twitter">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
           </svg>
         </a>
         {/* <a href="https://github.com/jaibhedia" target="_blank" rel="noopener noreferrer" className="nav-link social-link" aria-label="GitHub">
@@ -44,28 +44,28 @@ const LandingPage = ({ onStartGame, onMultiplayer, onechain }) => {
           </svg>
         </a> */}
       </div>
-      
+
       {/* Background Video - Full Screen */}
-      <video 
+      <video
         className="hero-bg-video"
-        autoPlay 
-        muted 
-        loop 
+        autoPlay
+        muted
+        loop
         playsInline
         preload="auto"
         disablePictureInPicture
         onError={handleVideoError}
         onLoadedData={handleVideoLoad}
-        onCanPlay={() => console.log('Video can play')}
+        onCanPlay={() => { }}
       >
         <source src="/background-video.mp4" type="video/mp4" />
         <source src={`${process.env.PUBLIC_URL}/background-video.mp4`} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-      
+
       {/* Video Overlay */}
       <div className="hero-video-overlay"></div>
-      
+
       {/* Main Content Area */}
       <main className="main-content">
         <div className="hero-section">
@@ -77,7 +77,7 @@ const LandingPage = ({ onStartGame, onMultiplayer, onechain }) => {
               </h1>
               <p className="hero-game-subtitle"></p>
             </div>
-            
+
             <button className="hero-play-button" onClick={handlePlayClick}>
               <span className="play-icon">▶</span>
               Play Now

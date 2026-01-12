@@ -15,15 +15,41 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
   const [createdCode, setCreatedCode] = useState(null); // Join code from created private game
   const [availableGames, setAvailableGames] = useState([]);
   const [playerStats, setPlayerStats] = useState(null);
+  const [statsLoaded, setStatsLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
 
   const fetchPlayerStats = React.useCallback(async () => {
-    if (!walletAddress) return;
-    const result = await multiplayerService.getPlayerStats(walletAddress);
-    if (result.success) {
-      setPlayerStats(result.stats);
+    if (!walletAddress) {
+      setStatsLoaded(true);
+      return;
     }
+    try {
+      const result = await multiplayerService.getPlayerStats(walletAddress);
+      if (result.success) {
+        setPlayerStats(result.stats);
+      } else {
+        // Set default stats on failure
+        setPlayerStats({
+          gamesPlayed: 0,
+          gamesWon: 0,
+          winRate: 0,
+          totalWagered: 0,
+          totalWinnings: 0
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch player stats:', error);
+      // Set default stats on error
+      setPlayerStats({
+        gamesPlayed: 0,
+        gamesWon: 0,
+        winRate: 0,
+        totalWagered: 0,
+        totalWinnings: 0
+      });
+    }
+    setStatsLoaded(true);
   }, [walletAddress]);
 
   useEffect(() => {
@@ -245,8 +271,8 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
         throw new Error('Game not found');
       }
 
-      const betAmountOCT = parseFloat(game.bet_amount) / 100000000; // Convert from MIST to OCT
-      const betTierId = game.bet_tier + 1; // Convert 0-indexed (database) to 1-indexed (contract)
+      const betAmountOCT = parseFloat(game.bet_amount) / 1000000000; // Convert from MIST to OCT (9 decimals)
+      const betTierId = game.bet_tier; // Database stores 1-indexed tier directly
 
       showNotification(`Joining game with ${betAmountOCT} OCT stake...`, 'info');
       console.log(`🎮 Joining game ${gameId} with bet tier ${betTierId} (${betAmountOCT} OCT)`);
@@ -706,10 +732,21 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                     </div>
                   </div>
                 </div>
-              ) : (
+              ) : !statsLoaded ? (
                 <div className="loading-stats">
                   <div className="loading-spinner"></div>
                   <p>Loading stats...</p>
+                </div>
+              ) : (
+                <div className="stats-grid">
+                  <div className="stat-card">
+                    <div className="stat-glow"></div>
+                    <div className="stat-content">
+                      <div className="stat-icon"><GiGamepad /></div>
+                      <div className="stat-value">0</div>
+                      <div className="stat-label">Games Played</div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

@@ -164,10 +164,10 @@ export class GameManager {
           try {
             logger.info(`   Attempt ${attempt}/${maxRetries}...`);
 
-            // Get transaction details to extract game_id from GameCreatedEvent
+            // Get transaction details to extract game_id from GameCreatedEvent or object changes
             const txDetails = await this.suiClient.getTransactionBlock({
               digest: transactionHash,
-              options: { showEvents: true }
+              options: { showEvents: true, showObjectChanges: true }
             });
 
             logger.info(`   Transaction events count: ${txDetails.events?.length || 0}`);
@@ -180,17 +180,29 @@ export class GameManager {
             }
 
             // Find GameCreatedEvent to get the contract's game_id
-            const gameCreatedEvent = txDetails.events?.find(event =>
-              event.type.includes('GameCreatedEvent')
-            );
+            // Check for multiple possible event type formats
+            const gameCreatedEvent = txDetails.events?.find(event => {
+              const eventType = event.type.toLowerCase();
+              return eventType.includes('gamecreatedevent') ||
+                eventType.includes('game_created') ||
+                eventType.includes('multiplayer_game') && eventType.includes('create');
+            });
 
             if (gameCreatedEvent) {
-              logger.info(`   GameCreatedEvent found:`, JSON.stringify(gameCreatedEvent.parsedJson));
-              gameId = parseInt(gameCreatedEvent.parsedJson.game_id);
-              logger.info(`✅ Extracted game_id from contract: ${gameId}`);
-              break; // Success! Exit retry loop
+              logger.info(`   GameCreatedEvent found:`, JSON.stringify(gameCreatedEvent));
+              // Try different possible field names for game_id
+              const parsedJson = gameCreatedEvent.parsedJson || {};
+              const gameIdValue = parsedJson.game_id || parsedJson.gameId || parsedJson.id;
+              if (gameIdValue !== undefined) {
+                gameId = parseInt(gameIdValue);
+                logger.info(`✅ Extracted game_id from contract: ${gameId}`);
+                break; // Success! Exit retry loop
+              } else {
+                logger.warn(`⚠️  GameCreatedEvent found but no game_id field. Fields: ${Object.keys(parsedJson).join(', ')}`);
+              }
             } else {
               logger.warn('⚠️  Could not find GameCreatedEvent in transaction events');
+              logger.warn(`   Available event types: ${txDetails.events?.map(e => e.type).join(', ') || 'none'}`);
               if (attempt < maxRetries) {
                 logger.info(`   Waiting ${retryDelay}ms before retry...`);
                 await new Promise(resolve => setTimeout(resolve, retryDelay));
