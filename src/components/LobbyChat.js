@@ -3,7 +3,7 @@ import { FiMessageCircle, FiSend, FiChevronDown, FiChevronUp } from 'react-icons
 import multiplayerService from '../services/multiplayerService';
 import './LobbyChat.css';
 
-const LobbyChat = ({ walletAddress }) => {
+const LobbyChat = ({ walletAddress, playerNickname }) => {
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [isExpanded, setIsExpanded] = useState(false);
@@ -105,7 +105,7 @@ const LobbyChat = ({ walletAddress }) => {
         if (multiplayerService.socket) {
             multiplayerService.socket.emit('chat:lobby:send', {
                 message,
-                senderName: null // Could add username feature later
+                senderName: playerNickname || null
             });
         }
 
@@ -156,7 +156,7 @@ const LobbyChat = ({ walletAddress }) => {
                                 >
                                     <div className="message-header">
                                         <span className="message-sender">
-                                            {isMyMessage(msg.sender) ? 'You' : formatAddress(msg.sender)}
+                                            {isMyMessage(msg.sender) ? 'You' : (msg.senderName || formatAddress(msg.sender))}
                                         </span>
                                         <span className="message-time">{formatTime(msg.timestamp)}</span>
                                     </div>

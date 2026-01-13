@@ -21,6 +21,30 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
   const [notification, setNotification] = useState(null);
   const [quickMatchSearching, setQuickMatchSearching] = useState(false);
 
+  // Player nickname - persisted per wallet
+  const [playerNickname, setPlayerNickname] = useState('');
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+
+  // Load nickname from localStorage on mount
+  React.useEffect(() => {
+    if (walletAddress) {
+      const savedNickname = localStorage.getItem(`ninja_nickname_${walletAddress}`);
+      if (savedNickname) {
+        setPlayerNickname(savedNickname);
+      }
+    }
+  }, [walletAddress]);
+
+  // Save nickname to localStorage
+  const saveNickname = (nickname) => {
+    const trimmed = nickname.trim().slice(0, 15); // Max 15 chars
+    setPlayerNickname(trimmed);
+    if (walletAddress && trimmed) {
+      localStorage.setItem(`ninja_nickname_${walletAddress}`, trimmed);
+    }
+    setIsEditingNickname(false);
+  };
+
   const fetchPlayerStats = React.useCallback(async () => {
     if (!walletAddress) {
       setStatsLoaded(true);
@@ -367,6 +391,39 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
           <div className="title-slash"></div>
         </h1>
         <p className="lobby-subtitle">COMPETE FOR REAL STAKES</p>
+      </div>
+
+      {/* Player Nickname Section */}
+      <div className="player-nickname-section">
+        {isEditingNickname ? (
+          <div className="nickname-edit-container">
+            <input
+              type="text"
+              className="nickname-input"
+              placeholder="Enter nickname..."
+              defaultValue={playerNickname}
+              maxLength={15}
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  saveNickname(e.target.value);
+                } else if (e.key === 'Escape') {
+                  setIsEditingNickname(false);
+                }
+              }}
+              onBlur={(e) => saveNickname(e.target.value)}
+            />
+            <span className="nickname-hint">Max 15 chars • Press Enter to save</span>
+          </div>
+        ) : (
+          <div className="nickname-display" onClick={() => setIsEditingNickname(true)}>
+            <span className="nickname-label">Playing as:</span>
+            <span className="nickname-value">
+              {playerNickname || multiplayerService.formatAddress(walletAddress)}
+            </span>
+            <button className="nickname-edit-btn" title="Edit nickname">✏️</button>
+          </div>
+        )}
       </div>
 
       <div className="lobby-content-wrapper">
@@ -924,7 +981,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
       </div>
 
       {/* Lobby Chat */}
-      <LobbyChat walletAddress={walletAddress} />
+      <LobbyChat walletAddress={walletAddress} playerNickname={playerNickname} />
     </div>
   );
 };
