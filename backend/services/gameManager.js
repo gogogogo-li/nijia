@@ -1805,4 +1805,109 @@ export class GameManager {
       logger.error(`Queue cleanup error: ${error.message}`);
     }
   }
+
+  // ============================================================
+  // QUICK EMOTES (Clash Royale style)
+  // ============================================================
+
+  /**
+   * Available emotes for in-game reactions
+   */
+  static EMOTES = {
+    laugh: { emoji: '😂', name: 'Laugh' },
+    angry: { emoji: '😡', name: 'Angry' },
+    thumbsup: { emoji: '👍', name: 'Thumbs Up' },
+    thumbsdown: { emoji: '👎', name: 'Thumbs Down' },
+    fire: { emoji: '🔥', name: 'Fire' },
+    skull: { emoji: '💀', name: 'Skull' },
+    wave: { emoji: '👋', name: 'Wave' },
+    gg: { emoji: 'GG', name: 'Good Game' }
+  };
+
+  /**
+   * Send an emote to opponent during a game
+   * @param {number} gameId - Game ID
+   * @param {string} senderAddress - Sender's wallet address
+   * @param {string} emoteType - Type of emote (e.g., 'laugh', 'angry', 'gg')
+   */
+  sendEmote(gameId, senderAddress, emoteType) {
+    const game = this.activeGames.get(gameId);
+
+    if (!game) {
+      logger.warn(`Emote failed: Game ${gameId} not found`);
+      return { success: false, error: 'Game not found' };
+    }
+
+    // Verify sender is in the game
+    if (game.player1 !== senderAddress && game.player2 !== senderAddress) {
+      logger.warn(`Emote failed: ${senderAddress.slice(0, 10)}... not in game ${gameId}`);
+      return { success: false, error: 'Not in this game' };
+    }
+
+    // Validate emote type
+    if (!GameManager.EMOTES[emoteType]) {
+      logger.warn(`Emote failed: Invalid emote type "${emoteType}"`);
+      return { success: false, error: 'Invalid emote' };
+    }
+
+    // Get opponent
+    const opponent = game.player1 === senderAddress ? game.player2 : game.player1;
+
+    // Get emote data
+    const emote = GameManager.EMOTES[emoteType];
+
+    // Broadcast emote to opponent
+    this.io.to(`player:${opponent}`).emit('emote:receive', {
+      game_id: gameId,
+      sender: senderAddress,
+      emoteType: emoteType,
+      emoji: emote.emoji,
+      name: emote.name,
+      timestamp: Date.now()
+    });
+
+    // Also confirm to sender
+    this.io.to(`player:${senderAddress}`).emit('emote:sent', {
+      game_id: gameId,
+      emoteType: emoteType,
+      emoji: emote.emoji
+    });
+
+    logger.info(`${emote.emoji} Emote: ${senderAddress.slice(0, 10)}... sent "${emote.name}" to ${opponent.slice(0, 10)}...`);
+
+    return { success: true, emote: emote };
+  }
+
+  /**
+   * Get list of available emotes
+   */
+  getAvailableEmotes() {
+    return Object.entries(GameManager.EMOTES).map(([key, value]) => ({
+      type: key,
+      emoji: value.emoji,
+      name: value.name
+    }));
+  }
+
+  /**
+   * Setup emote socket handlers for a player
+   */
+  setupEmoteHandlers(socket, walletAddress) {
+    socket.on('emote:send', (data) => {
+      if (!walletAddress || !data.gameId || !data.emoteType) {
+        socket.emit('emote:error', { error: 'Invalid emote request' });
+        return;
+      }
+
+      const result = this.sendEmote(data.gameId, walletAddress, data.emoteType);
+      if (!result.success) {
+        socket.emit('emote:error', { error: result.error });
+      }
+    });
+
+    // Send available emotes on request
+    socket.on('emote:list', () => {
+      socket.emit('emote:list', { emotes: this.getAvailableEmotes() });
+    });
+  }
 }

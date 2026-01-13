@@ -7,6 +7,8 @@ import { usePointPopups } from '../hooks/usePointPopups';
 import { useMissedTokenNotifications } from '../hooks/useMissedTokenNotifications';
 import multiplayerService from '../services/multiplayerService';
 import PointPopup from './PointPopup';
+import QuickEmotes, { EmoteTrigger } from './QuickEmotes';
+import EmotePopup from './EmotePopup';
 import { GiTrophyCup, GiCrossedSwords } from 'react-icons/gi';
 
 const GameScreen = ({
@@ -38,6 +40,9 @@ const GameScreen = ({
   // Animation state for win/loss overlay
   const [showOutcomeAnimation, setShowOutcomeAnimation] = useState(false);
   const [gameOutcome, setGameOutcome] = useState(null); // 'won', 'lost', 'draw'
+
+  // Emote state for multiplayer
+  const [showEmotePicker, setShowEmotePicker] = useState(false);
 
   // Listen for multiplayer events - RACE MODE + LIFE-BASED END
   useEffect(() => {
@@ -996,6 +1001,19 @@ const GameScreen = ({
             </p>
           </div>
         </div>
+      )}
+
+      {/* Quick Emotes for Multiplayer */}
+      {multiplayerGameId && gameState.isGameRunning && !gameState.isPaused && (
+        <>
+          <EmoteTrigger onClick={() => setShowEmotePicker(true)} />
+          <QuickEmotes
+            gameId={multiplayerGameId}
+            isOpen={showEmotePicker}
+            onClose={() => setShowEmotePicker(false)}
+          />
+          <EmotePopup gameId={multiplayerGameId} />
+        </>
       )}
     </div>
   );

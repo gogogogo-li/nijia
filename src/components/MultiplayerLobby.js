@@ -6,6 +6,7 @@ import './MultiplayerLobby.css';
 import { GiCrossedSwords, GiTwoCoins, GiTrophyCup, GiLightningBow, GiDiamondHard, GiGamepad, GiCrossedSabres, GiTargetArrows, GiMagnifyingGlass } from 'react-icons/gi';
 import { FaChartLine } from 'react-icons/fa';
 import { IoMdRefresh } from 'react-icons/io';
+import LobbyChat from './LobbyChat';
 
 const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
   const [activeTab, setActiveTab] = useState('create'); // 'create', 'join', 'stats'
@@ -921,6 +922,9 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
           )}
         </div>
       </div>
+
+      {/* Lobby Chat */}
+      <LobbyChat walletAddress={walletAddress} />
     </div>
   );
 };

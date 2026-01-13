@@ -15,6 +15,7 @@ import './App.css';
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
 import MultiplayerLobby from './components/MultiplayerLobby';
+import multiplayerService from './services/multiplayerService';
 
 function App() {
   // OneChain wallet and blockchain integration - must be first to get wallet address
@@ -152,6 +153,8 @@ function App() {
     setShowSoloMode(false);
     setMultiplayerGameId(null);
     setSoloGameData(null);
+    // Clear any stale multiplayer game ID to prevent solo games from calling multiplayer APIs
+    multiplayerService.clearCurrentGame();
   };
 
   const handleShowMultiplayer = () => {
@@ -180,6 +183,9 @@ function App() {
   const handleBackToMultiplayerLobby = () => {
     showStartScreen();
     setShowMultiplayer(true);
+    setMultiplayerGameId(null);
+    // Clear current game when returning to lobby
+    multiplayerService.clearCurrentGame();
   };
 
   // Solo Mode Handlers

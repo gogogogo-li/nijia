@@ -16,6 +16,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { authenticateWallet } from './middleware/auth.js';
 import { GameManager } from './services/gameManager.js';
 import SoloGameManager from './services/soloGameManager.js';
+import chatService from './services/chatService.js';
 import { supabase } from './config/supabase.js';
 import { validateContractConfig } from './config/onechain.js';
 
@@ -114,6 +115,9 @@ soloGameManager.initialize().then(success => {
   }
 });
 
+// Initialize Chat Service
+chatService.initialize(io);
+
 // Make gameManager and io accessible globally
 global.gameManager = gameManager;
 global.soloGameManager = soloGameManager;
@@ -175,6 +179,12 @@ io.on('connection', (socket) => {
   // Join player's personal room
   socket.join(`player:${address}`);
 
+  // Setup chat handlers
+  chatService.setupSocketHandlers(socket);
+
+  // Setup emote handlers
+  gameManager.setupEmoteHandlers(socket, address);
+
   // Subscribe to available games
   socket.on('subscribe:games', (betTier) => {
     const room = betTier ? `games:tier:${betTier}` : 'games:all';
@@ -196,6 +206,14 @@ io.on('connection', (socket) => {
   // Player status updates
   socket.on('player:status', (status) => {
     socket.broadcast.to(`player:${address}`).emit('player:status', status);
+  });
+
+  // Join game room for chat
+  socket.on('join:game', (data) => {
+    if (data.gameId) {
+      socket.join(`game:${data.gameId}`);
+      logger.info(`Socket ${socket.id} joined game chat: game:${data.gameId}`);
+    }
   });
 
   // Disconnect handling

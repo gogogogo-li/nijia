@@ -373,5 +373,58 @@ router.get('/quickmatch/status',
   })
 );
 
-export default router;
+// ============================================================
+// CHAT - Lobby and Game Chat Endpoints
+// ============================================================
 
+/**
+ * GET /api/multiplayer/chat/history
+ * Get lobby chat message history
+ */
+router.get('/chat/history',
+  optionalAuth,
+  asyncHandler(async (req, res) => {
+    const limit = parseInt(req.query.limit) || 50;
+
+    // Import chatService dynamically to avoid circular deps
+    const chatService = (await import('../services/chatService.js')).default;
+    const result = await chatService.getLobbyHistory(limit);
+
+    res.json(result);
+  })
+);
+
+/**
+ * GET /api/multiplayer/chat/game/:gameId
+ * Get chat history for a specific game
+ */
+router.get('/chat/game/:gameId',
+  optionalAuth,
+  validate([
+    param('gameId').isNumeric()
+  ]),
+  asyncHandler(async (req, res) => {
+    const { gameId } = req.params;
+
+    const chatService = (await import('../services/chatService.js')).default;
+    const result = await chatService.getGameHistory(parseInt(gameId));
+
+    res.json(result);
+  })
+);
+
+/**
+ * GET /api/multiplayer/emotes
+ * Get list of available emotes
+ */
+router.get('/emotes',
+  asyncHandler(async (req, res) => {
+    const emotes = global.gameManager.getAvailableEmotes();
+    res.json({
+      success: true,
+      emotes
+    });
+  })
+);
+
+export default router;

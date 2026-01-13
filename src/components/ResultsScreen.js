@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import multiplayerService from '../services/multiplayerService';
 import TierDisplay from './TierDisplay';
+import QuickEmotes, { EmoteTrigger } from './QuickEmotes';
+import EmotePopup from './EmotePopup';
 import { canMintNFTAtTier, getTierByScore } from '../utils/tierSystem';
 import { getWalletData, setWalletData } from '../utils/walletStorage';
 import '../styles/unified-design.css';
@@ -21,6 +23,9 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
 
   // Minted NFTs state - initialize empty, load when wallet is ready
   const [mintedNFTs, setMintedNFTs] = useState([]);
+
+  // Emote and chat state for multiplayer results
+  const [showEmotePicker, setShowEmotePicker] = useState(false);
 
   // Reload minted NFTs when wallet address changes
   useEffect(() => {
@@ -529,6 +534,20 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
             </>
           )}
         </div>
+
+        {/* Multiplayer Post-Game Emotes & Chat */}
+        {multiplayerGameId && (
+          <>
+            {/* Emote Trigger */}
+            <EmoteTrigger onClick={() => setShowEmotePicker(true)} />
+            <QuickEmotes
+              gameId={multiplayerGameId}
+              isOpen={showEmotePicker}
+              onClose={() => setShowEmotePicker(false)}
+            />
+            <EmotePopup gameId={multiplayerGameId} />
+          </>
+        )}
       </div>
     </div>
   );

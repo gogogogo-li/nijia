@@ -1,0 +1,197 @@
+/* Quick Emotes Styles - Clash Royale Style */
+
+.quick-emotes-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.quick-emotes-container {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+    border: 2px solid rgba(59, 130, 246, 0.4);
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+        0 0 40px rgba(59, 130, 246, 0.2);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Emotes Grid - 4x2 layout */
+.emotes-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+/* Individual Emote Button */
+.emote-btn {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(145deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    border-radius: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.emote-btn:hover:not(:disabled) {
+    background: linear-gradient(145deg, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.2));
+    border-color: #3b82f6;
+    transform: scale(1.1);
+    box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3);
+}
+
+.emote-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.emote-btn.cooldown {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.emote-btn.sent {
+    animation: sentPulse 0.5s ease;
+}
+
+@keyframes sentPulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+        background: rgba(34, 197, 94, 0.4);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.emote-emoji {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+/* Cooldown Indicator */
+.cooldown-indicator {
+    margin-top: 12px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.cooldown-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    border-radius: 2px;
+    animation: shrink linear forwards;
+}
+
+@keyframes shrink {
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0%;
+    }
+}
+
+/* Emote Trigger Button - Shown during gameplay */
+.emote-trigger-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(145deg, rgba(59, 130, 246, 0.9), rgba(139, 92, 246, 0.9));
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+}
+
+.emote-trigger-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.6);
+}
+
+.emote-trigger-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.emote-trigger-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.emote-trigger-icon {
+    font-size: 1.8rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+    .emotes-grid {
+        gap: 8px;
+    }
+
+    .emote-btn {
+        width: 56px;
+        height: 56px;
+    }
+
+    .emote-emoji {
+        font-size: 1.6rem;
+    }
+
+    .emote-trigger-btn {
+        width: 48px;
+        height: 48px;
+        bottom: 16px;
+        left: 16px;
+    }
+
+    .emote-trigger-icon {
+        font-size: 1.5rem;
+    }
+}
