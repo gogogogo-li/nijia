@@ -982,6 +982,40 @@ export class GameManager {
       // Guard: Skip if already settled on-chain
       if (game.settlement_tx) {
         logger.info(`⛓️  Game ${gameId} already settled on-chain (tx: ${game.settlement_tx}), skipping`);
+      } else if (game.is_quick_match) {
+        // Quick Match games: Transfer prize directly from admin treasury to winner
+        // (No on-chain escrow, so we send OCT directly)
+        if (game.winner && game.winner !== '0x0') {
+          logger.info(`⛓️  Quick Match game ${gameId} - Transferring prize from treasury to winner`);
+
+          // Calculate prize pool (both players' bets)
+          const betAmountMist = BigInt(game.bet_amount);
+          const totalPool = betAmountMist * 2n; // Winner takes both bets
+
+          const transferResult = await onChainSettlement.transferPrizeToWinner(
+            game.winner,
+            totalPool.toString(),
+            gameId
+          );
+
+          if (transferResult.success) {
+            game.settlement_tx = transferResult.digest;
+            game.prize_amount = transferResult.prizeAmount;
+            logger.info(`✅ Quick Match prize transferred: ${transferResult.digest}`);
+          } else {
+            logger.warn(`⚠️  Quick Match prize transfer failed: ${transferResult.reason}`);
+            game.settlement_error = transferResult.reason;
+          }
+        } else {
+          logger.info(`⛓️  Quick Match game ${gameId} was a draw - no prize transfer needed`);
+        }
+      } else if (game.onchain_registration_error) {
+        // Skip settlement if game was never registered on-chain
+        logger.info(`⛓️  Game ${gameId} was not registered on-chain, skipping settlement`);
+        logger.info(`   Registration error was: ${game.onchain_registration_error}`);
+      } else if (!game.onchain_tx) {
+        // Skip if no registration tx recorded (game created before on-chain was enabled)
+        logger.info(`⛓️  Game ${gameId} has no on-chain registration, skipping settlement`);
       } else if (reason === 'forfeit' || reason === 'disconnect') {
         // Use forfeit_game for forfeits/disconnects
         const forfeiter = reason === 'forfeit' ? game.forfeit_by :
@@ -1417,5 +1451,358 @@ export class GameManager {
     logger.info('GameManager cleanup...');
     this.activeGames.clear();
     this.playerGames.clear();
+  }
+
+  // ============================================================
+  // QUICK MATCH - Automatic Matchmaking
+  // ============================================================
+
+  /**
+   * Join the matchmaking queue for Quick Match
+   * @param {Object} params
+   * @param {string} params.playerAddress - Player's wallet address
+   * @param {number} params.betTierId - Bet tier ID (1-4)
+   * @param {string} params.txHash - On-chain transaction hash
+   * @returns {Object} Queue entry or matched game
+   */
+  async joinQuickMatchQueue({ playerAddress, betTierId, txHash }) {
+    try {
+      logger.info(`🎯 Quick Match: ${playerAddress.slice(0, 10)}... joining queue for tier ${betTierId}`);
+
+      // Validate tier
+      const tier = this.betTiers.find(t => t.id === betTierId);
+      if (!tier) {
+        throw new Error('Invalid bet tier');
+      }
+
+      // Check if player already in queue (use maybeSingle to avoid error when not found)
+      const { data: existingEntry, error: checkError } = await this.supabase
+        .from('matchmaking_queue')
+        .select('*')
+        .eq('player_address', playerAddress)
+        .eq('status', 'waiting')
+        .maybeSingle();
+
+      if (existingEntry) {
+        logger.info(`   Player already in queue, returning existing entry`);
+        return { success: true, status: 'waiting', queueEntry: existingEntry };
+      }
+
+      // Look for an opponent in the same tier
+      const { data: opponent } = await this.supabase
+        .from('matchmaking_queue')
+        .select('*')
+        .eq('bet_tier', betTierId)
+        .eq('status', 'waiting')
+        .neq('player_address', playerAddress)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (opponent) {
+        // Found a match! Create game immediately
+        logger.info(`   ✅ MATCHED with ${opponent.player_address.slice(0, 10)}...`);
+
+        // Update opponent's queue entry
+        await this.supabase
+          .from('matchmaking_queue')
+          .update({
+            status: 'matched',
+            matched_at: new Date().toISOString()
+          })
+          .eq('id', opponent.id);
+
+        // Generate a unique game_id for Quick Match (no on-chain create, just register)
+        // Use a combination of timestamp and random to avoid collisions
+        const quickMatchGameId = Math.floor(Date.now() / 1000) * 1000 + Math.floor(Math.random() * 1000);
+
+        logger.info(`   🎮 Creating Quick Match game with ID: ${quickMatchGameId}`);
+
+        // Create game directly in memory and database (skip the normal createGame flow)
+        // Quick Match games are registered on-chain during join, not during create
+        const tier = this.betTiers.find(t => t.id === betTierId);
+        const betAmountMist = BigInt(Math.floor(tier.amount * 1000000000));
+
+        const game = {
+          game_id: quickMatchGameId,
+          bet_tier: betTierId,
+          bet_amount: betAmountMist.toString(),
+          bet_amount_oct: tier.amount,
+          player1: opponent.player_address,
+          player2: playerAddress,
+          player1_score: null,
+          player2_score: null,
+          player1_lives: 3,
+          player2_lives: 3,
+          winner: null,
+          state: 'countdown',
+          room_type: 'public',
+          join_code: null,
+          countdown_start_at: Date.now(),
+          game_start_at: Date.now() + this.config.countdownDuration,
+          created_at: new Date().toISOString(),
+          started_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + this.config.gameTimeout).toISOString(),
+          transaction_hash: opponent.tx_hash,
+          join_transaction_hash: txHash,
+          verified: true,
+          game_timer: null,
+          is_quick_match: true, // Flag for Quick Match games
+          onchain_tx: null, // Will be set during registration
+        };
+
+        // Store in cache first
+        this.activeGames.set(quickMatchGameId, game);
+
+        // Store in database
+        const { error: dbError } = await this.supabase
+          .from('multiplayer_games')
+          .insert({
+            game_id: quickMatchGameId,
+            bet_tier: betTierId,
+            bet_amount: betAmountMist.toString(),
+            pool_amount: (betAmountMist * 2n).toString(),
+            status: 'in_progress',
+            room_type: 'public',
+            player1_address: opponent.player_address,
+            player1_tx_hash: opponent.tx_hash,
+            player2: playerAddress,
+            player2_tx_hash: txHash,
+            created_at: game.created_at,
+            started_at: game.started_at,
+            expires_at: game.expires_at,
+          });
+
+        if (dbError) {
+          logger.error(`   Database error: ${dbError.message}`);
+        }
+
+        // Register on-chain (admin_register_game) 
+        logger.info(`   ⛓️ Registering Quick Match game ${quickMatchGameId} on-chain...`);
+        const registrationResult = await onChainSettlement.registerGame(game);
+        if (registrationResult.success) {
+          game.onchain_tx = registrationResult.digest;
+          this.activeGames.set(quickMatchGameId, game);
+          logger.info(`   ✅ On-chain registration: ${registrationResult.digest}`);
+        } else {
+          logger.warn(`   ⚠️ On-chain registration failed: ${registrationResult.reason}`);
+          game.onchain_registration_error = registrationResult.reason;
+          this.activeGames.set(quickMatchGameId, game);
+        }
+
+        // Start game timer
+        const self = this;
+        setTimeout(() => {
+          const g = self.activeGames.get(quickMatchGameId);
+          if (g && g.state === 'countdown') {
+            g.state = 'in_progress';
+            self.activeGames.set(quickMatchGameId, g);
+            logger.info(`▶️ Quick Match game ${quickMatchGameId} now IN PROGRESS`);
+
+            self.io.to(`player:${g.player1}`).emit('game:started', { game_id: quickMatchGameId });
+            self.io.to(`player:${g.player2}`).emit('game:started', { game_id: quickMatchGameId });
+          }
+        }, this.config.countdownDuration);
+
+        // Start 60-second game timer
+        setTimeout(() => {
+          game.game_timer = setTimeout(async () => {
+            logger.info(`⏰ 60-second timer expired for Quick Match game ${quickMatchGameId}`);
+            await self.finalizeGameByTimeout(quickMatchGameId);
+          }, 60000);
+        }, this.config.countdownDuration);
+
+        // Create clean game data for socket emission
+        const gameData = {
+          game_id: game.game_id,
+          bet_tier: game.bet_tier,
+          bet_amount: game.bet_amount,
+          bet_amount_oct: game.bet_amount_oct,
+          player1: game.player1,
+          player2: game.player2,
+          player1_score: game.player1_score,
+          player2_score: game.player2_score,
+          player1_lives: game.player1_lives,
+          player2_lives: game.player2_lives,
+          winner: game.winner,
+          state: game.state,
+          room_type: game.room_type,
+          countdown_start_at: game.countdown_start_at,
+          game_start_at: game.game_start_at,
+          countdown_duration: this.config.countdownDuration,
+          created_at: game.created_at,
+          started_at: game.started_at,
+        };
+
+        // Notify players of game join
+        this.io.to(`player:${opponent.player_address}`).emit('game:joined', gameData);
+        this.io.to(`player:${playerAddress}`).emit('game:joined', gameData);
+
+        // Notify both players via Socket.IO
+        this.io.to(`player:${opponent.player_address}`).emit('quickmatch:matched', {
+          game_id: game.game_id,
+          opponent: playerAddress,
+          bet_tier: betTierId,
+          message: 'Match found! Game starting...'
+        });
+
+        this.io.to(`player:${playerAddress}`).emit('quickmatch:matched', {
+          game_id: game.game_id,
+          opponent: opponent.player_address,
+          bet_tier: betTierId,
+          message: 'Match found! Game starting...'
+        });
+
+        logger.info(`   🎮 Game ${game.game_id} created from Quick Match`);
+
+        return {
+          success: true,
+          status: 'matched',
+          game: gameData,
+          opponent: opponent.player_address
+        };
+      }
+
+      // No opponent found, add to queue (use upsert to handle race conditions)
+      const { data: queueEntry, error } = await this.supabase
+        .from('matchmaking_queue')
+        .upsert({
+          player_address: playerAddress,
+          bet_tier: betTierId,
+          tx_hash: txHash,
+          status: 'waiting',
+          expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString() // 5 min TTL
+        }, {
+          onConflict: 'player_address',
+          ignoreDuplicates: false
+        })
+        .select()
+        .single();
+
+      if (error) {
+        logger.error(`   Queue insert error: ${error.message}`);
+        // If duplicate, try to fetch the existing entry
+        const { data: existing } = await this.supabase
+          .from('matchmaking_queue')
+          .select('*')
+          .eq('player_address', playerAddress)
+          .maybeSingle();
+        if (existing) {
+          return { success: true, status: 'waiting', queueEntry: existing };
+        }
+        throw new Error('Failed to join matchmaking queue');
+      }
+
+      logger.info(`   ⏳ Added to queue, waiting for opponent...`);
+
+      // Notify player they're in queue
+      this.io.to(`player:${playerAddress}`).emit('quickmatch:waiting', {
+        bet_tier: betTierId,
+        queue_position: 1, // Simplified - could calculate actual position
+        message: 'Searching for opponent...'
+      });
+
+      return { success: true, status: 'waiting', queueEntry };
+
+    } catch (error) {
+      logger.error(`Quick Match join error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Leave the matchmaking queue
+   * @param {string} playerAddress - Player's wallet address
+   */
+  async leaveQuickMatchQueue(playerAddress) {
+    try {
+      logger.info(`🚪 Quick Match: ${playerAddress.slice(0, 10)}... leaving queue`);
+
+      const { error } = await this.supabase
+        .from('matchmaking_queue')
+        .delete()
+        .eq('player_address', playerAddress)
+        .eq('status', 'waiting');
+
+      if (error) {
+        logger.error(`   Queue delete error: ${error.message}`);
+      }
+
+      // Notify player they left
+      this.io.to(`player:${playerAddress}`).emit('quickmatch:cancelled', {
+        message: 'Left matchmaking queue'
+      });
+
+      return { success: true };
+
+    } catch (error) {
+      logger.error(`Quick Match leave error: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Get player's current queue status
+   * @param {string} playerAddress - Player's wallet address
+   */
+  async getQuickMatchStatus(playerAddress) {
+    try {
+      const { data: queueEntry } = await this.supabase
+        .from('matchmaking_queue')
+        .select('*')
+        .eq('player_address', playerAddress)
+        .eq('status', 'waiting')
+        .single();
+
+      if (!queueEntry) {
+        return { success: true, inQueue: false };
+      }
+
+      // Get queue position
+      const { count } = await this.supabase
+        .from('matchmaking_queue')
+        .select('*', { count: 'exact', head: true })
+        .eq('bet_tier', queueEntry.bet_tier)
+        .eq('status', 'waiting')
+        .lt('created_at', queueEntry.created_at);
+
+      return {
+        success: true,
+        inQueue: true,
+        queueEntry,
+        position: (count || 0) + 1
+      };
+
+    } catch (error) {
+      logger.error(`Quick Match status error: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Cleanup expired queue entries (called periodically)
+   */
+  async cleanupExpiredQueueEntries() {
+    try {
+      const { data: expired } = await this.supabase
+        .from('matchmaking_queue')
+        .delete()
+        .lt('expires_at', new Date().toISOString())
+        .eq('status', 'waiting')
+        .select();
+
+      if (expired && expired.length > 0) {
+        logger.info(`🧹 Cleaned up ${expired.length} expired queue entries`);
+
+        // Notify expired players
+        for (const entry of expired) {
+          this.io.to(`player:${entry.player_address}`).emit('quickmatch:expired', {
+            message: 'Matchmaking timed out. Please try again.'
+          });
+        }
+      }
+    } catch (error) {
+      logger.error(`Queue cleanup error: ${error.message}`);
+    }
   }
 }

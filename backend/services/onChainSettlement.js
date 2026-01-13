@@ -286,6 +286,83 @@ class OnChainSettlement {
             return { success: false, reason: error.message };
         }
     }
+
+    /**
+     * Transfer OCT prize directly from admin treasury to winner
+     * Used for Quick Match games where escrow isn't on-chain
+     * @param {string} winnerAddress - Address of the winner
+     * @param {number|string} prizeAmountMist - Prize amount in MIST (1 OCT = 1,000,000,000 MIST)
+     * @param {number} gameId - Game ID for logging
+     */
+    async transferPrizeToWinner(winnerAddress, prizeAmountMist, gameId) {
+        if (!this.isEnabled()) {
+            logger.warn('⚠️  On-chain settlement disabled, cannot transfer prize');
+            return { success: false, reason: 'settlement_disabled' };
+        }
+
+        try {
+            const prizeAmount = BigInt(prizeAmountMist);
+
+            // Apply 2% platform fee (same as regular games)
+            const platformFee = prizeAmount * 2n / 100n;
+            const winnerPrize = prizeAmount - platformFee;
+
+            logger.info(`💰 Quick Match Prize Transfer for game ${gameId}:`);
+            logger.info(`   Winner: ${winnerAddress}`);
+            logger.info(`   Total Pool: ${prizeAmount} MIST (${Number(prizeAmount) / 1e9} OCT)`);
+            logger.info(`   Platform Fee (2%): ${platformFee} MIST`);
+            logger.info(`   Winner Gets: ${winnerPrize} MIST (${Number(winnerPrize) / 1e9} OCT)`);
+
+            const tx = new Transaction();
+            tx.setSender(this.adminAddress);
+
+            // Get admin's OCT coins to pay the winner
+            // We need to split the exact amount from admin's OCT balance
+            const [winnerCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(winnerPrize)]);
+
+            // Transfer to winner
+            tx.transferObjects([winnerCoin], tx.pure.address(winnerAddress));
+
+            // Execute the transaction
+            const result = await suiClient.signAndExecuteTransaction({
+                transaction: tx,
+                signer: this.adminKeypair,
+                options: {
+                    showEffects: true,
+                    showEvents: true,
+                }
+            });
+
+            if (result.effects?.status?.status === 'success') {
+                logger.info(`✅ Quick Match prize transferred for game ${gameId}!`);
+                logger.info(`   Transaction: ${result.digest}`);
+                logger.info(`   Winner ${winnerAddress.slice(0, 10)}... received ${Number(winnerPrize) / 1e9} OCT`);
+                return {
+                    success: true,
+                    digest: result.digest,
+                    prizeAmount: winnerPrize.toString(),
+                    effects: result.effects
+                };
+            } else {
+                logger.error(`❌ Prize transfer failed for game ${gameId}`);
+                logger.error(`   Status: ${result.effects?.status?.status}`);
+                logger.error(`   Error: ${result.effects?.status?.error}`);
+                return {
+                    success: false,
+                    reason: result.effects?.status?.error || 'unknown_error'
+                };
+            }
+
+        } catch (error) {
+            logger.error(`❌ Quick Match prize transfer error for game ${gameId}:`, error.message);
+
+            if (error.message.includes('InsufficientGas') || error.message.includes('balance')) {
+                logger.error('   ⚠️  Admin wallet may have insufficient OCT balance for prize transfer');
+            }
+
+            return { success: false, reason: error.message };
+        }
+    }
 }
 
 // Export singleton instance

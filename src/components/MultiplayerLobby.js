@@ -3,7 +3,7 @@ import multiplayerService from '../services/multiplayerService';
 import onechainService from '../services/onechainService';
 import { createGameTransaction, joinGameTransaction } from '../services/multiplayerContract';
 import './MultiplayerLobby.css';
-import { GiCrossedSwords, GiTwoCoins, GiTrophyCup, GiLightningBow, GiDiamondHard, GiGamepad, GiCrossedSabres, GiTargetArrows } from 'react-icons/gi';
+import { GiCrossedSwords, GiTwoCoins, GiTrophyCup, GiLightningBow, GiDiamondHard, GiGamepad, GiCrossedSabres, GiTargetArrows, GiMagnifyingGlass } from 'react-icons/gi';
 import { FaChartLine } from 'react-icons/fa';
 import { IoMdRefresh } from 'react-icons/io';
 
@@ -18,6 +18,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
   const [statsLoaded, setStatsLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [quickMatchSearching, setQuickMatchSearching] = useState(false);
 
   const fetchPlayerStats = React.useCallback(async () => {
     if (!walletAddress) {
@@ -391,6 +392,13 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
             <span className="tab-icon"><GiTrophyCup /></span>
             <span className="tab-text">Stats</span>
           </button>
+          <button
+            className={`lobby-tab quickmatch-tab ${activeTab === 'quickmatch' ? 'active' : ''}`}
+            onClick={() => setActiveTab('quickmatch')}
+          >
+            <span className="tab-icon"><GiMagnifyingGlass /></span>
+            <span className="tab-text">Quick Match</span>
+          </button>
         </div>
 
         <div className="lobby-content">
@@ -747,6 +755,166 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                       <div className="stat-label">Games Played</div>
                     </div>
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'quickmatch' && (
+            <div className="quickmatch-section">
+              {!quickMatchSearching ? (
+                <>
+                  <h2 className="section-title"><GiMagnifyingGlass /> Quick Match</h2>
+                  <p className="section-description">
+                    Find an opponent automatically! Select your stake and we'll match you with another player.
+                  </p>
+
+                  <div className="bet-tiers-grid">
+                    {betTiers.map((tier, index) => (
+                      <div
+                        key={tier.id}
+                        className={`bet-tier-card ${selectedTier?.id === tier.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedTier(tier)}
+                        style={{
+                          animationDelay: `${index * 0.1}s`,
+                          borderColor: selectedTier?.id === tier.id ? tier.borderColor : 'rgba(255, 255, 255, 0.1)',
+                          boxShadow: selectedTier?.id === tier.id ? `0 0 40px ${tier.glowColor}` : 'none'
+                        }}
+                      >
+                        <div
+                          className="tier-glow"
+                          style={{
+                            background: `linear-gradient(135deg, ${tier.borderColor} 0%, ${tier.color} 100%)`,
+                            opacity: selectedTier?.id === tier.id ? 0.5 : 0
+                          }}
+                        ></div>
+                        <div className="tier-content">
+                          <div className="tier-icon"><GiTwoCoins /></div>
+                          <div className="tier-label" style={{ color: tier.borderColor }}>{tier.label}</div>
+                          <div className="tier-amount">{tier.amount} OCT</div>
+                          <div className="tier-prize"><GiTrophyCup /> Win: {tier.amount * 2} OCT</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    className="quickmatch-btn"
+                    onClick={async () => {
+                      if (!selectedTier) {
+                        showNotification('Please select a stake tier', 'error');
+                        return;
+                      }
+                      if (!onechain || !onechain.isConnected) {
+                        showNotification('Please connect your wallet first', 'error');
+                        return;
+                      }
+
+                      setLoading(true);
+                      try {
+                        // Check balance
+                        const balanceResult = await onechainService.getBalance();
+                        const balance = parseFloat(balanceResult.amount);
+                        if (balance < selectedTier.amount) {
+                          throw new Error(`Insufficient balance. Need ${selectedTier.amount} OCT`);
+                        }
+
+                        showNotification('Creating transaction...', 'info');
+
+                        // Create transaction
+                        const tx = createGameTransaction({
+                          betTierId: selectedTier.id,
+                          coinObjectId: null
+                        });
+
+                        const txResult = await onechainService.executeTransaction(tx);
+                        if (!txResult.success) {
+                          throw new Error('Transaction failed');
+                        }
+
+                        showNotification('Searching for opponent...', 'info');
+                        setQuickMatchSearching(true);
+
+                        // Setup socket listeners for match events
+                        multiplayerService.setupQuickMatchListeners({
+                          onMatched: (data) => {
+                            showNotification('Match found! Starting game...', 'success');
+                            setQuickMatchSearching(false);
+                            setTimeout(() => {
+                              onStartGame(data.game_id);
+                            }, 1500);
+                          },
+                          onExpired: () => {
+                            showNotification('Matchmaking timed out. Please try again.', 'error');
+                            setQuickMatchSearching(false);
+                          }
+                        });
+
+                        // Join matchmaking queue
+                        const result = await multiplayerService.joinQuickMatch(
+                          selectedTier.id,
+                          txResult.transactionHash
+                        );
+
+                        if (result.status === 'matched') {
+                          // Matched immediately
+                          showNotification('Match found! Starting game...', 'success');
+                          setQuickMatchSearching(false);
+                          setTimeout(() => {
+                            onStartGame(result.game.game_id);
+                          }, 1500);
+                        }
+                      } catch (error) {
+                        showNotification(`Error: ${error.message}`, 'error');
+                        setQuickMatchSearching(false);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    disabled={!selectedTier || loading}
+                    style={selectedTier ? {
+                      background: `linear-gradient(135deg, ${selectedTier.borderColor} 0%, ${selectedTier.color} 100%)`,
+                      boxShadow: `0 8px 32px ${selectedTier.glowColor}`
+                    } : {}}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="btn-spinner"></span>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <GiMagnifyingGlass /> Find Match - {selectedTier?.amount || '?'} OCT
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <div className="quickmatch-searching">
+                  <div className="searching-animation">
+                    <div className="searching-ring"></div>
+                    <div className="searching-ring ring-2"></div>
+                    <div className="searching-ring ring-3"></div>
+                    <GiMagnifyingGlass className="searching-icon" />
+                  </div>
+                  <h2 className="searching-title">Searching for Opponent...</h2>
+                  <p className="searching-subtitle">Looking for a player in the {selectedTier?.label} tier</p>
+                  <p className="searching-stake"><GiTwoCoins /> Stake: {selectedTier?.amount} OCT</p>
+
+                  <button
+                    className="cancel-search-btn"
+                    onClick={async () => {
+                      try {
+                        await multiplayerService.leaveQuickMatch();
+                        showNotification('Search cancelled', 'info');
+                      } catch (error) {
+                        console.error('Error cancelling search:', error);
+                      }
+                      setQuickMatchSearching(false);
+                    }}
+                  >
+                    Cancel Search
+                  </button>
                 </div>
               )}
             </div>

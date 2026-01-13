@@ -602,8 +602,146 @@ class MultiplayerService {
     if (!addr1 || !addr2) return false;
     return addr1.toLowerCase() === addr2.toLowerCase();
   }
+
+  // ============================================================
+  // QUICK MATCH - Automatic Matchmaking Methods
+  // ============================================================
+
+  /**
+   * Join the matchmaking queue for Quick Match
+   * @param {number} betTierId - Bet tier ID (1-4)
+   * @param {string} transactionHash - On-chain transaction hash
+   * @returns {Object} Queue status or matched game
+   */
+  async joinQuickMatch(betTierId, transactionHash) {
+    try {
+      console.log(`🎯 Quick Match: Joining queue for tier ${betTierId}`);
+
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/quickmatch/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify({
+          betTierId,
+          transactionHash
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to join matchmaking');
+      }
+
+      // If matched immediately, set current game
+      if (data.status === 'matched' && data.game) {
+        this.currentGameId = data.game.game_id;
+        this.gameEvents = [];
+        console.log(`✅ Quick Match: Matched! Game ${this.currentGameId}`);
+      } else {
+        console.log(`⏳ Quick Match: Waiting for opponent...`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Quick Match join error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Leave the matchmaking queue
+   */
+  async leaveQuickMatch() {
+    try {
+      console.log(`🚪 Quick Match: Leaving queue`);
+
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/quickmatch/leave`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        }
+      });
+
+      const data = await response.json();
+
+      return data;
+    } catch (error) {
+      console.error('Quick Match leave error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current queue status
+   */
+  async getQuickMatchStatus() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/multiplayer/quickmatch/status`, {
+        headers: {
+          'X-Wallet-Address': this.walletAddress
+        }
+      });
+
+      const data = await response.json();
+
+      return data;
+    } catch (error) {
+      console.error('Quick Match status error:', error);
+      return { success: false, inQueue: false };
+    }
+  }
+
+  /**
+   * Setup Quick Match socket listeners
+   * Call this after connecting to handle matchmaking events
+   */
+  setupQuickMatchListeners(callbacks = {}) {
+    if (!this.socket) {
+      console.warn('Socket not connected, cannot setup Quick Match listeners');
+      return;
+    }
+
+    // Matched - game starting
+    this.socket.on('quickmatch:matched', (data) => {
+      console.log('🎮 Quick Match: MATCHED!', data);
+      this.currentGameId = data.game_id;
+      this.gameEvents = [];
+      if (callbacks.onMatched) {
+        callbacks.onMatched(data);
+      }
+    });
+
+    // Waiting in queue
+    this.socket.on('quickmatch:waiting', (data) => {
+      console.log('⏳ Quick Match: Waiting...', data);
+      if (callbacks.onWaiting) {
+        callbacks.onWaiting(data);
+      }
+    });
+
+    // Cancelled
+    this.socket.on('quickmatch:cancelled', (data) => {
+      console.log('❌ Quick Match: Cancelled', data);
+      if (callbacks.onCancelled) {
+        callbacks.onCancelled(data);
+      }
+    });
+
+    // Expired (timed out)
+    this.socket.on('quickmatch:expired', (data) => {
+      console.log('⏰ Quick Match: Expired', data);
+      if (callbacks.onExpired) {
+        callbacks.onExpired(data);
+      }
+    });
+  }
 }
 
 // Export singleton instance
 const multiplayerService = new MultiplayerService();
 export default multiplayerService;
+

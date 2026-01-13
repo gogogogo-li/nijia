@@ -311,4 +311,67 @@ router.get('/stats', asyncHandler(async (req, res) => {
   });
 }));
 
+// ============================================================
+// QUICK MATCH - Automatic Matchmaking Endpoints
+// ============================================================
+
+/**
+ * POST /api/multiplayer/quickmatch/join
+ * Join the matchmaking queue for automatic matching
+ */
+router.post('/quickmatch/join',
+  authenticateWallet,
+  validate([
+    validations.betTier(),
+    validations.transactionHash()
+  ]),
+  asyncHandler(async (req, res) => {
+    const { betTierId, transactionHash } = req.body;
+    const playerAddress = req.walletAddress;
+
+    logger.info(`Quick Match join request: ${playerAddress} for tier ${betTierId}`);
+
+    const result = await global.gameManager.joinQuickMatchQueue({
+      playerAddress,
+      betTierId,
+      txHash: transactionHash
+    });
+
+    res.json(result);
+  })
+);
+
+/**
+ * POST /api/multiplayer/quickmatch/leave
+ * Leave the matchmaking queue
+ */
+router.post('/quickmatch/leave',
+  authenticateWallet,
+  asyncHandler(async (req, res) => {
+    const playerAddress = req.walletAddress;
+
+    logger.info(`Quick Match leave request: ${playerAddress}`);
+
+    const result = await global.gameManager.leaveQuickMatchQueue(playerAddress);
+
+    res.json(result);
+  })
+);
+
+/**
+ * GET /api/multiplayer/quickmatch/status
+ * Get player's current queue status
+ */
+router.get('/quickmatch/status',
+  authenticateWallet,
+  asyncHandler(async (req, res) => {
+    const playerAddress = req.walletAddress;
+
+    const result = await global.gameManager.getQuickMatchStatus(playerAddress);
+
+    res.json(result);
+  })
+);
+
 export default router;
+
