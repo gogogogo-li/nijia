@@ -21,6 +21,9 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
   const [notification, setNotification] = useState(null);
   const [quickMatchSearching, setQuickMatchSearching] = useState(false);
 
+  // REQ-P2-004: Player count for 2-4 player rooms
+  const [maxPlayers, setMaxPlayers] = useState(2);
+
   // Player nickname - persisted per wallet
   const [playerNickname, setPlayerNickname] = useState('');
   const [isEditingNickname, setIsEditingNickname] = useState(false);
@@ -525,6 +528,28 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                   {roomType === 'public'
                     ? 'Anyone can join from the lobby'
                     : 'Share a 6-char code with your friend'}
+                </p>
+              </div>
+
+              {/* REQ-P2-004: Player Count Selector */}
+              <div className="player-count-section">
+                <h3 className="room-type-title">👥 Number of Players</h3>
+                <div className="player-count-toggle">
+                  {[2, 3, 4].map(count => (
+                    <button
+                      key={count}
+                      className={`player-count-btn ${maxPlayers === count ? 'active' : ''}`}
+                      onClick={() => setMaxPlayers(count)}
+                    >
+                      <span className="count-number">{count}</span>
+                      <span className="count-label">{count === 2 ? 'Duel' : count === 3 ? 'Triple' : 'Squad'}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="room-type-hint">
+                  {maxPlayers === 2 ? 'Winner takes all!' :
+                    maxPlayers === 3 ? '1st: 70%, 2nd: 30%' :
+                      '1st: 50%, 2nd: 30%, 3rd: 20%'}
                 </p>
               </div>
 

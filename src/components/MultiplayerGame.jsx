@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import multiplayerService from '../services/multiplayerService';
+import MultiplayerLeaderboard from './MultiplayerLeaderboard';
 import './MultiplayerGame.css';
 import { GiHeartPlus, GiEmptyHourglass, GiTrophyCup, GiCrossedSwords } from 'react-icons/gi';
 
-const MultiplayerGame = ({ gameId, walletAddress, onGameComplete, onBack }) => {
+const MultiplayerGame = ({ gameId, roomId, walletAddress, onGameComplete, onBack }) => {
     const [gameState, setGameState] = useState('countdown'); // 'countdown', 'playing', 'completed'
     const [countdown, setCountdown] = useState(3);
     const [timeLeft, setTimeLeft] = useState(60);
@@ -18,26 +19,59 @@ const MultiplayerGame = ({ gameId, walletAddress, onGameComplete, onBack }) => {
     const [gameOutcome, setGameOutcome] = useState(null); // 'won', 'lost', 'draw'
     const [showOutcomeAnimation, setShowOutcomeAnimation] = useState(false);
 
+    // REQ-P2-004: Multi-player support (2-4 players)
+    const [players, setPlayers] = useState([]);
+    const [isRoomMode, setIsRoomMode] = useState(!!roomId);
+    const [showLeaderboard, setShowLeaderboard] = useState(true);
+
     // Fetch game info on mount
     useEffect(() => {
         const fetchGame = async () => {
             try {
-                const gameData = await multiplayerService.getGame(gameId);
-                setGame(gameData);
+                // REQ-P2-004: Handle room-based games
+                if (isRoomMode && roomId) {
+                    const roomData = await multiplayerService.getRoomDetails(roomId);
+                    setGame(roomData);
 
-                // Determine if we are player1 or player2
-                const isP1 = multiplayerService.compareAddresses(gameData.player1, walletAddress);
-                setIsPlayer1(isP1);
+                    // Set players from room data
+                    const roomPlayers = roomData.room_players?.map(p => ({
+                        address: p.player_address,
+                        score: p.score || 0,
+                        lives: p.lives || 3,
+                        status: p.status
+                    })) || [];
+                    setPlayers(roomPlayers);
 
-                console.log('🎮 Game loaded:', gameData);
-                console.log('   You are:', isP1 ? 'Player 1' : 'Player 2');
+                    // Find my player index
+                    const myIndex = roomPlayers.findIndex(p =>
+                        multiplayerService.compareAddresses(p.address, walletAddress)
+                    );
+                    setIsPlayer1(myIndex === 0);
+
+                    console.log(`🎮 Room loaded: ${roomPlayers.length} players`);
+                } else {
+                    // Legacy 2-player game mode
+                    const gameData = await multiplayerService.getGame(gameId);
+                    setGame(gameData);
+
+                    const isP1 = multiplayerService.compareAddresses(gameData.player1, walletAddress);
+                    setIsPlayer1(isP1);
+
+                    // Convert to players array for unified handling
+                    setPlayers([
+                        { address: gameData.player1, score: 0, lives: 3 },
+                        { address: gameData.player2, score: 0, lives: 3 }
+                    ]);
+
+                    console.log('🎮 Game loaded (2-player mode)');
+                }
             } catch (error) {
                 console.error('Error fetching game:', error);
             }
         };
 
         fetchGame();
-    }, [gameId, walletAddress]);
+    }, [gameId, roomId, walletAddress, isRoomMode]);
 
     // Countdown sync with server
     useEffect(() => {
@@ -291,37 +325,85 @@ const MultiplayerGame = ({ gameId, walletAddress, onGameComplete, onBack }) => {
 
                 {/* Lives and Scores */}
                 <div className="players-info">
-                    {/* Player info */}
-                    <div className="player-panel you">
-                        <div className="player-label">YOU</div>
-                        <div className="player-lives">
-                            {[...Array(3)].map((_, i) => (
-                                <GiHeartPlus
-                                    key={i}
-                                    className={`heart ${i < playerLives ? 'active' : 'lost'}`}
-                                />
-                            ))}
-                        </div>
-                        <div className="player-score">{playerScore}</div>
-                    </div>
+                    {/* REQ-P2-004: Dynamic player panels based on player count */}
+                    {players.length <= 2 ? (
+                        // 2-player layout (classic)
+                        <>
+                            {/* Player info */}
+                            <div className="player-panel you">
+                                <div className="player-label">YOU</div>
+                                <div className="player-lives">
+                                    {[...Array(3)].map((_, i) => (
+                                        <GiHeartPlus
+                                            key={i}
+                                            className={`heart ${i < playerLives ? 'active' : 'lost'}`}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="player-score">{playerScore}</div>
+                            </div>
 
-                    <div className="vs-divider">VS</div>
+                            <div className="vs-divider">VS</div>
 
-                    {/* Opponent info */}
-                    <div className="player-panel opponent">
-                        <div className="player-label">OPPONENT</div>
-                        <div className="player-lives">
-                            {[...Array(3)].map((_, i) => (
-                                <GiHeartPlus
-                                    key={i}
-                                    className={`heart ${i < opponentLives ? 'active' : 'lost'}`}
-                                />
-                            ))}
+                            {/* Opponent info */}
+                            <div className="player-panel opponent">
+                                <div className="player-label">OPPONENT</div>
+                                <div className="player-lives">
+                                    {[...Array(3)].map((_, i) => (
+                                        <GiHeartPlus
+                                            key={i}
+                                            className={`heart ${i < opponentLives ? 'active' : 'lost'}`}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="player-score">{opponentScore}</div>
+                            </div>
+                        </>
+                    ) : (
+                        // 3-4 player layout with mini-panels
+                        <div className="multi-player-panels">
+                            {players.map((player, index) => {
+                                const isMe = multiplayerService.compareAddresses(player.address, walletAddress);
+                                const displayScore = isMe ? playerScore : player.score;
+                                const displayLives = isMe ? playerLives : player.lives;
+
+                                return (
+                                    <div
+                                        key={player.address || index}
+                                        className={`mini-player-panel ${isMe ? 'is-me' : ''} ${displayLives <= 0 ? 'eliminated' : ''}`}
+                                    >
+                                        <div className="mini-rank">#{index + 1}</div>
+                                        <div className="mini-info">
+                                            <span className="mini-name">
+                                                {isMe ? 'YOU' : multiplayerService.formatAddress(player.address)}
+                                            </span>
+                                            <span className="mini-score">{displayScore}</span>
+                                        </div>
+                                        <div className="mini-lives">
+                                            {[...Array(3)].map((_, i) => (
+                                                <span key={i} className={`mini-heart ${i < displayLives ? 'alive' : 'dead'}`}>♥</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                        <div className="player-score">{opponentScore}</div>
-                    </div>
+                    )}
                 </div>
             </div>
+
+            {/* REQ-P2-004: Leaderboard for 3-4 player games */}
+            {showLeaderboard && players.length > 2 && (
+                <MultiplayerLeaderboard
+                    players={players.map((p, idx) => ({
+                        ...p,
+                        score: multiplayerService.compareAddresses(p.address, walletAddress) ? playerScore : p.score,
+                        lives: multiplayerService.compareAddresses(p.address, walletAddress) ? playerLives : p.lives
+                    }))}
+                    currentPlayerAddress={walletAddress}
+                    gameStatus={gameState}
+                />
+            )}
 
             {/* Debug: Life loss button (remove in production) */}
             <button

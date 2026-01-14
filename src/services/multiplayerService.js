@@ -739,9 +739,423 @@ class MultiplayerService {
       }
     });
   }
+
+  // ============================================================
+  // REQ-P2-004: ROOM MANAGEMENT (2-4 Players)
+  // ============================================================
+
+  /**
+   * Create a multiplayer room (2-4 players)
+   * @param {number} betTierId - Bet tier ID (1-4)
+   * @param {number} maxPlayers - Max players in room (2-4)
+   * @param {string} transactionHash - On-chain transaction hash
+   */
+  async createRoom(betTierId, maxPlayers, transactionHash) {
+    try {
+      console.log(`🏠 Creating room: tier ${betTierId}, max ${maxPlayers} players`);
+
+      const response = await fetch(`${API_BASE_URL}/api/rooms/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify({
+          betTierId,
+          maxPlayers,
+          transactionHash
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to create room');
+      }
+
+      this.currentRoomId = data.room.id;
+      console.log(`✅ Room created: ${data.room.roomCode}`);
+
+      return data;
+    } catch (error) {
+      console.error('Error creating room:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Join a room by room code
+   * @param {string} roomCode - Room code (e.g., "ROOM-1234")
+   * @param {string} transactionHash - On-chain transaction hash
+   */
+  async joinRoom(roomCode, transactionHash) {
+    try {
+      console.log(`🚪 Joining room: ${roomCode}`);
+
+      const response = await fetch(`${API_BASE_URL}/api/rooms/join/${roomCode}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify({
+          transactionHash
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to join room');
+      }
+
+      this.currentRoomId = data.room.id;
+      console.log(`✅ Joined room: ${roomCode} as player #${data.joinOrder}`);
+
+      // Join socket room for real-time updates
+      if (this.socket) {
+        this.socket.emit('join:room', { roomId: data.room.id });
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error joining room:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Set player ready status in a room
+   * @param {string} roomId - Room UUID
+   */
+  async setPlayerReady(roomId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/ready`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        }
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to set ready status');
+      }
+
+      console.log(`✅ Ready status set. All ready: ${data.allReady}`);
+
+      return data;
+    } catch (error) {
+      console.error('Error setting ready:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update score in a room
+   * @param {string} roomId - Room UUID
+   * @param {number} score - Current score
+   * @param {number} lives - Current lives
+   */
+  async updateRoomScore(roomId, score, lives) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/score`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify({ score, lives })
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error updating room score:', error);
+      // Non-critical, don't throw
+    }
+  }
+
+  /**
+   * Record a super fruit hit (REQ-P2-005 contribution scoring)
+   * @param {string} roomId - Room UUID
+   * @param {object} hitData - Hit information
+   */
+  async recordSuperFruitHit(roomId, hitData) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/super-fruit-hit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify(hitData)
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error recording super fruit hit:', error);
+      // Non-critical, don't throw
+      return { success: false };
+    }
+  }
+
+  /**
+   * Get room details
+   * @param {string} roomId - Room UUID
+   */
+  async getRoomDetails(roomId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}`, {
+        headers: {
+          'X-Wallet-Address': this.walletAddress
+        }
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to get room');
+      }
+
+      return data.room;
+    } catch (error) {
+      console.error('Error getting room:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get room leaderboard
+   * @param {string} roomId - Room UUID
+   */
+  async getRoomLeaderboard(roomId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/leaderboard`, {
+        headers: {
+          'X-Wallet-Address': this.walletAddress
+        }
+      });
+
+      const data = await response.json();
+      return data.leaderboard || [];
+    } catch (error) {
+      console.error('Error getting room leaderboard:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get available rooms for a bet tier
+   * @param {number} betTierId - Bet tier ID (1-4)
+   */
+  async getAvailableRooms(betTierId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/available/${betTierId}`, {
+        headers: {
+          'X-Wallet-Address': this.walletAddress
+        }
+      });
+
+      const data = await response.json();
+      return data.rooms || [];
+    } catch (error) {
+      console.error('Error getting available rooms:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Setup room socket listeners
+   * @param {object} callbacks - Event callbacks
+   */
+  setupRoomListeners(callbacks = {}) {
+    if (!this.socket) {
+      console.warn('Socket not connected, cannot setup room listeners');
+      return;
+    }
+
+    // Player joined room
+    this.socket.on('player:joined', (data) => {
+      console.log('👤 Player joined room:', data);
+      if (callbacks.onPlayerJoined) callbacks.onPlayerJoined(data);
+    });
+
+    // Player ready
+    this.socket.on('player:ready', (data) => {
+      console.log('✅ Player ready:', data);
+      if (callbacks.onPlayerReady) callbacks.onPlayerReady(data);
+    });
+
+    // Player left
+    this.socket.on('player:left', (data) => {
+      console.log('👋 Player left:', data);
+      if (callbacks.onPlayerLeft) callbacks.onPlayerLeft(data);
+    });
+
+    // Countdown started
+    this.socket.on('room:countdown', (data) => {
+      console.log('⏱️ Countdown:', data);
+      if (callbacks.onCountdown) callbacks.onCountdown(data);
+    });
+
+    // Game start
+    this.socket.on('game:start', (data) => {
+      console.log('🎮 Game start:', data);
+      if (callbacks.onGameStart) callbacks.onGameStart(data);
+    });
+
+    // Score update
+    this.socket.on('score:update', (data) => {
+      if (callbacks.onScoreUpdate) callbacks.onScoreUpdate(data);
+    });
+
+    // Super fruit hit
+    this.socket.on('fruit:hit', (data) => {
+      if (callbacks.onFruitHit) callbacks.onFruitHit(data);
+    });
+
+    // Super fruit destroyed
+    this.socket.on('fruit:destroyed', (data) => {
+      if (callbacks.onFruitDestroyed) callbacks.onFruitDestroyed(data);
+    });
+
+    // === SYNCHRONIZED MULTIPLAYER EVENTS ===
+
+    // Server spawns item batch
+    this.socket.on('sync:spawn', (data) => {
+      console.log('🍎 Sync spawn:', data.pattern, data.items?.length);
+      if (callbacks.onSyncSpawn) callbacks.onSyncSpawn(data);
+    });
+
+    // Item was slashed by someone
+    this.socket.on('sync:slashed', (data) => {
+      console.log('⚔️ Sync slashed:', data.itemId, 'by', data.slashedBy);
+      if (callbacks.onSyncSlashed) callbacks.onSyncSlashed(data);
+    });
+
+    // Milestone reached
+    this.socket.on('sync:milestone', (data) => {
+      console.log('🏆 Milestone:', data.milestone, data.message);
+      if (callbacks.onSyncMilestone) callbacks.onSyncMilestone(data);
+    });
+
+    // Bomb hit
+    this.socket.on('sync:bomb', (data) => {
+      console.log('💣 Bomb hit:', data.playerAddress);
+      if (callbacks.onSyncBomb) callbacks.onSyncBomb(data);
+    });
+
+    // Game end (winner declared)
+    this.socket.on('game:end', (data) => {
+      console.log('🏁 Game end:', data.winner, data.reason);
+      if (callbacks.onGameEnd) callbacks.onGameEnd(data);
+    });
+  }
+
+  /**
+   * Clear room listeners
+   */
+  clearRoomListeners() {
+    if (!this.socket) return;
+
+    this.socket.off('player:joined');
+    this.socket.off('player:ready');
+    this.socket.off('player:left');
+    this.socket.off('room:countdown');
+    this.socket.off('game:start');
+    this.socket.off('score:update');
+    this.socket.off('fruit:hit');
+    this.socket.off('fruit:destroyed');
+    this.socket.off('sync:spawn');
+    this.socket.off('sync:slashed');
+    this.socket.off('sync:milestone');
+    this.socket.off('sync:bomb');
+    this.socket.off('game:end');
+  }
+
+  // ============================================================
+  // SYNCHRONIZED MULTIPLAYER ACTIONS
+  // ============================================================
+
+  /**
+   * Attempt to slash an item (first to slash wins)
+   * @param {string} roomId - Room ID
+   * @param {string} itemId - Item ID to slash
+   */
+  async attemptSlash(roomId, itemId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/slash`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        },
+        body: JSON.stringify({
+          itemId,
+          timestamp: Date.now()
+        })
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error attempting slash:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Request server to spawn a new batch (for testing)
+   * In production, server controls spawn timing
+   * @param {string} roomId - Room ID
+   */
+  async requestSpawnBatch(roomId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/spawn-batch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': this.walletAddress
+        }
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error requesting spawn:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Join room's socket channel
+   * @param {string} roomId - Room ID
+   */
+  joinRoomChannel(roomId) {
+    if (this.socket && this.connected) {
+      this.socket.emit('room:join', { roomId });
+      console.log(`📡 Joined room channel: room:${roomId}`);
+    }
+  }
+
+  /**
+   * Leave room's socket channel
+   * @param {string} roomId - Room ID
+   */
+  leaveRoomChannel(roomId) {
+    if (this.socket && this.connected) {
+      this.socket.emit('room:leave', { roomId });
+      console.log(`📡 Left room channel: room:${roomId}`);
+    }
+  }
 }
 
 // Export singleton instance
 const multiplayerService = new MultiplayerService();
 export default multiplayerService;
+
 

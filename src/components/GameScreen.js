@@ -243,67 +243,66 @@ const GameScreen = ({
         }
       }
 
-      // Progressive difficulty system - adapted for difficulty level
+      // REQ-P2-002: Enhanced spawn system - faster intervals, larger waves
       let waveSize, spawnInterval, staggerDelay;
 
       // Multiplayer: Shorter tutorial phase, more immediate action
       if (isMultiplayer) {
         if (elapsed < 5000) {
-          // First 5 seconds - Quick intro, 2 tokens
-          waveSize = 2;
-          spawnInterval = 2000 * intervalMultiplier;
-          staggerDelay = 150;
+          // First 5 seconds - Quick intro
+          waveSize = 3;  // was 2
+          spawnInterval = 1400 * intervalMultiplier;  // was 2000 (-30%)
+          staggerDelay = 120;
         } else if (elapsed < 20000) {
           // 5-20 seconds - Ramping up
-          waveSize = 2 + Math.floor(Math.random() * 2); // 2-3 tokens
-          spawnInterval = 1800 * intervalMultiplier;
-          staggerDelay = 130;
+          waveSize = 3 + Math.floor(Math.random() * 2); // 3-4 tokens (was 2-3)
+          spawnInterval = 1200 * intervalMultiplier;  // was 1800 (-33%)
+          staggerDelay = 100;
         } else if (elapsed < 40000) {
           // 20-40 seconds - Full action
-          waveSize = 3 + Math.floor(Math.random() * 2); // 3-4 tokens
-          spawnInterval = 1500 * intervalMultiplier;
-          staggerDelay = 100;
+          waveSize = 4 + Math.floor(Math.random() * 3); // 4-6 tokens (was 3-4)
+          spawnInterval = 1000 * intervalMultiplier;  // was 1500 (-33%)
+          staggerDelay = 80;
         } else {
           // After 40 seconds - Intense
-          waveSize = 4 + Math.floor(Math.random() * 2); // 4-5 tokens
-          spawnInterval = 1200 * intervalMultiplier;
-          staggerDelay = 80;
+          waveSize = 5 + Math.floor(Math.random() * 3); // 5-7 tokens (was 4-5)
+          spawnInterval = 800 * intervalMultiplier;   // was 1200 (-33%)
+          staggerDelay = 60;
         }
       }
-      // Solo mode: Difficulty-aware progression
+      // Solo mode: Difficulty-aware progression with enhanced pace
       else {
-        if (elapsed < 15000) {
-          // First 15 seconds - Tutorial (shortened for higher difficulties)
-          const tutorialWave = difficultyLevel >= 1.3 ? 2 : 1;
+        if (elapsed < 10000) {
+          // REQ-P2-002: Shortened tutorial (10s vs 15s)
+          const tutorialWave = difficultyLevel >= 1.3 ? 3 : 2;  // was 2:1
           waveSize = tutorialWave + waveBonus;
-          spawnInterval = (difficultyLevel >= 1.3 ? 2000 : 3000) * intervalMultiplier;
-          staggerDelay = 0;
-        } else if (elapsed < 30000) {
-          // 15-30 seconds - Getting started
-          waveSize = (Math.random() < 0.8 ? 1 : 2) + waveBonus;
-          spawnInterval = 2500 * intervalMultiplier;
-          staggerDelay = 200;
-        } else if (elapsed < 50000) {
-          // 30-50 seconds - Mix of tokens
-          waveSize = (Math.random() < 0.5 ? 1 : 2) + waveBonus;
-          spawnInterval = 2200 * intervalMultiplier;
-          staggerDelay = 180;
-        } else if (elapsed < 70000) {
-          // 50-70 seconds - Ramping up
-          const rand = Math.random();
-          waveSize = (rand < 0.3 ? 1 : rand < 0.7 ? 2 : 3) + waveBonus;
-          spawnInterval = 2000 * intervalMultiplier;
+          spawnInterval = (difficultyLevel >= 1.3 ? 1400 : 2100) * intervalMultiplier;  // was 2000:3000 (-30%)
+          staggerDelay = 100;
+        } else if (elapsed < 25000) {
+          // 10-25 seconds - Getting started
+          waveSize = (Math.random() < 0.6 ? 2 : 3) + waveBonus;  // was 1:2
+          spawnInterval = 1750 * intervalMultiplier;  // was 2500 (-30%)
           staggerDelay = 150;
+        } else if (elapsed < 45000) {
+          // 25-45 seconds - Mix of tokens
+          waveSize = (2 + Math.floor(Math.random() * 2)) + waveBonus;  // 2-3 (was 1-2)
+          spawnInterval = 1500 * intervalMultiplier;  // was 2200 (-32%)
+          staggerDelay = 120;
+        } else if (elapsed < 70000) {
+          // 45-70 seconds - Ramping up
+          waveSize = (3 + Math.floor(Math.random() * 2)) + waveBonus;  // 3-4 (was 1-3)
+          spawnInterval = 1300 * intervalMultiplier;  // was 2000 (-35%)
+          staggerDelay = 100;
         } else if (elapsed < 90000) {
           // 70-90 seconds - High intensity
-          waveSize = (2 + Math.floor(Math.random() * 3)) + waveBonus; // 2-4 tokens + bonus
-          spawnInterval = 1800 * intervalMultiplier;
-          staggerDelay = 130;
+          waveSize = (4 + Math.floor(Math.random() * 3)) + waveBonus; // 4-6 (was 2-4)
+          spawnInterval = 1100 * intervalMultiplier;  // was 1800 (-39%)
+          staggerDelay = 80;
         } else {
           // After 90 seconds - Expert mode
-          waveSize = (3 + Math.floor(Math.random() * 3)) + waveBonus; // 3-5 tokens + bonus
-          spawnInterval = 1500 * intervalMultiplier;
-          staggerDelay = 100;
+          waveSize = (5 + Math.floor(Math.random() * 3)) + waveBonus; // 5-7 (was 3-5)
+          spawnInterval = 900 * intervalMultiplier;   // was 1500 (-40%)
+          staggerDelay = 60;
         }
       }
 
@@ -374,20 +373,27 @@ const GameScreen = ({
     }
   }, [items, slashTrail, particles, render, renderBladeTrail]);
 
+  // REQ-P2-001: Hover-to-slice - mouse movement triggers slashing automatically
   const handleMouseDown = useCallback((e) => {
-    startSlashing();
+    // Still track position for initial setup
     startSlash(e);
-  }, [startSlashing, startSlash]);
+  }, [startSlash]);
 
   const handleMouseMove = useCallback((e) => {
+    // REQ-P2-001: Auto-start slashing on mouse move (hover-to-slice)
+    if (!isSlashing) {
+      startSlashing();
+      startSlash(e);
+    }
     updateSlash(e);
-  }, [updateSlash]);
+  }, [updateSlash, isSlashing, startSlashing, startSlash]);
 
   const handleMouseUp = useCallback(() => {
     stopSlashing();
     endSlash();
   }, [stopSlashing, endSlash]);
 
+  // For mobile: touch events work similarly but clear on touch end
   const handleTouchStart = useCallback((e) => {
     e.preventDefault();
     startSlashing();
@@ -396,8 +402,13 @@ const GameScreen = ({
 
   const handleTouchMove = useCallback((e) => {
     e.preventDefault();
+    // Auto-start if not already slashing (finger may have started outside game area)
+    if (!isSlashing) {
+      startSlashing();
+      startSlash(e.touches[0]);
+    }
     updateSlash(e.touches[0]);
-  }, [updateSlash]);
+  }, [updateSlash, isSlashing, startSlashing, startSlash]);
 
   const handleTouchEnd = useCallback((e) => {
     e.preventDefault();

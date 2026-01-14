@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useVisibility } from './useVisibility';
+import { ITEM_CONFIG, SPEED_CONFIG, DIFFICULTY_CONFIG, SUPER_FRUIT_CONFIG } from '../config/gameConfig';
 
 // OneChain tokens with different colored rings - each has different speed and difficulty
 const TOKEN_TYPES = [
@@ -14,7 +15,8 @@ const ITEM_TYPES = [
   { name: "Bomb", symbol: "💣", color: "#ff4444", isGood: false, points: 0, spawnWeight: 0.1 }
 ];
 
-const MAX_ITEMS = 12; // Limit maximum items on screen
+// REQ-P2-002: Increased max items from 12 to 20 (+67%)
+const MAX_ITEMS = ITEM_CONFIG.maxItems;
 
 // Spawn interval multiplier based on difficulty - higher difficulties spawn MORE items
 // This is separate from speed - we want more items, not just faster items
@@ -65,6 +67,40 @@ const getRandomItemType = (mode = null) => {
 // Get random token type from TOKEN_TYPES
 const getRandomToken = () => {
   return TOKEN_TYPES[Math.floor(Math.random() * TOKEN_TYPES.length)];
+};
+
+// REQ-P2-003: Get random super fruit type based on spawn weights
+const getRandomSuperFruit = () => {
+  if (!SUPER_FRUIT_CONFIG.enabled || SUPER_FRUIT_CONFIG.types.length === 0) {
+    return null;
+  }
+
+  const totalWeight = SUPER_FRUIT_CONFIG.types.reduce((sum, type) => sum + type.spawnWeight, 0);
+  let random = Math.random() * totalWeight;
+
+  for (const fruitType of SUPER_FRUIT_CONFIG.types) {
+    random -= fruitType.spawnWeight;
+    if (random <= 0) {
+      return fruitType;
+    }
+  }
+
+  return SUPER_FRUIT_CONFIG.types[0];
+};
+
+// REQ-P2-003: Check if should spawn super fruit based on elapsed time
+const shouldSpawnSuperFruit = (elapsedTime) => {
+  if (!SUPER_FRUIT_CONFIG.enabled) return false;
+  if (elapsedTime < SUPER_FRUIT_CONFIG.minTimeToSpawn) return false;
+
+  // Calculate spawn probability based on elapsed time
+  const minutesElapsed = elapsedTime / 60000;
+  const probability = Math.min(
+    SUPER_FRUIT_CONFIG.baseSpawnProbability + (minutesElapsed * SUPER_FRUIT_CONFIG.probabilityIncreasePerMinute),
+    SUPER_FRUIT_CONFIG.maxSpawnProbability
+  );
+
+  return Math.random() < probability;
 };
 
 export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, onFruitMissed, difficultyLevel = 1, multiplayerGameId = null) => {
@@ -151,9 +187,8 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
     let randomToken = getRandomToken();
 
     // Calculate progressive difficulty based on elapsed time (Fruit Ninja style)
-    // Apply difficultyLevel from solo games with REDUCED impact (was too aggressive before)
-    // Base multiplier is now gentler: Easy=1.0, Medium=1.15, Hard=1.3, Extreme=1.5
-    let speedMultiplier = 1.0;
+    // REQ-P2-002: Apply base speed multiplier for faster gameplay
+    let speedMultiplier = SPEED_CONFIG.baseMultiplier; // 1.4x base speed
     const isMultiplayer = !!multiplayerGameId;
 
     if (gameState.gameStartTime) {
@@ -162,23 +197,27 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
       // Multiplayer: Skip tutorial phase, start with action immediately
       if (isMultiplayer) {
         // Faster progression for competitive gameplay
-        if (elapsed < 10000) {
-          speedMultiplier = 0.8 + (elapsed / 10000) * 0.2; // 0.8x to 1.0x in first 10 seconds
-        } else if (elapsed < 30000) {
-          speedMultiplier = 1.0 + ((elapsed - 10000) / 20000) * 0.3; // 1.0x to 1.3x
+        if (elapsed < DIFFICULTY_CONFIG.phases.tutorial) {
+          speedMultiplier = SPEED_CONFIG.baseMultiplier * (0.8 + (elapsed / DIFFICULTY_CONFIG.phases.tutorial) * 0.2);
+        } else if (elapsed < DIFFICULTY_CONFIG.phases.early) {
+          speedMultiplier = SPEED_CONFIG.baseMultiplier * (1.0 + ((elapsed - DIFFICULTY_CONFIG.phases.tutorial) / 15000) * 0.3);
         } else {
-          const level = Math.floor((elapsed - 30000) / 15000);
-          speedMultiplier = 1.3 + (level * 0.2); // 1.3x, 1.5x, 1.7x, etc.
+          const level = Math.floor((elapsed - DIFFICULTY_CONFIG.phases.early) / 15000);
+          // REQ-P2-002: Exponential curve for later stages
+          speedMultiplier = SPEED_CONFIG.baseMultiplier * Math.min(
+            1.3 * Math.pow(DIFFICULTY_CONFIG.exponentialFactor, level),
+            SPEED_CONFIG.maxSpeedMultiplier
+          );
         }
         // All tokens available from start in multiplayer
       }
-      // Solo mode: Gentler start, applies difficultyLevel modifier
+      // Solo mode: Applies difficultyLevel modifier with enhanced base speed
       else {
-        // Very gentle start for first 15 seconds (reduced from original)
-        if (elapsed < 15000) {
-          speedMultiplier = 0.5 + (elapsed / 15000) * 0.5; // 0.5x to 1.0x over 15 seconds
+        // Shortened tutorial phase (10 seconds instead of 15)
+        if (elapsed < DIFFICULTY_CONFIG.phases.tutorial) {
+          speedMultiplier = SPEED_CONFIG.baseMultiplier * (0.6 + (elapsed / DIFFICULTY_CONFIG.phases.tutorial) * 0.4);
 
-          // Only use yellow (easy) tokens in first 15 seconds for Easy/Medium
+          // Only use yellow (easy) tokens in tutorial for Easy/Medium
           if (itemType.isGood && difficultyLevel < 1.3) {
             randomToken = TOKEN_TYPES[0]; // Force yellow ring (easiest)
           } else if (itemType.isGood && difficultyLevel >= 1.3) {
@@ -186,27 +225,34 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
             randomToken = Math.random() < 0.7 ? TOKEN_TYPES[0] : TOKEN_TYPES[1];
           }
         }
-        // Gradual progression 15-45 seconds
-        else if (elapsed < 45000) {
-          speedMultiplier = 1.0 + ((elapsed - 15000) / 30000) * 0.3; // 1.0x to 1.3x (reduced from 1.5x)
+        // Early game progression
+        else if (elapsed < DIFFICULTY_CONFIG.phases.mid) {
+          speedMultiplier = SPEED_CONFIG.baseMultiplier * (1.0 + ((elapsed - DIFFICULTY_CONFIG.phases.tutorial) / 35000) * 0.4);
 
           // Token restrictions based on time
-          if (itemType.isGood && randomToken === TOKEN_TYPES[2]) { // If blue was selected
+          if (itemType.isGood && randomToken === TOKEN_TYPES[2]) {
             randomToken = Math.random() < 0.5 ? TOKEN_TYPES[0] : TOKEN_TYPES[1];
           }
-          if (itemType.isGood && randomToken === TOKEN_TYPES[3]) { // If red was selected
+          if (itemType.isGood && randomToken === TOKEN_TYPES[3]) {
             randomToken = Math.random() < 0.5 ? TOKEN_TYPES[0] : TOKEN_TYPES[1];
           }
         }
-        // Progressive difficulty after 45 seconds
+        // REQ-P2-002: Exponential difficulty progression after mid-game
         else {
-          const timeLevel = Math.floor((elapsed - 45000) / 20000);
-          speedMultiplier = 1.3 + (timeLevel * 0.2); // 1.3x, 1.5x, 1.7x, etc. (reduced from 1.5x base)
+          const timeLevel = Math.floor((elapsed - DIFFICULTY_CONFIG.phases.mid) / 20000);
+          speedMultiplier = SPEED_CONFIG.baseMultiplier * Math.min(
+            1.4 * Math.pow(DIFFICULTY_CONFIG.exponentialFactor, timeLevel),
+            SPEED_CONFIG.maxSpeedMultiplier
+          );
         }
 
-        // Apply difficulty level modifier (REDUCED impact - was multiplying, now adding)
-        // This makes tokens faster but still catchable
-        speedMultiplier *= (0.85 + (difficultyLevel * 0.15)); // Results in ~1.0x for Easy up to ~1.22x for Extreme
+        // Apply difficulty level modifier
+        const difficultyMod = SPEED_CONFIG.difficultySpeed[
+          difficultyLevel >= 1.5 ? 'extreme' :
+            difficultyLevel >= 1.3 ? 'hard' :
+              difficultyLevel >= 1.15 ? 'medium' : 'easy'
+        ] || 1.0;
+        speedMultiplier *= difficultyMod;
       }
     }
 
@@ -289,6 +335,17 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
       ? { ...itemType, points: randomToken.points }
       : itemType;
 
+    // REQ-P2-003: Check if this should be a super fruit
+    const elapsed = gameState.gameStartTime ? Date.now() - gameState.gameStartTime : 0;
+    const isSuperFruit = itemType.isGood && shouldSpawnSuperFruit(elapsed);
+    const superFruitType = isSuperFruit ? getRandomSuperFruit() : null;
+
+    // Calculate radius based on whether it's a super fruit
+    let itemRadius = itemType.name === 'Bomb' ? 28 : 38;
+    if (superFruitType) {
+      itemRadius = 38 * superFruitType.size; // Apply size modifier
+    }
+
     const item = {
       id: Math.random(),
       x: spawnX,
@@ -296,7 +353,7 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
       vx: vx,
       vy: vy,
       gravity: gravity,
-      radius: itemType.name === 'Bomb' ? 28 : 38,
+      radius: itemRadius,
       rotation: 0,
       rotationSpeed: (Math.random() - 0.5) * 0.15 * speedMultiplier,
       type: finalItemType,
@@ -308,8 +365,15 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
       motionTime: 0,
       amplitude: 10,
       frequency: 0.1,
-      hitBox: itemType.name === 'Bomb' ? 35 : 45,
-      spawnedFromBottom: spawnFromBottom
+      hitBox: itemType.name === 'Bomb' ? 35 : (superFruitType ? 45 * superFruitType.size : 45),
+      spawnedFromBottom: spawnFromBottom,
+      // REQ-P2-003: Super fruit properties
+      isSuperFruit: isSuperFruit,
+      superFruit: superFruitType,
+      hp: superFruitType ? superFruitType.hp : 1,
+      maxHp: superFruitType ? superFruitType.maxHp : 1,
+      hitLog: [], // Track who hit this for multiplayer contribution scoring
+      lastHitBy: null
     };
 
     setItems(prev => [...prev, item]);
@@ -523,64 +587,140 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
         // Draw Token with image
         ctx.save();
 
-        // Draw circular background with subtle glow
-        const gradient = ctx.createRadialGradient(
-          0, 0, 0,
-          0, 0, item.radius * 1.1
-        );
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-        gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
-        gradient.addColorStop(1, item.token?.ringColor || item.token?.color || '#FF8C00');
+        // REQ-P2-003: Special rendering for super fruits
+        if (item.isSuperFruit && item.superFruit) {
+          const sf = item.superFruit;
 
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(0, 0, item.radius, 0, Math.PI * 2);
-        ctx.fill();
+          // Outer glow for super fruits
+          ctx.shadowColor = sf.glowColor;
+          ctx.shadowBlur = 25 + (Math.sin(Date.now() / 200) * 5); // Pulsing glow
 
-        // Add subtle outer glow with ring color
-        ctx.shadowColor = item.token?.ringColor || item.token?.color || '#FF8C00';
-        ctx.shadowBlur = 20;
-        ctx.strokeStyle = item.token?.ringColor || item.token?.color || '#FF8C00';
-        ctx.lineWidth = 4;
-        ctx.stroke();
+          // Draw gradient background
+          const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, item.radius);
+          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+          gradient.addColorStop(0.4, sf.glowColor);
+          gradient.addColorStop(1, sf.color);
 
-        // Reset shadow for image drawing
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-
-        // Draw token image if loaded - larger and centered
-        if (item.token && tokenImages[item.token.name]) {
-          const img = tokenImages[item.token.name];
-          const imgSize = item.radius * 1.6; // Larger image size
-
-          // Ensure image is fully loaded before drawing
-          if (img.complete && img.naturalHeight !== 0) {
-            ctx.drawImage(img, -imgSize / 2, -imgSize / 2, imgSize, imgSize);
-          } else {
-            // Fallback while loading
-            ctx.fillStyle = item.token?.color || '#FF8C00';
-            ctx.beginPath();
-            ctx.arc(0, 0, item.radius * 0.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        } else {
-          // Fallback: draw colored circle with token name initial
-          ctx.fillStyle = item.token?.color || '#FF8C00';
+          ctx.fillStyle = gradient;
           ctx.beginPath();
-          ctx.arc(0, 0, item.radius * 0.6, 0, Math.PI * 2);
+          ctx.arc(0, 0, item.radius, 0, Math.PI * 2);
           ctx.fill();
 
-          // Draw first letter of token name
-          if (item.token?.name) {
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = `bold ${item.radius * 0.8}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(item.token.name[0], 0, 0);
-          }
-        }
+          // Draw colored ring
+          ctx.strokeStyle = sf.color;
+          ctx.lineWidth = 5;
+          ctx.stroke();
 
-        ctx.restore();
+          // Reset shadow for emoji
+          ctx.shadowBlur = 0;
+
+          // Draw super fruit emoji
+          ctx.font = `${item.radius * 1.2}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#000';
+          ctx.fillText(sf.emoji, 0, 3);
+
+          ctx.restore();
+
+          // Draw HP bar above super fruit (outside rotation context)
+          ctx.save();
+          const barWidth = item.radius * 1.6;
+          const barHeight = 8;
+          const barX = item.x - barWidth / 2;
+          const barY = item.y - item.radius - 18;
+
+          // HP bar background
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(barX, barY, barWidth, barHeight, 4);
+          ctx.fill();
+          ctx.stroke();
+
+          // HP fill
+          const hpPercent = item.hp / item.maxHp;
+          const fillColor = hpPercent > 0.5 ? '#00ff00' : hpPercent > 0.25 ? '#ffff00' : '#ff4444';
+          const fillWidth = barWidth * hpPercent;
+
+          ctx.fillStyle = fillColor;
+          ctx.shadowColor = fillColor;
+          ctx.shadowBlur = 5;
+          ctx.beginPath();
+          ctx.roundRect(barX, barY, fillWidth, barHeight, 4);
+          ctx.fill();
+
+          // HP text
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 10px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${item.hp}/${item.maxHp}`, item.x, barY + barHeight / 2);
+
+          ctx.restore();
+        } else {
+          // Regular token rendering
+          // Draw circular background with subtle glow
+          const gradient = ctx.createRadialGradient(
+            0, 0, 0,
+            0, 0, item.radius * 1.1
+          );
+          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+          gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
+          gradient.addColorStop(1, item.token?.ringColor || item.token?.color || '#FF8C00');
+
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(0, 0, item.radius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Add subtle outer glow with ring color
+          ctx.shadowColor = item.token?.ringColor || item.token?.color || '#FF8C00';
+          ctx.shadowBlur = 20;
+          ctx.strokeStyle = item.token?.ringColor || item.token?.color || '#FF8C00';
+          ctx.lineWidth = 4;
+          ctx.stroke();
+
+          // Reset shadow for image drawing
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+
+          // Draw token image if loaded - larger and centered
+          if (item.token && tokenImages[item.token.name]) {
+            const img = tokenImages[item.token.name];
+            const imgSize = item.radius * 1.6; // Larger image size
+
+            // Ensure image is fully loaded before drawing
+            if (img.complete && img.naturalHeight !== 0) {
+              ctx.drawImage(img, -imgSize / 2, -imgSize / 2, imgSize, imgSize);
+            } else {
+              // Fallback while loading
+              ctx.fillStyle = item.token?.color || '#FF8C00';
+              ctx.beginPath();
+              ctx.arc(0, 0, item.radius * 0.5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else {
+            // Fallback: draw colored circle with token name initial
+            ctx.fillStyle = item.token?.color || '#FF8C00';
+            ctx.beginPath();
+            ctx.arc(0, 0, item.radius * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw first letter of token name
+            if (item.token?.name) {
+              ctx.fillStyle = '#FFFFFF';
+              ctx.font = `bold ${item.radius * 0.8}px Arial`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(item.token.name[0], 0, 0);
+            }
+          }
+
+          ctx.restore();
+        }
       }
 
       ctx.restore();

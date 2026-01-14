@@ -1,0 +1,216 @@
+/* MultiplayerLeaderboard - REQ-P2-004 */
+
+.mp-leaderboard {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 280px;
+    background: rgba(10, 10, 20, 0.95);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 16px;
+    padding: 16px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.leaderboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-icon {
+    color: #ffd700;
+    font-size: 24px;
+}
+
+.leaderboard-header h3 {
+    font-family: "Impact", sans-serif;
+    font-size: 16px;
+    color: #ffd700;
+    letter-spacing: 2px;
+    margin: 0;
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.leaderboard-item.is-me {
+    background: rgba(255, 215, 0, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.4);
+}
+
+.leaderboard-item.eliminated {
+    opacity: 0.5;
+    background: rgba(255, 0, 0, 0.1);
+}
+
+.leaderboard-item.rank-gold {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.05) 100%);
+}
+
+.leaderboard-item.rank-silver {
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.2) 0%, rgba(192, 192, 192, 0.05) 100%);
+}
+
+.leaderboard-item.rank-bronze {
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.2) 0%, rgba(205, 127, 50, 0.05) 100%);
+}
+
+.rank-badge {
+    font-size: 18px;
+    min-width: 28px;
+    text-align: center;
+}
+
+.player-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.player-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.you-badge {
+    font-size: 10px;
+    background: #ffd700;
+    color: #000;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.player-score {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 2px;
+}
+
+.lives-display {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.hearts {
+    display: flex;
+    gap: 2px;
+}
+
+.heart {
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.heart.alive {
+    color: #ff4444;
+}
+
+.heart.dead {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.eliminated-badge {
+    color: #ff4444;
+    font-size: 20px;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-3px);
+    }
+
+    75% {
+        transform: translateX(3px);
+    }
+}
+
+.score-gap {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Animation for score updates */
+@keyframes scoreUpdate {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+        color: #00ff88;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.leaderboard-item.score-updated .player-score {
+    animation: scoreUpdate 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mp-leaderboard {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        border-radius: 16px 16px 0 0;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .leaderboard-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .leaderboard-item {
+        flex: 1;
+        min-width: 120px;
+        padding: 8px;
+    }
+}

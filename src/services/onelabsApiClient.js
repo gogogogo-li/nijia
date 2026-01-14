@@ -251,18 +251,34 @@ class OnelabsApiClient {
   }
 
   /**
-   * Game API - Submit slash batch
+   * Game API - Submit slash batch (uses local backend, not external API)
    */
   async submitSlashBatch(walletAddress, slashes, signature) {
-    return this.makeRequest('/game/slash-batch', {
-      method: 'POST',
-      body: {
-        address: walletAddress,
-        slashes,
-        signature,
-        timestamp: Date.now(),
-      },
-    });
+    // Use local backend for game endpoints, not external API
+    const backendUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
+    try {
+      const response = await fetch(`${backendUrl}/api/game/slash-batch`, {
+        method: 'POST',
+        headers: this.defaultHeaders,
+        body: JSON.stringify({
+          address: walletAddress,
+          slashes,
+          signature,
+          timestamp: Date.now(),
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn('Slash batch submission failed, continuing offline');
+        return { success: false, offline: true };
+      }
+
+      return await response.json();
+    } catch (error) {
+      // Don't throw - slash batch is optional, game works offline
+      console.warn('Slash batch failed (offline mode):', error.message);
+      return { success: false, offline: true };
+    }
   }
 
   /**

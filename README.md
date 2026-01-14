@@ -4,13 +4,35 @@ A blockchain-integrated fruit ninja game built on the OneChain network, featurin
 
 ## Features
 
-- 🎮 Fast-paced fruit slashing gameplay
+### Core Gameplay
+- 🎮 Fast-paced fruit slashing with hover-to-slice mechanics
+- ⚡ Velocity-based activation (no button hold required)
+- 🔥 Dynamic difficulty scaling with increasing spawn rates
+- ⏱️ 60-second timed matches with 3-life system
+
+### Super Fruits (Phase 2)
+- 🐉 **Dragon Fruit** - 5 HP, 2x multiplier, 100 base points
+- 🥭 **Mango** - 4 HP, 1.75x multiplier, 80 base points
+- 🍈 **Durian** - 6 HP, 2.5x multiplier, 150 base points
+- 🍯 **Jackfruit** - 5 HP, 2x multiplier, 120 base points
+
+### Multiplayer (2-4 Players)
+- 👥 Room-based matchmaking with 2, 3, or 4 players
+- 🏆 Dynamic payout distribution based on final rankings
+- 📊 Real-time leaderboard during matches
+- 🎯 Deterministic fruit spawning for fair play
+
+### Contribution Scoring
+- 📈 Multi-player super fruit contribution tracking
+- 🎯 15% bonus for final hit on super fruits
+- 💰 10% pool bonus shared by qualified contributors
+- ⚡ 5% minimum contribution threshold
+
+### Blockchain Integration
 - 💰 OneWallet integration with real-time OCT balance
 - 🏆 On-chain leaderboards and achievements
 - 🎨 NFT minting for game achievements
 - 🔗 Full OneChain blockchain integration via OneLabs SDK
-- 📊 Player statistics and tier system
-- 🌐 Multiplayer support
 
 ## Technology Stack
 
