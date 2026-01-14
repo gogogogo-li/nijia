@@ -32,7 +32,8 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
             target: 100,
             reward: 1,
             rewardDisplay: "1 OCT",
-            speed: "1.0x",
+            speed: 1.0,
+            speedDisplay: "1.0x",
             description: "BEGINNER FRIENDLY",
             subtitle: "TARGET: 100 POINTS",
             particles: [<GiCherry key="p1" />, <GiOrange key="p2" />, <GiLemon key="p3" />],
@@ -48,7 +49,8 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
             target: 200,
             reward: 2,
             rewardDisplay: "2 OCT",
-            speed: "1.3x",
+            speed: 1.15,
+            speedDisplay: "1.15x",
             description: "THE STANDARD CHALLENGE",
             subtitle: "TARGET: 200 POINTS",
             particles: [<GiGrapes key="p1" />, <GiPeach key="p2" />, <GiBanana key="p3" />],
@@ -61,12 +63,13 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
             shadow: "0 0 40px rgba(255, 107, 107, 0.6)",
             stake: 2,
             stakeDisplay: "2 OCT",
-            target: 350,
+            target: 300,
             reward: 4,
             rewardDisplay: "4 OCT",
-            speed: "1.6x",
+            speed: 1.3,
+            speedDisplay: "1.3x",
             description: "FOR TRUE NINJAS",
-            subtitle: "TARGET: 350 POINTS",
+            subtitle: "TARGET: 300 POINTS",
             particles: [<GiPear key="p1" />, <GiWatermelon key="p2" />, <GiLemon key="p3" />],
         },
         {
@@ -77,12 +80,13 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
             shadow: "0 0 40px rgba(245, 87, 108, 0.8)",
             stake: 5,
             stakeDisplay: "5 OCT",
-            target: 500,
+            target: 400,
             reward: 10,
             rewardDisplay: "10 OCT",
-            speed: "2.0x",
+            speed: 1.5,
+            speedDisplay: "1.5x",
             description: "LEGENDARY DIFFICULTY",
-            subtitle: "TARGET: 500 POINTS",
+            subtitle: "TARGET: 400 POINTS",
             particles: [<GiCherry key="p1" />, <GiOrange key="p2" />, <GiGrapes key="p3" />],
         },
     ];
@@ -213,7 +217,7 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
                             </div>
 
                             <p className="solo-speed-badge" style={{ background: diff.background }}>
-                                SPEED: {diff.speed}
+                                SPEED: {diff.speedDisplay}
                             </p>
 
                             <button

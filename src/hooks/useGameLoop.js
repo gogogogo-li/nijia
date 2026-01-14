@@ -16,6 +16,33 @@ const ITEM_TYPES = [
 
 const MAX_ITEMS = 12; // Limit maximum items on screen
 
+// Spawn interval multiplier based on difficulty - higher difficulties spawn MORE items
+// This is separate from speed - we want more items, not just faster items
+// NOTE: This logic is duplicated in GameScreen.js for the spawn interval calculations
+// eslint-disable-next-line no-unused-vars
+const getSpawnIntervalMultiplier = (difficultyLevel, isMultiplayer = false) => {
+  // Multiplayer always uses faster spawning for competitive gameplay
+  if (isMultiplayer) return 0.6; // 40% faster spawns in multiplayer
+
+  // Solo mode difficulty-based spawning
+  if (difficultyLevel >= 1.5) return 0.5;  // Extreme: 50% faster spawns
+  if (difficultyLevel >= 1.3) return 0.6;  // Hard: 40% faster spawns
+  if (difficultyLevel >= 1.15) return 0.8; // Medium: 20% faster spawns
+  return 1.0; // Easy: normal spawn rate
+};
+
+// Get wave size bonus based on difficulty - higher difficulties get more items per wave
+// NOTE: This logic is duplicated in GameScreen.js for the spawn interval calculations
+// eslint-disable-next-line no-unused-vars
+const getDifficultyWaveBonus = (difficultyLevel, isMultiplayer = false) => {
+  if (isMultiplayer) return 1; // +1 extra item per wave in multiplayer
+
+  if (difficultyLevel >= 1.5) return 2;  // Extreme: +2 items per wave
+  if (difficultyLevel >= 1.3) return 1;  // Hard: +1 item per wave
+  if (difficultyLevel >= 1.15) return 1; // Medium: +1 item per wave sometimes
+  return 0; // Easy: no bonus
+};
+
 const getRandomItemType = (mode = null) => {
   // In Zen mode, never spawn bombs
   if (mode === 'zen') {
@@ -124,37 +151,62 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
     let randomToken = getRandomToken();
 
     // Calculate progressive difficulty based on elapsed time (Fruit Ninja style)
-    // Also apply difficultyLevel from solo games (1.0 = normal, 1.3 = medium, etc.)
-    let speedMultiplier = difficultyLevel;
+    // Apply difficultyLevel from solo games with REDUCED impact (was too aggressive before)
+    // Base multiplier is now gentler: Easy=1.0, Medium=1.15, Hard=1.3, Extreme=1.5
+    let speedMultiplier = 1.0;
+    const isMultiplayer = !!multiplayerGameId;
 
     if (gameState.gameStartTime) {
       const elapsed = Date.now() - gameState.gameStartTime;
 
-      // Very gentle start for first 15 seconds
-      if (elapsed < 15000) {
-        speedMultiplier = 0.4 + (elapsed / 15000) * 0.6; // Gradually increase from 0.4x to 1x over 15 seconds
-
-        // Only use yellow (easy) tokens in first 15 seconds
-        if (itemType.isGood) {
-          randomToken = TOKEN_TYPES[0]; // Force yellow ring (easiest)
+      // Multiplayer: Skip tutorial phase, start with action immediately
+      if (isMultiplayer) {
+        // Faster progression for competitive gameplay
+        if (elapsed < 10000) {
+          speedMultiplier = 0.8 + (elapsed / 10000) * 0.2; // 0.8x to 1.0x in first 10 seconds
+        } else if (elapsed < 30000) {
+          speedMultiplier = 1.0 + ((elapsed - 10000) / 20000) * 0.3; // 1.0x to 1.3x
+        } else {
+          const level = Math.floor((elapsed - 30000) / 15000);
+          speedMultiplier = 1.3 + (level * 0.2); // 1.3x, 1.5x, 1.7x, etc.
         }
+        // All tokens available from start in multiplayer
       }
-      // Gradual progression 15-45 seconds
-      else if (elapsed < 45000) {
-        speedMultiplier = 1.0 + ((elapsed - 15000) / 30000) * 0.5; // 1.0x to 1.5x
+      // Solo mode: Gentler start, applies difficultyLevel modifier
+      else {
+        // Very gentle start for first 15 seconds (reduced from original)
+        if (elapsed < 15000) {
+          speedMultiplier = 0.5 + (elapsed / 15000) * 0.5; // 0.5x to 1.0x over 15 seconds
 
-        // Only yellow and green tokens (easy/medium) in first 45 seconds
-        if (itemType.isGood && randomToken === TOKEN_TYPES[2]) { // If blue was selected
-          randomToken = Math.random() < 0.5 ? TOKEN_TYPES[0] : TOKEN_TYPES[1]; // Replace with yellow or green
+          // Only use yellow (easy) tokens in first 15 seconds for Easy/Medium
+          if (itemType.isGood && difficultyLevel < 1.3) {
+            randomToken = TOKEN_TYPES[0]; // Force yellow ring (easiest)
+          } else if (itemType.isGood && difficultyLevel >= 1.3) {
+            // Hard/Extreme: Allow green tokens from start
+            randomToken = Math.random() < 0.7 ? TOKEN_TYPES[0] : TOKEN_TYPES[1];
+          }
         }
-        if (itemType.isGood && randomToken === TOKEN_TYPES[3]) { // If red was selected
-          randomToken = Math.random() < 0.5 ? TOKEN_TYPES[0] : TOKEN_TYPES[1]; // Replace with yellow or green
+        // Gradual progression 15-45 seconds
+        else if (elapsed < 45000) {
+          speedMultiplier = 1.0 + ((elapsed - 15000) / 30000) * 0.3; // 1.0x to 1.3x (reduced from 1.5x)
+
+          // Token restrictions based on time
+          if (itemType.isGood && randomToken === TOKEN_TYPES[2]) { // If blue was selected
+            randomToken = Math.random() < 0.5 ? TOKEN_TYPES[0] : TOKEN_TYPES[1];
+          }
+          if (itemType.isGood && randomToken === TOKEN_TYPES[3]) { // If red was selected
+            randomToken = Math.random() < 0.5 ? TOKEN_TYPES[0] : TOKEN_TYPES[1];
+          }
         }
-      }
-      // Progressive difficulty after 45 seconds
-      else if (elapsed > 45000) {
-        const difficultyLevel = Math.floor((elapsed - 45000) / 20000); // Level up every 20 seconds after 45s
-        speedMultiplier = 1.5 + (difficultyLevel * 0.3); // 1.5x, 1.8x, 2.1x, etc.
+        // Progressive difficulty after 45 seconds
+        else {
+          const timeLevel = Math.floor((elapsed - 45000) / 20000);
+          speedMultiplier = 1.3 + (timeLevel * 0.2); // 1.3x, 1.5x, 1.7x, etc. (reduced from 1.5x base)
+        }
+
+        // Apply difficulty level modifier (REDUCED impact - was multiplying, now adding)
+        // This makes tokens faster but still catchable
+        speedMultiplier *= (0.85 + (difficultyLevel * 0.15)); // Results in ~1.0x for Easy up to ~1.22x for Extreme
       }
     }
 

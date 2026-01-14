@@ -212,48 +212,99 @@ const GameScreen = ({
       updateTrail(); // Update blade trail
     }, 16);
 
-    // Fruit Ninja style progressive spawning - starts very slow, gradually increases
+    // Fruit Ninja style progressive spawning - adapted for difficulty levels
     let lastSpawn = Date.now();
     const dynamicSpawner = setInterval(() => {
       const now = Date.now();
       if (!gameState.gameStartTime) return;
 
       const elapsed = now - gameState.gameStartTime;
+      const isMultiplayer = !!multiplayerGameId;
+      const difficultyLevel = soloGameData?.speed || 1.0;
 
-      // Progressive difficulty system (Fruit Ninja algorithm - very gentle start)
+      // Calculate spawn interval multiplier based on difficulty
+      // Higher difficulties = faster spawns (more items = more fun + more scoring opportunities)
+      let intervalMultiplier = 1.0;
+      let waveBonus = 0;
+
+      if (isMultiplayer) {
+        intervalMultiplier = 0.6; // 40% faster spawns in multiplayer
+        waveBonus = 1; // +1 item per wave
+      } else {
+        if (difficultyLevel >= 1.5) {
+          intervalMultiplier = 0.5;  // Extreme: 50% faster spawns
+          waveBonus = 2;
+        } else if (difficultyLevel >= 1.3) {
+          intervalMultiplier = 0.6;  // Hard: 40% faster spawns
+          waveBonus = 1;
+        } else if (difficultyLevel >= 1.15) {
+          intervalMultiplier = 0.8; // Medium: 20% faster spawns
+          waveBonus = 1;
+        }
+      }
+
+      // Progressive difficulty system - adapted for difficulty level
       let waveSize, spawnInterval, staggerDelay;
 
-      if (elapsed < 15000) {
-        // First 15 seconds - VERY slow tutorial, 1 token at a time
-        waveSize = 1;
-        spawnInterval = 3000; // 3 seconds between spawns (very slow)
-        staggerDelay = 0;
-      } else if (elapsed < 30000) {
-        // 15-30 seconds - Still gentle, start introducing pairs occasionally
-        waveSize = Math.random() < 0.8 ? 1 : 2; // 80% single, 20% pairs
-        spawnInterval = 2500; // 2.5 seconds
-        staggerDelay = 200;
-      } else if (elapsed < 50000) {
-        // 30-50 seconds - Mix of 1-2 tokens, more pairs
-        waveSize = Math.random() < 0.5 ? 1 : 2; // 50% single, 50% pairs
-        spawnInterval = 2200;
-        staggerDelay = 180;
-      } else if (elapsed < 70000) {
-        // 50-70 seconds - 1-3 tokens, introducing triplets
-        const rand = Math.random();
-        waveSize = rand < 0.3 ? 1 : rand < 0.7 ? 2 : 3; // 30% single, 40% pairs, 30% triplets
-        spawnInterval = 2000;
-        staggerDelay = 150;
-      } else if (elapsed < 90000) {
-        // 70-90 seconds - 2-4 tokens
-        waveSize = 2 + Math.floor(Math.random() * 3); // 2-4 tokens
-        spawnInterval = 1800;
-        staggerDelay = 130;
-      } else {
-        // After 90 seconds - 3-5 tokens, expert mode
-        waveSize = 3 + Math.floor(Math.random() * 3); // 3-5 tokens
-        spawnInterval = 1500;
-        staggerDelay = 100;
+      // Multiplayer: Shorter tutorial phase, more immediate action
+      if (isMultiplayer) {
+        if (elapsed < 5000) {
+          // First 5 seconds - Quick intro, 2 tokens
+          waveSize = 2;
+          spawnInterval = 2000 * intervalMultiplier;
+          staggerDelay = 150;
+        } else if (elapsed < 20000) {
+          // 5-20 seconds - Ramping up
+          waveSize = 2 + Math.floor(Math.random() * 2); // 2-3 tokens
+          spawnInterval = 1800 * intervalMultiplier;
+          staggerDelay = 130;
+        } else if (elapsed < 40000) {
+          // 20-40 seconds - Full action
+          waveSize = 3 + Math.floor(Math.random() * 2); // 3-4 tokens
+          spawnInterval = 1500 * intervalMultiplier;
+          staggerDelay = 100;
+        } else {
+          // After 40 seconds - Intense
+          waveSize = 4 + Math.floor(Math.random() * 2); // 4-5 tokens
+          spawnInterval = 1200 * intervalMultiplier;
+          staggerDelay = 80;
+        }
+      }
+      // Solo mode: Difficulty-aware progression
+      else {
+        if (elapsed < 15000) {
+          // First 15 seconds - Tutorial (shortened for higher difficulties)
+          const tutorialWave = difficultyLevel >= 1.3 ? 2 : 1;
+          waveSize = tutorialWave + waveBonus;
+          spawnInterval = (difficultyLevel >= 1.3 ? 2000 : 3000) * intervalMultiplier;
+          staggerDelay = 0;
+        } else if (elapsed < 30000) {
+          // 15-30 seconds - Getting started
+          waveSize = (Math.random() < 0.8 ? 1 : 2) + waveBonus;
+          spawnInterval = 2500 * intervalMultiplier;
+          staggerDelay = 200;
+        } else if (elapsed < 50000) {
+          // 30-50 seconds - Mix of tokens
+          waveSize = (Math.random() < 0.5 ? 1 : 2) + waveBonus;
+          spawnInterval = 2200 * intervalMultiplier;
+          staggerDelay = 180;
+        } else if (elapsed < 70000) {
+          // 50-70 seconds - Ramping up
+          const rand = Math.random();
+          waveSize = (rand < 0.3 ? 1 : rand < 0.7 ? 2 : 3) + waveBonus;
+          spawnInterval = 2000 * intervalMultiplier;
+          staggerDelay = 150;
+        } else if (elapsed < 90000) {
+          // 70-90 seconds - High intensity
+          waveSize = (2 + Math.floor(Math.random() * 3)) + waveBonus; // 2-4 tokens + bonus
+          spawnInterval = 1800 * intervalMultiplier;
+          staggerDelay = 130;
+        } else {
+          // After 90 seconds - Expert mode
+          waveSize = (3 + Math.floor(Math.random() * 3)) + waveBonus; // 3-5 tokens + bonus
+          spawnInterval = 1500 * intervalMultiplier;
+          staggerDelay = 100;
+        }
       }
 
       if (now - lastSpawn >= spawnInterval) {
@@ -270,7 +321,7 @@ const GameScreen = ({
       clearInterval(gameLoop);
       clearInterval(dynamicSpawner);
     };
-  }, [gameState.isGameRunning, gameState.isPaused, gameState.gameStartTime, updateGame, spawnItem, updateTrail, isVisible]);
+  }, [gameState.isGameRunning, gameState.isPaused, gameState.gameStartTime, updateGame, spawnItem, updateTrail, isVisible, multiplayerGameId, soloGameData]);
 
   // Auto-pause when tab becomes invisible, resume when visible again
   // DISABLED for multiplayer - game continues even if tab is hidden
