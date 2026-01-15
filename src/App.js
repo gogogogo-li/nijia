@@ -124,6 +124,7 @@ function App() {
             multiplayerGameId={multiplayerGameId}
             onBackToMultiplayer={handleBackToMultiplayerLobby}
             soloGameData={soloGameData}
+            onSoloReplay={handleSoloReplay}
           />
         );
       default:
@@ -195,6 +196,15 @@ function App() {
       return;
     }
     setShowModeSelection(false);
+    setShowSoloMode(true);
+  };
+
+  // Handler for replaying solo stakes - navigates back to tier selection
+  const handleSoloReplay = () => {
+    // Clear the previous game data so a fresh game can be started
+    setSoloGameData(null);
+    // Go back to solo mode selection to pick a tier and stake again
+    showStartScreen(); // Reset game state
     setShowSoloMode(true);
   };
 

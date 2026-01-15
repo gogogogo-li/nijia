@@ -9,7 +9,7 @@ import '../styles/unified-design.css';
 import './ResultsScreen.css';
 import { GiTrophyCup, GiCrossedSwords } from 'react-icons/gi';
 
-const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, multiplayerGameId, onBackToMultiplayer, soloGameData }) => {
+const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, multiplayerGameId, onBackToMultiplayer, soloGameData, onSoloReplay }) => {
   const isNewBest = gameState.score > gameState.bestScore;
   const [mintingStatus, setMintingStatus] = useState(null); // null, 'minting', 'success', 'error'
   const [transactionHash, setTransactionHash] = useState(null);
@@ -512,6 +512,21 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
               </button>
               <button
                 className="unified-button back-home"
+                onClick={onShowStartScreen}
+              >
+                Home
+              </button>
+            </>
+          ) : soloGameData ? (
+            <>
+              <button
+                className="unified-button play-again"
+                onClick={onSoloReplay}
+              >
+                Play Again
+              </button>
+              <button
+                className="unified-button unified-button-secondary back-home"
                 onClick={onShowStartScreen}
               >
                 Home
