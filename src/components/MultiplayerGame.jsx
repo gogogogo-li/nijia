@@ -276,7 +276,7 @@ const MultiplayerGame = ({ gameId, roomId, walletAddress, onGameComplete, onBack
                             <>
                                 <GiTrophyCup className="outcome-icon trophy" />
                                 <h1 className="outcome-text">YOU WON!</h1>
-                                <p className="outcome-subtext">+0.196 OCT</p>
+                                <p className="outcome-subtext">+0.196 HACK</p>
                             </>
                         )}
                         {gameOutcome === 'lost' && (

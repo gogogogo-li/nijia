@@ -10,14 +10,14 @@ import logger from '../utils/logger.js';
 
 // Contract constants
 const CLOCK_OBJECT = '0x6';
-const OCT_COIN_TYPE = '0x2::oct::OCT';
+const HACK_COIN_TYPE = '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON';
 
 // Difficulty configuration
 const DIFFICULTY_CONFIG = {
-    0: { name: 'Easy', stake: 500000000, target: 100, speedMultiplier: 1.0 },      // 0.5 OCT
-    1: { name: 'Medium', stake: 1000000000, target: 200, speedMultiplier: 1.3 },   // 1 OCT
-    2: { name: 'Hard', stake: 2000000000, target: 350, speedMultiplier: 1.6 },     // 2 OCT
-    3: { name: 'Extreme', stake: 5000000000, target: 500, speedMultiplier: 2.0 },  // 5 OCT
+    0: { name: 'Easy', stake: 500000000, target: 100, speedMultiplier: 1.0 },      // 0.5 HACK
+    1: { name: 'Medium', stake: 1000000000, target: 200, speedMultiplier: 1.3 },   // 1 HACK
+    2: { name: 'Hard', stake: 2000000000, target: 350, speedMultiplier: 1.6 },     // 2 HACK
+    3: { name: 'Extreme', stake: 5000000000, target: 500, speedMultiplier: 2.0 },  // 5 HACK
 };
 
 class SoloGameManager {
@@ -150,7 +150,7 @@ class SoloGameManager {
             difficulty,
             difficulty_name: config.name,
             stake_amount: config.stake,
-            stake_amount_oct: config.stake / 1_000_000_000,
+            stake_amount_token: config.stake / 1_000_000_000,
             target_score: config.target,
             speed_multiplier: config.speedMultiplier,
             current_score: 0,
@@ -182,7 +182,7 @@ class SoloGameManager {
         }
 
         logger.info(`   ✅ Solo game ${gameId} registered`);
-        logger.info(`   Difficulty: ${config.name}, Target: ${config.target}, Stake: ${config.stake / 1_000_000_000} OCT`);
+        logger.info(`   Difficulty: ${config.name}, Target: ${config.target}, Stake: ${config.stake / 1_000_000_000} HACK`);
 
         return game;
     }
@@ -232,6 +232,7 @@ class SoloGameManager {
 
     /**
      * Update lives (called when player loses a life)
+     * Lives can only decrease by exactly 1 per call to prevent manipulation.
      */
     async updateLives(gameId, playerAddress, lives) {
         const game = this.activeGames.get(gameId);
@@ -248,13 +249,20 @@ class SoloGameManager {
             return game;
         }
 
+        // Validate: lives can only decrease by exactly 1
+        const expectedLives = game.lives - 1;
+        if (lives !== expectedLives) {
+            logger.warn(`⚠️ Invalid lives update for game ${gameId}: current=${game.lives}, requested=${lives}, expected=${expectedLives}`);
+            throw new Error(`Invalid lives update: expected ${expectedLives}, got ${lives}`);
+        }
+
         game.lives = lives;
         this.activeGames.set(gameId, game);
 
         // If player lost all lives, end the game
         if (lives <= 0) {
             logger.info(`💀 Player ${playerAddress} lost all lives in solo game ${gameId}`);
-            return this.completeGame(gameId, game.current_score);
+            return this.completeGame(gameId);
         }
 
         return game;
@@ -262,8 +270,9 @@ class SoloGameManager {
 
     /**
      * Complete a solo game - determine winner and settle on-chain
+     * Always uses backend-tracked current_score as the authoritative final score.
      */
-    async completeGame(gameId, finalScore) {
+    async completeGame(gameId) {
         const game = this.activeGames.get(gameId);
 
         if (!game) {
@@ -275,7 +284,8 @@ class SoloGameManager {
             return game;
         }
 
-        game.final_score = finalScore || game.current_score;
+        // Use backend-tracked score only — never trust client-reported finalScore
+        game.final_score = game.current_score;
         game.won = game.final_score >= game.target_score;
         game.state = 'completed';
         game.completed_at = new Date().toISOString();
@@ -285,10 +295,10 @@ class SoloGameManager {
             const totalPayout = game.stake_amount * 2;
             const platformFee = totalPayout * 2 / 100; // 2%
             game.payout = totalPayout - platformFee;
-            game.payout_oct = game.payout / 1_000_000_000;
+            game.payout_token = game.payout / 1_000_000_000;
         } else {
             game.payout = 0;
-            game.payout_oct = 0;
+            game.payout_token = 0;
         }
 
         this.activeGames.set(gameId, game);
@@ -297,9 +307,9 @@ class SoloGameManager {
         logger.info(`   Player: ${game.player}`);
         logger.info(`   Final Score: ${game.final_score} / Target: ${game.target_score}`);
         logger.info(`   Result: ${game.won ? '✅ WIN' : '❌ LOSE'}`);
-        logger.info(`   Payout: ${game.payout_oct} OCT`);
+        logger.info(`   Payout: ${game.payout_token} HACK`);
 
-        // Settle via direct OCT transfer (no contract needed)
+        // Settle via direct HACK transfer (no contract needed)
         logger.info(`   🔐 Admin keypair configured: ${!!this.adminKeypair}`);
         if (this.adminKeypair) {
             try {
@@ -336,7 +346,7 @@ class SoloGameManager {
     }
 
     /**
-     * Settle game by sending direct OCT transfer from admin wallet
+     * Settle game by sending direct HACK transfer from admin wallet
      * Used when contract doesn't have a payout function
      */
     async settleOnChain(game) {
@@ -357,7 +367,7 @@ class SoloGameManager {
             // Transfer to player
             tx.transferObjects([payoutCoin], tx.pure.address(game.player));
 
-            logger.info(`   Sending ${game.payout_oct} OCT to ${game.player}...`);
+            logger.info(`   Sending ${game.payout_token} HACK to ${game.player}...`);
 
             const result = await suiClient.signAndExecuteTransaction({
                 signer: this.adminKeypair,

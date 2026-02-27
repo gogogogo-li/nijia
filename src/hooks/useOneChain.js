@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import onechainService from '../services/onechainService';
-import { createSoloGameTransaction, getStakeAmountOCT } from '../services/soloContract';
+import { createSoloGameTransaction, getStakeAmountToken } from '../services/soloContract';
 
 export const useOneChain = () => {
   const [walletAddress, setWalletAddress] = useState(onechainService.walletAddress);
@@ -11,6 +11,8 @@ export const useOneChain = () => {
   const [mintedNFT, setMintedNFT] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [balance, setBalance] = useState(null);
+  const [walletSignature, setWalletSignature] = useState(onechainService.sessionToken);
+  const [walletAuthMessage, setWalletAuthMessage] = useState(onechainService.authMessage);
 
   // Check if wallet is already connected on mount and set up listeners
   useEffect(() => {
@@ -23,6 +25,8 @@ export const useOneChain = () => {
           setWalletAddress(onechainService.walletAddress);
           setIsConnected(true);
           setUserProfile(onechainService.userProfile);
+          setWalletSignature(onechainService.sessionToken);
+          setWalletAuthMessage(onechainService.authMessage);
           console.log('✅ Wallet session restored');
 
           // Load balance
@@ -93,6 +97,8 @@ export const useOneChain = () => {
         setWalletAddress(result.address);
         setIsConnected(true);
         setUserProfile(result.profile);
+        setWalletSignature(onechainService.sessionToken);
+        setWalletAuthMessage(onechainService.authMessage);
 
         // Load balance after connection with retry logic
         const loadBalance = async (attempt = 1) => {
@@ -114,7 +120,7 @@ export const useOneChain = () => {
               return loadBalance(attempt + 1);
             }
             console.error('❌ All balance fetch attempts failed');
-            setBalance({ amount: '0.0000', symbol: 'OCT', error: 'Failed to fetch' });
+            setBalance({ amount: '0.0000', symbol: 'HACK', error: 'Failed to fetch' });
             return null;
           }
         };
@@ -147,6 +153,8 @@ export const useOneChain = () => {
     setMintedNFT(null);
     setUserProfile(null);
     setBalance(null);
+    setWalletSignature(null);
+    setWalletAuthMessage(null);
     console.log('✅ Wallet disconnected in hook');
   }, []);
 
@@ -168,7 +176,7 @@ export const useOneChain = () => {
       return balanceData;
     } catch (error) {
       console.error('Error refreshing balance:', error);
-      return balance || { amount: '0', symbol: 'OCT' };
+      return balance || { amount: '0', symbol: 'HACK' };
     }
   }, [balance]);
 
@@ -219,10 +227,29 @@ export const useOneChain = () => {
     try {
       console.log('🎮 Creating solo game on-chain...');
       console.log(`   Difficulty: ${difficulty}`);
-      console.log(`   Stake: ${getStakeAmountOCT(difficulty)} OCT`);
+      console.log(`   Stake: ${getStakeAmountToken(difficulty)} HACK`);
 
-      // Build the transaction
-      const tx = createSoloGameTransaction({ difficulty });
+      // 1. Fetch available HACK coin objects
+      const coinObjects = await onechainService.getCoinObjects();
+      console.log('   Available coins:', coinObjects);
+
+      // 2. Select a coin with sufficient balance or use primary
+      // Note: for production, you might want to merge coins if split is needed
+      let selectedCoinId = null;
+      if (coinObjects.length > 0) {
+        // Find largest coin
+        const bestCoin = coinObjects.sort((a, b) => Number(b.balance) - Number(a.balance))[0];
+        selectedCoinId = bestCoin.objectId;
+        console.log('   Selected coin for payment:', selectedCoinId);
+      } else {
+        console.warn('   ⚠️ No HACK coins found! Transaction might fail if not simulating.');
+      }
+
+      // Build the transaction with selected coin
+      const tx = createSoloGameTransaction({
+        difficulty,
+        coinObjectId: selectedCoinId
+      });
 
       // Check if this is development mode
       if (tx._isDevelopmentMode) {
@@ -272,8 +299,8 @@ export const useOneChain = () => {
     }
   }, [walletAddress, isConnected, refreshBalance]);
 
-  // Compute OCT balance from balance object
-  const octBalance = balance ? parseFloat(balance.amount) : 0;
+  // Compute Token balance from balance object
+  const tokenBalance = balance ? parseFloat(balance.amount) : 0;
 
   return {
     // Wallet state
@@ -283,7 +310,9 @@ export const useOneChain = () => {
     error,
     userProfile,
     balance,
-    octBalance,
+    tokenBalance,
+    walletSignature,
+    walletAuthMessage,
 
     // Wallet actions
     connectWallet,

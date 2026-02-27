@@ -13,7 +13,7 @@ const formatAddress = (address) => {
 const formatBalance = (balance) => {
   console.log('💰 formatBalance called with:', balance, 'type:', typeof balance);
   if (!balance) return '0.0000';
-  // Balance is already formatted from service (OCT with 9 decimals: 1 OCT = 1,000,000,000 MIST)
+  // Balance is already formatted from service (HACK with 9 decimals: 1 HACK = 1,000,000,000 MIST)
   if (typeof balance === 'object' && balance.amount) {
     console.log('   Using balance.amount:', balance.amount);
     return balance.amount;
@@ -309,7 +309,7 @@ const OneWallet = ({ onechain }) => {
                       <div className="balance-info">
                         <span className="balance-label">Balance:</span>
                         <span className="balance-value">
-                          {onechain.balance ? formatBalance(onechain.balance) : '...'} OCT
+                          {onechain.balance ? formatBalance(onechain.balance) : '...'} HACK
                         </span>
                       </div>
                       <button

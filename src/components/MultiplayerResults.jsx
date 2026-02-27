@@ -31,7 +31,7 @@ const MultiplayerResults = ({ game, walletAddress, onPlayAgain, onMainMenu }) =>
     const opponentScore = isPlayer1 ? game.player2_score : game.player1_score;
 
     // Calculate payout details
-    const betAmount = parseFloat(game.bet_amount_oct || game.bet_amount / 1_000_000_000);
+    const betAmount = parseFloat(game.bet_amount_token || game.bet_amount / 1_000_000_000);
     const totalPot = betAmount * 2;
 
     let payout = 0;
@@ -148,12 +148,12 @@ const MultiplayerResults = ({ game, walletAddress, onPlayAgain, onMainMenu }) =>
                     <div className="payout-details">
                         <div className="payout-row">
                             <span className="payout-label">Total Pot:</span>
-                            <span className="payout-value">{totalPot.toFixed(2)} OCT</span>
+                            <span className="payout-value">{totalPot.toFixed(2)} HACK</span>
                         </div>
 
                         <div className="payout-row">
                             <span className="payout-label">Platform Fee ({feePercentage}%):</span>
-                            <span className="payout-value fee">-{platformFee.toFixed(4)} OCT</span>
+                            <span className="payout-value fee">-{platformFee.toFixed(4)} HACK</span>
                         </div>
 
                         <div className="payout-divider"></div>
@@ -161,7 +161,7 @@ const MultiplayerResults = ({ game, walletAddress, onPlayAgain, onMainMenu }) =>
                         <div className="payout-row total">
                             <span className="payout-label">Your Payout:</span>
                             <span className={`payout-value ${isWinner ? 'win' : ''}`}>
-                                {isWinner ? '+' : ''}{payout.toFixed(4)} OCT
+                                {isWinner ? '+' : ''}{payout.toFixed(4)} HACK
                             </span>
                         </div>
 

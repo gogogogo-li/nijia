@@ -120,7 +120,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
 
     // Initialize multiplayer service with wallet address
     console.log('🔌 Connecting multiplayer service with wallet:', walletAddress);
-    multiplayerService.connect(walletAddress).then(() => {
+    multiplayerService.connect(walletAddress, onechain?.walletSignature, onechain?.walletAuthMessage).then(() => {
       console.log('✅ Multiplayer service connected');
       // Subscribe to game updates
       multiplayerService.subscribeToGames();
@@ -229,22 +229,29 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
 
     try {
       // Step 1: Check balance
-      showNotification(`Creating game with ${selectedTier.amount} OCT stake...`, 'info');
+      showNotification(`Creating game with ${selectedTier.amount} HACK stake...`, 'info');
       console.log(`🎮 Creating game with bet tier ${selectedTier.id}`);
 
       const balanceResult = await onechainService.getBalance();
       const balance = parseFloat(balanceResult.amount);
 
       if (balance < selectedTier.amount) {
-        throw new Error(`Insufficient balance. Need ${selectedTier.amount} OCT, have ${balance.toFixed(2)} OCT`);
+        throw new Error(`Insufficient balance. Need ${selectedTier.amount} HACK, have ${balance.toFixed(2)} HACK`);
       }
 
       // Step 2: Create contract transaction
-      // Note: We'll use tx.gas in the transaction builder, no need to pass coinObjectId
+      // Fetch HACK coins to pay the bet (do NOT use tx.gas)
+      const coinObjects = await onechainService.getCoinObjects();
+      let selectedCoinId = null;
+      if (coinObjects.length > 0) {
+        // Use largest coin
+        const bestCoin = coinObjects.sort((a, b) => Number(b.balance) - Number(a.balance))[0];
+        selectedCoinId = bestCoin.objectId;
+      }
 
       const tx = createGameTransaction({
         betTierId: selectedTier.id,
-        coinObjectId: null // Will use tx.gas in the transaction
+        coinObjectId: selectedCoinId
       });
 
       // Step 3: Execute transaction on blockchain
@@ -300,28 +307,33 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
         throw new Error('Game not found');
       }
 
-      const betAmountOCT = parseFloat(game.bet_amount) / 1000000000; // Convert from MIST to OCT (9 decimals)
+      const betAmountToken = parseFloat(game.bet_amount) / 1000000000; // Convert from MIST to HACK (9 decimals)
       const betTierId = game.bet_tier; // Database stores 1-indexed tier directly
 
-      showNotification(`Joining game with ${betAmountOCT} OCT stake...`, 'info');
-      console.log(`🎮 Joining game ${gameId} with bet tier ${betTierId} (${betAmountOCT} OCT)`);
+      showNotification(`Joining game with ${betAmountToken} HACK stake...`, 'info');
+      console.log(`🎮 Joining game ${gameId} with bet tier ${betTierId} (${betAmountToken} HACK)`);
 
       // Check balance
       const balanceResult = await onechainService.getBalance();
       const balance = parseFloat(balanceResult.amount);
 
-      if (balance < betAmountOCT) {
-        throw new Error(`Insufficient balance. Need ${betAmountOCT} OCT, have ${balance.toFixed(2)} OCT`);
+      if (balance < betAmountToken) {
+        throw new Error(`Insufficient balance. Need ${betAmountToken} HACK, have ${balance.toFixed(2)} HACK`);
       }
 
-      // Get coin object ID (use gas coin)
-      // Note: Will use tx.gas in the transaction builder
+      // Get coin object ID (do NOT use tx.gas)
+      const coinObjects = await onechainService.getCoinObjects();
+      let selectedCoinId = null;
+      if (coinObjects.length > 0) {
+        const bestCoin = coinObjects.sort((a, b) => Number(b.balance) - Number(a.balance))[0];
+        selectedCoinId = bestCoin.objectId;
+      }
 
       // Create contract transaction
       const tx = joinGameTransaction({
         gameId: game.game_id,
         betTierId: betTierId,
-        coinObjectId: null // Will use tx.gas
+        coinObjectId: selectedCoinId
       });
 
       // Execute transaction on blockchain
@@ -590,7 +602,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                 ) : (
                   <>
 
-                    Create {roomType === 'private' ? 'Private' : 'Public'} Game - Stake {selectedTier?.amount || '?'} OCT
+                    Create {roomType === 'private' ? 'Private' : 'Public'} Game - Stake {selectedTier?.amount || '?'} HACK
                   </>
                 )}
               </button>
@@ -618,10 +630,18 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                       if (joinCode.length !== 6) return;
                       setLoading(true);
                       try {
+                        // Fetch coins for payment
+                        const coinObjects = await onechainService.getCoinObjects();
+                        let selectedCoinId = null;
+                        if (coinObjects.length > 0) {
+                          const bestCoin = coinObjects.sort((a, b) => Number(b.balance) - Number(a.balance))[0];
+                          selectedCoinId = bestCoin.objectId;
+                        }
+
                         // First create transaction with default tier
                         const tx = createGameTransaction({
                           betTierId: 1,
-                          coinObjectId: null
+                          coinObjectId: selectedCoinId
                         });
                         const txResult = await onechainService.executeTransaction(tx);
                         if (!txResult.success) throw new Error('Transaction failed');
@@ -672,8 +692,8 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                 ) : (
                   <div className="games-list">
                     {availableGames.map((game, index) => {
-                      const betAmountOctas = parseInt(game.bet_amount);
-                      const tier = betTiers.find(t => t.octas === betAmountOctas);
+                      const betAmountMist = parseInt(game.bet_amount);
+                      const tier = betTiers.find(t => Math.floor(t.amount * 1_000_000_000) === betAmountMist);
 
                       const isOwnGame = multiplayerService.compareAddresses(game.player1, walletAddress);
                       const isDisabled = loading || isOwnGame;
@@ -712,14 +732,14 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                                 <span className="info-icon"><GiTwoCoins /></span>
                                 <span className="info-label">Stake:</span>
                                 <span className="info-value" style={{ color: tier?.color || '#fff' }}>
-                                  {tier?.amount || (betAmountOctas / 100000000)} {tier?.token || 'OCT'}
+                                  {tier?.amount || (betAmountMist / 1_000_000_000)} {tier?.token || 'HACK'}
                                 </span>
                               </div>
                               <div className="info-row prize">
                                 <span className="info-icon"><GiTrophyCup /></span>
                                 <span className="info-label">Prize:</span>
                                 <span className="info-value gold" style={{ color: tier?.borderColor || '#FFD700' }}>
-                                  {(tier?.amount || (betAmountOctas / 100000000)) * 2} {tier?.token || 'OCT'}
+                                  {(tier?.amount || (betAmountMist / 1_000_000_000)) * 2} {tier?.token || 'HACK'}
                                 </span>
                               </div>
                               <div className="info-row">
@@ -874,8 +894,8 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                         <div className="tier-content">
                           <div className="tier-icon"><GiTwoCoins /></div>
                           <div className="tier-label" style={{ color: tier.borderColor }}>{tier.label}</div>
-                          <div className="tier-amount">{tier.amount} OCT</div>
-                          <div className="tier-prize"><GiTrophyCup /> Win: {tier.amount * 2} OCT</div>
+                          <div className="tier-amount">{tier.amount} HACK</div>
+                          <div className="tier-prize"><GiTrophyCup /> Win: {tier.amount * 2} HACK</div>
                         </div>
                       </div>
                     ))}
@@ -899,7 +919,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                         const balanceResult = await onechainService.getBalance();
                         const balance = parseFloat(balanceResult.amount);
                         if (balance < selectedTier.amount) {
-                          throw new Error(`Insufficient balance. Need ${selectedTier.amount} OCT`);
+                          throw new Error(`Insufficient balance. Need ${selectedTier.amount} HACK`);
                         }
 
                         showNotification('Creating transaction...', 'info');
@@ -967,7 +987,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                       </>
                     ) : (
                       <>
-                        <GiMagnifyingGlass /> Find Match - {selectedTier?.amount || '?'} OCT
+                        <GiMagnifyingGlass /> Find Match - {selectedTier?.amount || '?'} HACK
                       </>
                     )}
                   </button>
@@ -982,7 +1002,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
                   </div>
                   <h2 className="searching-title">Searching for Opponent...</h2>
                   <p className="searching-subtitle">Looking for a player in the {selectedTier?.label} tier</p>
-                  <p className="searching-stake"><GiTwoCoins /> Stake: {selectedTier?.amount} OCT</p>
+                  <p className="searching-stake"><GiTwoCoins /> Stake: {selectedTier?.amount} HACK</p>
 
                   <button
                     className="cancel-search-btn"

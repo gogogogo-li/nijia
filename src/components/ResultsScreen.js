@@ -95,10 +95,30 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
         setSoloPayoutStatus('processing');
         console.log('🎮 Completing solo game:', soloGameData.gameId, 'Score:', gameState.score);
 
+        const apiBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
+        const authHeaders = {
+          'Content-Type': 'application/json',
+          'X-Wallet-Address': onechain.walletAddress,
+          ...(onechain.walletSignature && { 'X-Wallet-Signature': onechain.walletSignature }),
+          ...(onechain.walletAuthMessage && { 'X-Wallet-Message': onechain.walletAuthMessage })
+        };
+
+        // Flush final score to backend before completing so backend has the latest score
         try {
-          const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'}/api/solo/games/${soloGameData.gameId}/complete`, {
+          await fetch(`${apiBase}/api/solo/games/${soloGameData.gameId}/score`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders,
+            body: JSON.stringify({ score: gameState.score }),
+          });
+          console.log('✅ Final score flushed to backend:', gameState.score);
+        } catch (flushErr) {
+          console.warn('⚠️ Final score flush failed (continuing with complete):', flushErr);
+        }
+
+        try {
+          const response = await fetch(`${apiBase}/api/solo/games/${soloGameData.gameId}/complete`, {
+            method: 'POST',
+            headers: authHeaders,
             body: JSON.stringify({
               playerAddress: onechain.walletAddress,
               finalScore: gameState.score
@@ -201,10 +221,11 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
                   fontWeight: 700,
                   color: gameState.score >= soloGameData.target ? '#4ade80' : '#f87171'
                 }}>
-                  {gameState.score >= soloGameData.target
-                    ? `+${(soloGameData.stake * 2 * 0.98).toFixed(2)} OCT`
-                    : `-${soloGameData.stake} OCT`
-                  }
+                  <p className={`payout ${soloGameData.won ? 'positive' : 'negative'}`}>
+                    {soloGameData.won
+                      ? `+${(soloGameData.stake * 2 * 0.98).toFixed(2)} HACK`
+                      : `-${soloGameData.stake} HACK`}
+                  </p>
                 </div>
               </div>
             </div>

@@ -170,6 +170,7 @@ router.post('/games/:gameId/lives',
  * Cancel a game (only creator can cancel)
  */
 router.post('/games/:gameId/cancel',
+  authenticateWallet,
   validate([
     param('gameId').isString()
   ]),

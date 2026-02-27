@@ -15,14 +15,14 @@ const IS_DEV_MODE = !PACKAGE_ID || !GAME_LOBBY_ID;
 
 // OneChain constants
 const CLOCK_OBJECT = '0x6'; // Standard clock object on Sui/OneChain
-const OCT_COIN_TYPE = process.env.REACT_APP_OCT_COIN_TYPE || '0x2::oct::OCT'; // OCT coin type on OneChain
+const HACK_COIN_TYPE = process.env.REACT_APP_HACK_COIN_TYPE || '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON'; // HACK coin type on OneChain
 
 // Bet tier mapping (matching contract)
 const BET_TIERS = {
-  1: 100000000,    // 0.1 OCT in MIST
-  2: 500000000,    // 0.5 OCT in MIST
-  3: 1000000000,   // 1 OCT in MIST
-  4: 5000000000,   // 5 OCT in MIST
+  1: 100000000,    // 0.1 HACK in MIST
+  2: 500000000,    // 0.5 HACK in MIST
+  3: 1000000000,   // 1 HACK in MIST
+  4: 5000000000,   // 5 HACK in MIST
 };
 
 /**
@@ -60,7 +60,7 @@ export function createGameTransaction({ betTierId, coinObjectId }) {
   // Call create_game function
   tx.moveCall({
     target: `${PACKAGE_ID}::multiplayer_game::create_game`,
-    typeArguments: [OCT_COIN_TYPE],
+    typeArguments: [HACK_COIN_TYPE],
     arguments: [
       tx.object(GAME_LOBBY_ID),           // lobby: &mut GameLobby
       tx.pure.u64(betTierId - 1),         // bet_tier: u64 (0-indexed in contract)
@@ -112,7 +112,7 @@ export function joinGameTransaction({ gameId, betTierId, coinObjectId }) {
   // Call join_game function
   tx.moveCall({
     target: `${PACKAGE_ID}::multiplayer_game::join_game`,
-    typeArguments: [OCT_COIN_TYPE],
+    typeArguments: [HACK_COIN_TYPE],
     arguments: [
       tx.object(GAME_LOBBY_ID),           // lobby: &mut GameLobby
       tx.pure.u64(gameId),                // game_id: u64
@@ -151,7 +151,7 @@ export function submitScoreTransaction({
 
   tx.moveCall({
     target: `${PACKAGE_ID}::multiplayer_game::submit_score`,
-    typeArguments: [OCT_COIN_TYPE],
+    typeArguments: [HACK_COIN_TYPE],
     arguments: [
       tx.object(GAME_LOBBY_ID),           // lobby: &mut GameLobby
       tx.object(STATS_REGISTRY_ID),       // stats_registry: &mut StatsRegistry
@@ -182,7 +182,7 @@ export function claimPrizeTransaction({ gameId }) {
 
   tx.moveCall({
     target: `${PACKAGE_ID}::multiplayer_game::claim_prize`,
-    typeArguments: [OCT_COIN_TYPE],
+    typeArguments: [HACK_COIN_TYPE],
     arguments: [
       tx.object(GAME_LOBBY_ID),           // lobby: &mut GameLobby
       tx.pure.u64(gameId),                // game_id: u64
@@ -270,11 +270,11 @@ export async function getLobbyStats(suiClient) {
 }
 
 /**
- * Convert bet tier ID to OCT amount
+ * Convert bet tier ID to HACK amount
  * @param {number} tierId - Tier ID (1-4)
- * @returns {number} Amount in OCT
+ * @returns {number} Amount in HACK
  */
-export function getBetAmountOCT(tierId) {
+export function getBetAmountToken(tierId) {
   const mist = BET_TIERS[tierId];
   return mist ? mist / 1_000_000_000 : 0;
 }
@@ -299,7 +299,7 @@ const multiplayerContract = {
   claimPrizeTransaction,
   getPlayerStats,
   getLobbyStats,
-  getBetAmountOCT,
+  getBetAmountToken,
   getContractConfig,
   BET_TIERS
 };

@@ -8,17 +8,17 @@ module ninja_addr::multiplayer_game {
     use one::tx_context::{Self, TxContext};
     use one::transfer;
 
-    // Bet tiers (in MIST, 1 OCT = 1,000,000,000 MIST)
-    const BET_TIER_1: u64 = 100000000;    // 0.1 OCT
-    const BET_TIER_2: u64 = 500000000;    // 0.5 OCT
-    const BET_TIER_3: u64 = 1000000000;   // 1 OCT
-    const BET_TIER_4: u64 = 5000000000;   // 5 OCT
+    // Bet tiers (in MIST, 1 HACK = 1,000,000,000 MIST)
+    const BET_TIER_1: u64 = 100000000;    // 0.1 HACK
+    const BET_TIER_2: u64 = 500000000;    // 0.5 HACK
+    const BET_TIER_3: u64 = 1000000000;   // 1 HACK
+    const BET_TIER_4: u64 = 5000000000;   // 5 HACK
 
     // Solo game difficulty tiers (stake amounts in MIST)
-    const SOLO_EASY_STAKE: u64 = 500000000;      // 0.5 OCT
-    const SOLO_MEDIUM_STAKE: u64 = 1000000000;   // 1 OCT
-    const SOLO_HARD_STAKE: u64 = 2000000000;     // 2 OCT
-    const SOLO_EXTREME_STAKE: u64 = 5000000000;  // 5 OCT
+    const SOLO_EASY_STAKE: u64 = 500000000;      // 0.5 HACK
+    const SOLO_MEDIUM_STAKE: u64 = 1000000000;   // 1 HACK
+    const SOLO_HARD_STAKE: u64 = 2000000000;     // 2 HACK
+    const SOLO_EXTREME_STAKE: u64 = 5000000000;  // 5 HACK
 
     // Solo game target scores
     const SOLO_EASY_TARGET: u64 = 100;
@@ -120,7 +120,7 @@ module ninja_addr::multiplayer_game {
 
     // ========== SOLO GAME STRUCTS ==========
     
-    /// Single player game with OCT stake
+    /// Single player game with HACK stake
     public struct SoloGame<phantom T> has key, store {
         id: UID,
         game_id: u64,
@@ -229,7 +229,7 @@ module ninja_addr::multiplayer_game {
 
     /// Admin function to register a game that was created off-chain (backend-managed)
     /// This puts the game directly into IN_PROGRESS state for later settlement via submit_score
-    /// NOTE: This creates a game with zero escrow - OCT transfers are handled separately by backend
+    /// NOTE: This creates a game with zero escrow - HACK transfers are handled separately by backend
     /// The admin is responsible for ensuring players have deposited funds before calling this
     public fun admin_register_game<T>(
         lobby: &mut GameLobby,
@@ -252,7 +252,7 @@ module ninja_addr::multiplayer_game {
         };
         
         // Create game directly in IN_PROGRESS state with empty escrow
-        // The bet_amount is tracked for record-keeping but actual OCT is managed externally
+        // The bet_amount is tracked for record-keeping but actual HACK is managed externally
         let game = MultiplayerGame<T> {
             id: object::new(ctx),
             game_id,
@@ -266,7 +266,7 @@ module ninja_addr::multiplayer_game {
             created_at: clock::timestamp_ms(clock),
             joined_at: clock::timestamp_ms(clock),
             finished_at: 0,
-            escrow: balance::zero<T>(), // Empty escrow - OCT handled by backend
+            escrow: balance::zero<T>(), // Empty escrow - HACK handled by backend
         };
         
         df::add(&mut lobby.id, game_id, game);
@@ -389,7 +389,7 @@ module ninja_addr::multiplayer_game {
 
         let game: &mut MultiplayerGame<T> = df::borrow_mut(&mut lobby.id, game_id);
         assert!(game.state == STATE_IN_PROGRESS, E_GAME_NOT_IN_PROGRESS);
-        assert!(player1_address == game.player1 || player2_address == game.player2, E_NOT_YOUR_GAME);
+        assert!(player1_address == game.player1 && player2_address == game.player2, E_NOT_YOUR_GAME);
 
         game.player1_score = player1_score;
         game.player2_score = player2_score;
@@ -726,8 +726,8 @@ module ninja_addr::multiplayer_game {
 
     // ========== SOLO GAME FUNCTIONS ==========
 
-    /// Create a solo game - player stakes OCT to play
-    /// difficulty: 0=Easy(0.5 OCT), 1=Medium(1 OCT), 2=Hard(2 OCT), 3=Extreme(5 OCT)
+    /// Create a solo game - player stakes HACK to play
+    /// difficulty: 0=Easy(0.5 HACK), 1=Medium(1 HACK), 2=Hard(2 HACK), 3=Extreme(5 HACK)
     public fun create_solo_game<T>(
         solo_lobby: &mut SoloGameLobby,
         difficulty: u8,

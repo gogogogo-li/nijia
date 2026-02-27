@@ -29,7 +29,7 @@ A blockchain-integrated fruit ninja game built on the OneChain network, featurin
 - ⚡ 5% minimum contribution threshold
 
 ### Blockchain Integration
-- 💰 OneWallet integration with real-time OCT balance
+- 💰 OneWallet integration with real-time HACK balance
 - 🏆 On-chain leaderboards and achievements
 - 🎨 NFT minting for game achievements
 - 🔗 Full OneChain blockchain integration via OneLabs SDK
@@ -145,11 +145,11 @@ The game uses OneWallet for authentication:
 3. Connect to OneChain testnet
 4. Connect wallet in-game
 
-### Token: OCT
+### Token: HACK
 
-- Symbol: OCT
+- Symbol: HACK
 - Decimals: 9
-- 1 OCT = 1,000,000,000 MIST
+- 1 HACK = 1,000,000,000 MIST
 
 ### Smart Contracts
 

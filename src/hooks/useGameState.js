@@ -2,6 +2,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import multiplayerService from '../services/multiplayerService';
 import { getWalletData, setWalletData } from '../utils/walletStorage';
 
+const SOLO_API_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+
 // Initial state without wallet-specific data
 const getInitialState = () => ({
   screen: 'start',
@@ -31,8 +33,65 @@ const getInitialState = () => ({
 export const useGameState = (walletAddress = null) => {
   const lastPenaltyTime = useRef(0); // Track last penalty time to prevent rapid successive calls
   const currentWalletRef = useRef(walletAddress); // Track current wallet to detect changes
+  const soloGameRef = useRef(null); // Track active solo game context { gameId, walletAddress, signature, message }
+  const lastScoreReportRef = useRef(0); // Throttle solo score reports
+  const livesQueueRef = useRef(Promise.resolve()); // Sequential queue for solo lives updates
 
   const [gameState, setGameState] = useState(getInitialState());
+
+  /**
+   * Set or clear the active solo game context for mid-game reporting.
+   * Called by App when soloGameData changes.
+   */
+  const setSoloGameContext = useCallback((context) => {
+    // context: { gameId, walletAddress, signature, message } or null
+    soloGameRef.current = context;
+    lastScoreReportRef.current = 0;
+  }, []);
+
+  /**
+   * Fire-and-forget solo score report to backend (throttled to ~2/sec)
+   */
+  const reportSoloScore = useCallback((score) => {
+    const ctx = soloGameRef.current;
+    if (!ctx) return;
+    const now = Date.now();
+    if (now - lastScoreReportRef.current < 500) return; // Throttle: max every 500ms
+    lastScoreReportRef.current = now;
+    const headers = { 'Content-Type': 'application/json' };
+    if (ctx.walletAddress) headers['X-Wallet-Address'] = ctx.walletAddress;
+    if (ctx.signature) headers['X-Wallet-Signature'] = ctx.signature;
+    if (ctx.message) headers['X-Wallet-Message'] = ctx.message;
+    fetch(`${SOLO_API_URL}/api/solo/games/${ctx.gameId}/score`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ score }),
+    }).catch(err => console.warn('Solo score report failed:', err));
+  }, []);
+
+  /**
+   * Sequential solo lives report to backend.
+   * Uses a promise queue so rapid life losses are processed in order,
+   * preventing the backend from rejecting "lives must decrease by 1".
+   */
+  const reportSoloLives = useCallback((lives, score) => {
+    const ctx = soloGameRef.current;
+    if (!ctx) return;
+    const headers = { 'Content-Type': 'application/json' };
+    if (ctx.walletAddress) headers['X-Wallet-Address'] = ctx.walletAddress;
+    if (ctx.signature) headers['X-Wallet-Signature'] = ctx.signature;
+    if (ctx.message) headers['X-Wallet-Message'] = ctx.message;
+    // Chain onto previous lives update so they execute sequentially
+    livesQueueRef.current = livesQueueRef.current
+      .then(() =>
+        fetch(`${SOLO_API_URL}/api/solo/games/${ctx.gameId}/lives`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ lives, score }),
+        })
+      )
+      .catch(err => console.warn('Solo lives report failed:', err));
+  }, []);
 
   // Load wallet-specific game stats when wallet address changes
   useEffect(() => {
@@ -180,9 +239,16 @@ export const useGameState = (walletAddress = null) => {
         onComboPopup(newCombo, bonusPoints);
       }
 
+      const newScore = prev.score + points + bonusPoints;
+
+      // Report score to solo backend (throttled)
+      if (soloGameRef.current) {
+        reportSoloScore(newScore);
+      }
+
       return {
         ...prev,
-        score: prev.score + points + bonusPoints,
+        score: newScore,
         citreaSlashed: prev.citreaSlashed + 1,
         totalSlashes: prev.totalSlashes + 1,
         combo: newCombo,
@@ -190,7 +256,7 @@ export const useGameState = (walletAddress = null) => {
         lastSlashTime: now
       };
     });
-  }, []);
+  }, [reportSoloScore]);
 
   const loseLife = useCallback(async () => {
     setGameState(prev => {
@@ -208,11 +274,16 @@ export const useGameState = (walletAddress = null) => {
         }
       }
 
-      // NEW: Send life update to backend in multiplayer
+      // Send life update to backend in multiplayer
       if (multiplayerService.currentGameId) {
         multiplayerService.updateLives(newLives, prev.score).catch(err => {
           console.error('Failed to update lives:', err);
         });
+      }
+
+      // Send life update to backend in solo staked mode
+      if (soloGameRef.current) {
+        reportSoloLives(newLives, prev.score);
       }
 
       // Check if we should end the game after this life loss
@@ -232,7 +303,7 @@ export const useGameState = (walletAddress = null) => {
         combo: 0 // Break combo when hitting bomb
       };
     });
-  }, [endGame]);
+  }, [endGame, reportSoloLives]);
 
 
 
@@ -269,12 +340,17 @@ export const useGameState = (walletAddress = null) => {
         }
       }
 
-      // NEW: Send life update to backend in multiplayer
+      // Send life update to backend in multiplayer
       if (multiplayerService.currentGameId) {
         console.log(`📡 Sending life update to backend: lives=${newLives}, score=${prev.score}`);
         multiplayerService.updateLives(newLives, prev.score).catch(err => {
           console.error('Failed to update lives:', err);
         });
+      }
+
+      // Send life update to backend in solo staked mode
+      if (soloGameRef.current) {
+        reportSoloLives(newLives, prev.score);
       }
 
       // Check if we should end the game after this life loss
@@ -295,7 +371,7 @@ export const useGameState = (walletAddress = null) => {
         combo: 0 // Break combo when missing fruit
       };
     });
-  }, [endGame]);
+  }, [endGame, reportSoloLives]);
 
   const togglePause = useCallback(() => {
     setGameState(prev => ({
@@ -358,6 +434,7 @@ export const useGameState = (walletAddress = null) => {
     togglePause,
     createParticles,
     createScreenFlash,
-    decrementTimer
+    decrementTimer,
+    setSoloGameContext
   };
 };

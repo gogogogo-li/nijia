@@ -1,7 +1,7 @@
 // OneChain Service - Handles all blockchain interactions with OneChain network
 // Integrates OneWallet, OneDEX, OneID, and OneRWA
 import onelabsApiClient from './onelabsApiClient';
-import { Transaction } from '@onelabs/sui/transactions';
+
 
 class OneChainService {
   constructor() {
@@ -9,6 +9,7 @@ class OneChainService {
     this.walletAddress = null;
     this.walletProvider = null;
     this.sessionToken = null;
+    this.authMessage = null;
     this.userProfile = null;
     this.slashBuffer = [];
     this.BATCH_SIZE = 10;
@@ -135,6 +136,7 @@ class OneChainService {
         address: this.walletAddress,
         provider: this.walletProvider,
         signature: this.sessionToken,
+        authMessage: this.authMessage,
         timestamp: Date.now(),
         network: this.ONECHAIN_CONFIG.network,
         profile: this.userProfile
@@ -209,6 +211,7 @@ class OneChainService {
           this.walletConnected = true;
           this.walletProvider = session.provider || wallet.name;
           this.sessionToken = session.signature;
+          this.authMessage = session.authMessage || null;
           this.userProfile = session.profile;
 
           console.log('   ✅ Session restored successfully');
@@ -490,6 +493,7 @@ class OneChainService {
       this.walletProvider = wallet.name;
       this.walletConnected = true;
       this.sessionToken = signature;
+      this.authMessage = authMessage;
 
       // Save to localStorage with signature
       this.saveSession();
@@ -625,11 +629,11 @@ class OneChainService {
     console.log('\nStep 2: Validating wallet address format...');
     if (!this.walletAddress || typeof this.walletAddress !== 'string') {
       console.error('❌ Invalid wallet address type:', typeof this.walletAddress);
-      return { amount: '0.0000', symbol: 'OCT', error: 'Invalid address type' };
+      return { amount: '0.0000', symbol: 'HACK', error: 'Invalid address type' };
     }
     if (!this.walletAddress.startsWith('0x')) {
       console.error('❌ Address does not start with 0x:', this.walletAddress);
-      return { amount: '0.0000', symbol: 'OCT', error: 'Invalid address format' };
+      return { amount: '0.0000', symbol: 'HACK', error: 'Invalid address format' };
     }
     console.log('✅ Address format valid');
 
@@ -639,26 +643,27 @@ class OneChainService {
       console.log('   Target address:', this.walletAddress);
 
       try {
-        const balance = await this.apiClient.getBalance(this.walletAddress);
+        const hackCoinType = process.env.REACT_APP_HACK_COIN_TYPE || '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON';
+        const balance = await this.apiClient.getBalance(this.walletAddress, hackCoinType);
         console.log('   Raw API response:', JSON.stringify(balance));
 
         if (balance && balance.totalBalance !== undefined) {
-          // Convert from MIST (smallest unit) to OCT (9 decimals)
+          // Convert from MIST (smallest unit) to HACK (9 decimals)
           const rawBalance = balance.totalBalance;
           console.log('   Raw totalBalance:', rawBalance, '(type:', typeof rawBalance, ')');
 
-          const balanceInOCT = this.apiClient.formatAmount(rawBalance, 9);
-          const formattedBalance = balanceInOCT.toFixed(4);
+          const balanceInToken = this.apiClient.formatAmount(rawBalance, 9);
+          const formattedBalance = balanceInToken.toFixed(4);
 
           console.log('═══════════════════════════════════════════════════════');
           console.log('✅ BALANCE FETCH SUCCESSFUL');
-          console.log('   Balance:', formattedBalance, 'OCT');
+          console.log('   Balance:', formattedBalance, 'HACK');
           console.log('   Coin Type:', balance.coinType || 'unknown');
           console.log('═══════════════════════════════════════════════════════\n');
 
           return {
             amount: formattedBalance,
-            symbol: 'OCT',
+            symbol: 'HACK',
             coinType: balance.coinType
           };
         } else {
@@ -689,11 +694,11 @@ class OneChainService {
             console.log('   Provider balance result:', JSON.stringify(result));
 
             if (result && result.totalBalance) {
-              const balanceInOCT = (Number(result.totalBalance) / 1_000_000_000).toFixed(4);
-              console.log('✅ Balance from provider:', balanceInOCT, 'OCT\n');
+              const balanceInToken = (Number(result.totalBalance) / 1_000_000_000).toFixed(4);
+              console.log('✅ Balance from provider:', balanceInToken, 'HACK\n');
               return {
-                amount: balanceInOCT,
-                symbol: 'OCT'
+                amount: balanceInToken,
+                symbol: 'HACK'
               };
             }
           } catch (err) {
@@ -709,16 +714,17 @@ class OneChainService {
             console.log('   Provider all balances result:', JSON.stringify(result));
 
             if (result && result.length > 0) {
-              // Only look for OCT coin - do NOT fallback to SUI
-              const targetBalance = result.find(b => b.coinType && b.coinType.includes('::oct::OCT'));
+              // Only look for HACK coin - do NOT fallback to SUI
+              const hackCoinType = process.env.REACT_APP_HACK_COIN_TYPE || '::hackathon::HACKATHON';
+              const targetBalance = result.find(b => b.coinType && b.coinType.includes(hackCoinType));
 
               if (targetBalance && targetBalance.totalBalance) {
-                const balanceInOCT = (Number(targetBalance.totalBalance) / 1_000_000_000).toFixed(4);
-                console.log('✅ Balance from provider.getAllBalances():', balanceInOCT, 'OCT');
+                const balanceInToken = (Number(targetBalance.totalBalance) / 1_000_000_000).toFixed(4);
+                console.log('✅ Balance from provider.getAllBalances():', balanceInToken, 'HACK');
                 console.log('   Coin type:', targetBalance.coinType, '\n');
                 return {
-                  amount: balanceInOCT,
-                  symbol: 'OCT'
+                  amount: balanceInToken,
+                  symbol: 'HACK'
                 };
               }
             }
@@ -733,9 +739,9 @@ class OneChainService {
       // All methods failed
       console.log('═══════════════════════════════════════════════════════');
       console.warn('⚠️ ALL BALANCE FETCH METHODS FAILED');
-      console.warn('   Returning 0.0000 OCT');
+      console.warn('   Returning 0.0000 HACK');
       console.log('═══════════════════════════════════════════════════════\n');
-      return { amount: '0.0000', symbol: 'OCT', error: 'All fetch methods failed' };
+      return { amount: '0.0000', symbol: 'HACK', error: 'All fetch methods failed' };
 
     } catch (error) {
       console.log('═══════════════════════════════════════════════════════');
@@ -743,13 +749,13 @@ class OneChainService {
       console.error('   Error:', error.message);
       console.error('   Stack:', error.stack);
       console.log('═══════════════════════════════════════════════════════\n');
-      return { amount: '0.0000', symbol: 'OCT', error: error.message };
+      return { amount: '0.0000', symbol: 'HACK', error: error.message };
     }
   }
 
   /**
    * Get coin objects for transaction building
-   * @param {number} minAmount - Minimum amount needed in OCT
+   * @param {number} minAmount - Minimum amount needed in HACK
    * @returns {Promise<Array>} Array of coin objects
    */
   async getCoinObjects(minAmount = 0) {
@@ -759,18 +765,26 @@ class OneChainService {
       }
 
       console.log(`🪙 Fetching coin objects for: ${this.walletAddress}`);
+      const hackCoinType = process.env.REACT_APP_HACK_COIN_TYPE || '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON';
 
-      // Use OneLabs API SDK to get coins
-      if (this.apiClient) {
-        const balance = await this.apiClient.getBalance(this.walletAddress);
-        console.log('   Coin balance:', balance);
+      // Use OneLabs API SDK to get specific coins
+      if (this.apiClient && this.apiClient.getSuiClient()) {
+        const client = this.apiClient.getSuiClient();
+        const coins = await client.getCoins({
+          owner: this.walletAddress,
+          coinType: hackCoinType
+        });
 
-        // For now, return gas coin object as fallback
-        // In production, you'd parse the actual coin objects from the balance response
-        return [{
-          objectId: '0x2', // Gas coin
-          balance: balance.totalBalance
-        }];
+        console.log('   Fetched coins:', coins.data.length);
+
+        // Filter coins with enough balance if needed
+        const validCoins = coins.data.map(c => ({
+          objectId: c.coinObjectId,
+          balance: c.balance,
+          coinType: c.coinType
+        }));
+
+        return validCoins;
       }
 
       return [];
@@ -863,7 +877,7 @@ class OneChainService {
       const nftDescription = gameStats.isWelcomeNFT
         ? 'Welcome to OneNinja! Your journey begins here.'
         : gameStats.isWinnerNFT
-          ? `🏆 Victory in multiplayer! Won with score ${gameStats.score} and claimed ${gameStats.prizeAmount || '?'} OCT!`
+          ? `🏆 Victory in multiplayer! Won with score ${gameStats.score} and claimed ${gameStats.prizeAmount || '?'} HACK!`
           : `${gameStats.tierIcon || '🎮'} Achieved ${gameStats.tierName} tier with ${gameStats.totalScore} total score!`;
 
       // Generate proper NFT image URL
@@ -1098,7 +1112,8 @@ class OneChainService {
   // Get token price from OneDEX using API SDK
   async getTokenPrice() {
     try {
-      const data = await this.apiClient.getTokenPrice('OCT');
+      // In production this would call a real DEX or oracle
+      const data = await this.apiClient.getTokenPrice('HACK');
       return data.price;
     } catch (error) {
       console.error('Error fetching token price:', error);
@@ -1328,13 +1343,21 @@ class OneChainService {
   }
 
   /**
-   * Transfer OCT to a recipient
-   * @param {string} recipient - Recipient wallet address
-   * @param {number} amount - Amount in OCT (will be converted to MIST)
-   * @returns {Promise<Object>} Transaction result with hash
+   * Transfer HACK to a recipient
+   * @param {string} recipient - Recipient address
+   * @param {number} amount - Amount in HACK (will be converted to MIST)
    */
-  async transferOCT(recipient, amount) {
+  async transferToken(recipient, amount) {
+    console.log('💸 transferToken called');
+
+    if (!this.walletAddress) {
+      throw new Error('Wallet not connected');
+    }
+
     try {
+      console.log(`💸 Transferring ${amount} HACK to ${recipient}...`);
+
+      // Convert HACK to MIST (1 HACK = 10^9 MIST)
       if (!this.walletConnected || !this.walletAddress) {
         throw new Error('Wallet not connected');
       }
@@ -1344,13 +1367,14 @@ class OneChainService {
         throw new Error('Wallet provider not available');
       }
 
-      console.log(`💸 Transferring ${amount} OCT to ${recipient}...`);
+      console.log(`💸 Transferring ${amount} HACK to ${recipient}...`);
 
-      // Convert OCT to MIST (1 OCT = 10^9 MIST)
+      // Convert HACK to MIST (1 HACK = 10^9 MIST)
       // eslint-disable-next-line no-undef
       const amountInMist = BigInt(Math.floor(amount * 1_000_000_000));
 
       // Create a proper Transaction instance
+      const { Transaction } = await import('@onelabs/sui/transactions');
       const tx = new Transaction();
 
       // Set sender for the transaction
@@ -1497,8 +1521,8 @@ class OneChainService {
       transaction.setSender(this.walletAddress);
 
       // Set a reasonable gas budget if not already set
-      // This prevents "all endpoints failed" error in wallet dry run
-      transaction.setGasBudget(50000000); // 0.05 OCT for gas
+      // This prevents "all endpoints failed" error
+      transaction.setGasBudget(50000000); // 0.05 SUI/HACK for gas
 
       let result;
       const provider = wallet.provider;

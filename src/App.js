@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import StartScreen from './components/StartScreen';
 import GameScreen from './components/GameScreen';
 import ResultsScreen from './components/ResultsScreen';
@@ -31,7 +31,8 @@ function App() {
     loseLiveFromMissedToken,
     togglePause,
     createScreenFlash,
-    decrementTimer
+    decrementTimer,
+    setSoloGameContext
   } = useGameState(onechain?.walletAddress); // Pass wallet address for wallet-scoped storage
   const [particles, setParticles] = useState([]);
   const [showLanding, setShowLanding] = useState(true);
@@ -41,6 +42,20 @@ function App() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [soloGameData, setSoloGameData] = useState(null);
   const [multiplayerGameId, setMultiplayerGameId] = useState(null);
+
+  // Set solo game context for mid-game score/lives reporting
+  useEffect(() => {
+    if (soloGameData && soloGameData.gameId && onechain?.walletAddress) {
+      setSoloGameContext({
+        gameId: soloGameData.gameId,
+        walletAddress: onechain.walletAddress,
+        signature: onechain.walletSignature,
+        message: onechain.walletAuthMessage
+      });
+    } else {
+      setSoloGameContext(null);
+    }
+  }, [soloGameData, onechain?.walletAddress, onechain?.walletSignature, onechain?.walletAuthMessage, setSoloGameContext]);
 
   // Add taskbar controls (pass multiplayer flag to disable pause in multiplayer)
   useTaskbarControls(gameState, togglePause, multiplayerGameId);
@@ -212,7 +227,7 @@ function App() {
     console.log('Starting solo game with difficulty:', difficulty);
 
     try {
-      // 1. Create game on-chain (stake OCT)
+      // 1. Create game on-chain (stake HACK)
       console.log('📝 Creating game on-chain...');
       const txResult = await onechain.createSoloGame(difficulty.id);
 
@@ -228,7 +243,12 @@ function App() {
         console.log('📝 Registering game with backend...');
         const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001'}/api/solo/games/create`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Wallet-Address': onechain.walletAddress,
+            ...(onechain.walletSignature && { 'X-Wallet-Signature': onechain.walletSignature }),
+            ...(onechain.walletAuthMessage && { 'X-Wallet-Message': onechain.walletAuthMessage })
+          },
           body: JSON.stringify({
             txHash: txResult.transactionHash,
             playerAddress: onechain.walletAddress,
@@ -301,7 +321,7 @@ function App() {
           onSelectDifficulty={handleSoloDifficultySelect}
           onBack={() => { setShowSoloMode(false); setShowModeSelection(true); }}
           onechain={onechain}
-          octBalance={onechain.octBalance || 0}
+          tokenBalance={onechain.tokenBalance || 0}
         />
         <SpeedInsights />
         <Analytics />

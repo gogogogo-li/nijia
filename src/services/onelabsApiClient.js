@@ -85,15 +85,17 @@ class OnelabsApiClient {
   /**
    * Get wallet balance
    */
-  async getBalance(address) {
+  async getBalance(address, coinType = null) {
     console.log('📊 OnelabsApiClient.getBalance() called');
     console.log('   Address:', address);
+    console.log('   CoinType:', coinType);
     console.log('   RPC Endpoint:', this.config.rpcEndpoint);
 
     try {
       const startTime = Date.now();
       const balance = await this.suiClient.getBalance({
         owner: address,
+        coinType: coinType
       });
       const duration = Date.now() - startTime;
 

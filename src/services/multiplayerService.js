@@ -22,6 +22,9 @@ class MultiplayerService {
       { id: 4, amount: 5.0, label: 'High Stakes', description: 'Big risk, big reward', color: '#9D4EDD' },
     ];
 
+    this.walletSignature = null;
+    this.walletAuthMessage = null;
+
     this.listeners = {
       onGameCreated: null,
       onGameJoined: null,
@@ -38,12 +41,14 @@ class MultiplayerService {
   /**
    * Connect to multiplayer server
    */
-  async connect(walletAddress, signature = null) {
+  async connect(walletAddress, signature = null, authMessage = null) {
     if (this.connected) {
       return;
     }
 
     this.walletAddress = walletAddress;
+    this.walletSignature = signature;
+    this.walletAuthMessage = authMessage;
     console.log('🔌 Connecting to multiplayer with wallet:', walletAddress);
 
     this.socket = io(API_BASE_URL, {
@@ -72,6 +77,17 @@ class MultiplayerService {
         reject(error);
       });
     });
+  }
+
+  /**
+   * Build auth headers for authenticated API requests
+   */
+  _authHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.walletAddress) headers['X-Wallet-Address'] = this.walletAddress;
+    if (this.walletSignature) headers['X-Wallet-Signature'] = this.walletSignature;
+    if (this.walletAuthMessage) headers['X-Wallet-Message'] = this.walletAuthMessage;
+    return headers;
   }
 
   /**
@@ -208,12 +224,7 @@ class MultiplayerService {
         ? `${API_BASE_URL}/api/multiplayer/games/available?betTier=${betTier}`
         : `${API_BASE_URL}/api/multiplayer/games/available`;
 
-      const headers = {};
-      if (this.walletAddress) {
-        headers['X-Wallet-Address'] = this.walletAddress;
-      }
-
-      const response = await fetch(url, { headers });
+      const response = await fetch(url, { headers: this._authHeaders() });
       const data = await response.json();
 
       return data.games || [];
@@ -234,10 +245,7 @@ class MultiplayerService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify({
           betTierId,
           transactionHash,
@@ -273,10 +281,7 @@ class MultiplayerService {
 
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${gameId}/join`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify({
           transactionHash
         })
@@ -313,10 +318,7 @@ class MultiplayerService {
 
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/join-code/${code}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify({
           transactionHash
         })
@@ -371,10 +373,7 @@ class MultiplayerService {
 
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${this.currentGameId}/score`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify({
           finalScore,
           gameEvents: this.gameEvents
@@ -409,10 +408,7 @@ class MultiplayerService {
 
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${this.currentGameId}/lives`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify({
           lives,
           score
@@ -441,10 +437,7 @@ class MultiplayerService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${gameId}/cancel`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        }
+        headers: this._authHeaders()
       });
 
       const data = await response.json();
@@ -471,9 +464,7 @@ class MultiplayerService {
   async getGame(gameId) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${gameId}`, {
-        headers: {
-          'X-Wallet-Address': this.walletAddress
-        }
+        headers: this._authHeaders()
       });
 
       const data = await response.json();
@@ -497,9 +488,7 @@ class MultiplayerService {
       const playerAddress = address || this.walletAddress;
 
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/player/${playerAddress}/games`, {
-        headers: {
-          'X-Wallet-Address': this.walletAddress
-        }
+        headers: this._authHeaders()
       });
 
       const data = await response.json();
@@ -619,10 +608,7 @@ class MultiplayerService {
 
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/quickmatch/join`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify({
           betTierId,
           transactionHash
@@ -660,10 +646,7 @@ class MultiplayerService {
 
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/quickmatch/leave`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        }
+        headers: this._authHeaders()
       });
 
       const data = await response.json();
@@ -681,9 +664,7 @@ class MultiplayerService {
   async getQuickMatchStatus() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/quickmatch/status`, {
-        headers: {
-          'X-Wallet-Address': this.walletAddress
-        }
+        headers: this._authHeaders()
       });
 
       const data = await response.json();
@@ -756,10 +737,7 @@ class MultiplayerService {
 
       const response = await fetch(`${API_BASE_URL}/api/rooms/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify({
           betTierId,
           maxPlayers,
@@ -794,10 +772,7 @@ class MultiplayerService {
 
       const response = await fetch(`${API_BASE_URL}/api/rooms/join/${roomCode}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify({
           transactionHash
         })
@@ -832,10 +807,7 @@ class MultiplayerService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/ready`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        }
+        headers: this._authHeaders()
       });
 
       const data = await response.json();
@@ -863,10 +835,7 @@ class MultiplayerService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/score`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify({ score, lives })
       });
 
@@ -887,10 +856,7 @@ class MultiplayerService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/super-fruit-hit`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify(hitData)
       });
 
@@ -910,9 +876,7 @@ class MultiplayerService {
   async getRoomDetails(roomId) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}`, {
-        headers: {
-          'X-Wallet-Address': this.walletAddress
-        }
+        headers: this._authHeaders()
       });
 
       const data = await response.json();
@@ -935,9 +899,7 @@ class MultiplayerService {
   async getRoomLeaderboard(roomId) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/leaderboard`, {
-        headers: {
-          'X-Wallet-Address': this.walletAddress
-        }
+        headers: this._authHeaders()
       });
 
       const data = await response.json();
@@ -955,9 +917,7 @@ class MultiplayerService {
   async getAvailableRooms(betTierId) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/rooms/available/${betTierId}`, {
-        headers: {
-          'X-Wallet-Address': this.walletAddress
-        }
+        headers: this._authHeaders()
       });
 
       const data = await response.json();
@@ -1090,10 +1050,7 @@ class MultiplayerService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/slash`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        },
+        headers: this._authHeaders(),
         body: JSON.stringify({
           itemId,
           timestamp: Date.now()
@@ -1117,10 +1074,7 @@ class MultiplayerService {
     try {
       const response = await fetch(`${API_BASE_URL}/api/rooms/${roomId}/spawn-batch`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Wallet-Address': this.walletAddress
-        }
+        headers: this._authHeaders()
       });
 
       const data = await response.json();

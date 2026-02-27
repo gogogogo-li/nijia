@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../utils/logger.js';
-import { suiClient, mistToOct, octToMist } from '../config/onechain.js';
+import { suiClient, mistToToken, tokenToMist } from '../config/onechain.js';
 import onChainSettlement from './onChainSettlement.js';
 
 /**
@@ -23,14 +23,14 @@ export class GameManager {
     this.config = {
       gameTimeout: parseInt(process.env.GAME_TIMEOUT_MS) || 300000, // 5 minutes
       maxActiveGamesPerPlayer: parseInt(process.env.MAX_ACTIVE_GAMES_PER_PLAYER) || 3,
-      minBetAmount: BigInt(process.env.MIN_BET_AMOUNT || 100000000), // 0.1 OCT
-      maxBetAmount: BigInt(process.env.MAX_BET_AMOUNT || 10000000000), // 10 OCT
+      minBetAmount: BigInt(process.env.MIN_BET_AMOUNT || 100000000), // 0.1 HACK
+      maxBetAmount: BigInt(process.env.MAX_BET_AMOUNT || 10000000000), // 10 HACK
       cleanupInterval: 30000, // 30 seconds
       disconnectGracePeriod: 5000, // 5 seconds grace window for reconnection
       countdownDuration: 3000 // 3 second countdown before game start
     };
 
-    // Bet tiers (in OCT)
+    // Bet tiers (in HACK)
     this.betTiers = [
       { id: 1, amount: 0.1, label: 'Casual', description: 'Perfect for beginners' },
       { id: 2, amount: 0.5, label: 'Standard', description: 'Most popular choice' },
@@ -249,7 +249,7 @@ export class GameManager {
         logger.warn(`⚠️  Using fallback numeric game_id: ${gameId}`);
       }
 
-      const betAmountMist = octToMist(tier.amount);
+      const betAmountMist = tokenToMist(tier.amount);
 
       // Create game object
       const isPrivate = roomType === 'private';
@@ -259,7 +259,7 @@ export class GameManager {
         game_id: gameId,
         bet_tier: betTierId,
         bet_amount: betAmountMist.toString(),
-        bet_amount_oct: tier.amount,
+        bet_amount_token: tier.amount,
         player1: player1Address,
         player2: null,
         player1_score: null,
@@ -334,7 +334,7 @@ export class GameManager {
         this.io.to(`games:tier:${betTierId}`).emit('game:created', game);
       }
 
-      logger.info(`Game created: ${gameId} by ${player1Address.slice(0, 10)}... (${tier.amount} OCT, ${roomType})${joinCode ? ` [Code: ${joinCode}]` : ''}`);
+      logger.info(`Game created: ${gameId} by ${player1Address.slice(0, 10)}... (${tier.amount} HACK, ${roomType})${joinCode ? ` [Code: ${joinCode}]` : ''}`);
 
       return { success: true, game };
     } catch (error) {
@@ -483,7 +483,7 @@ export class GameManager {
         game_id: game.game_id,
         bet_tier: game.bet_tier,
         bet_amount: game.bet_amount,
-        bet_amount_oct: game.bet_amount_oct,
+        bet_amount_token: game.bet_amount_token,
         player1: game.player1,
         player2: game.player2,
         player1_score: game.player1_score,
@@ -956,9 +956,9 @@ export class GameManager {
       game.winnings = game.winner ? winnings.toString() : '0';
       game.platform_fee = platformFee.toString();
 
-      logger.info(`   Total Pot: ${mistToOct(totalPot)} OCT`);
-      logger.info(`   Platform Fee: ${mistToOct(platformFee)} OCT`);
-      logger.info(`   Winner Gets: ${game.winner ? mistToOct(winnings) : '0'} OCT`);
+      logger.info(`   Total Pot: ${mistToToken(totalPot)} HACK`);
+      logger.info(`   Platform Fee: ${mistToToken(platformFee)} HACK`);
+      logger.info(`   Winner Gets: ${game.winner ? mistToToken(winnings) : '0'} HACK`);
 
       // Update cache
       this.activeGames.set(gameId, game);
@@ -984,7 +984,7 @@ export class GameManager {
         logger.info(`⛓️  Game ${gameId} already settled on-chain (tx: ${game.settlement_tx}), skipping`);
       } else if (game.is_quick_match) {
         // Quick Match games: Transfer prize directly from admin treasury to winner
-        // (No on-chain escrow, so we send OCT directly)
+        // (No on-chain escrow, so we send HACK directly)
         if (game.winner && game.winner !== '0x0') {
           logger.info(`⛓️  Quick Match game ${gameId} - Transferring prize from treasury to winner`);
 

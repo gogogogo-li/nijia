@@ -8,19 +8,19 @@ import { Transaction } from '@onelabs/sui/transactions';
 // Contract configuration from environment
 const PACKAGE_ID = process.env.REACT_APP_PACKAGE_ID;
 const SOLO_GAME_LOBBY_ID = process.env.REACT_APP_SOLO_GAME_LOBBY_ID;
-const OCT_COIN_TYPE = process.env.REACT_APP_OCT_COIN_TYPE || '0x2::sui::SUI';
+const HACK_COIN_TYPE = process.env.REACT_APP_HACK_COIN_TYPE || '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON';
 const CLOCK_OBJECT = '0x6';
 
 // Development mode check
 const IS_DEV_MODE = !PACKAGE_ID || !SOLO_GAME_LOBBY_ID;
 
-// Stake amounts in MIST (1 OCT = 10^9 MIST)
-const MIST_PER_OCT = 1_000_000_000;
+// Stake amounts in MIST (1 HACK = 10^9 MIST)
+const MIST_PER_TOKEN = 1_000_000_000;
 const STAKE_AMOUNTS = {
-    0: 0.5 * MIST_PER_OCT,  // Easy: 0.5 OCT
-    1: 1 * MIST_PER_OCT,    // Medium: 1 OCT
-    2: 2 * MIST_PER_OCT,    // Hard: 2 OCT
-    3: 5 * MIST_PER_OCT,    // Extreme: 5 OCT
+    0: 0.5 * MIST_PER_TOKEN,  // Easy: 0.5 HACK
+    1: 1 * MIST_PER_TOKEN,    // Medium: 1 HACK
+    2: 2 * MIST_PER_TOKEN,    // Hard: 2 HACK
+    3: 5 * MIST_PER_TOKEN,    // Extreme: 5 HACK
 };
 
 /**
@@ -54,7 +54,7 @@ export function createSoloGameTransaction({ difficulty, coinObjectId }) {
         throw new Error(`Invalid difficulty: ${difficulty}. Must be 0-3`);
     }
 
-    console.log(`   Stake: ${stakeAmount / MIST_PER_OCT} OCT (${stakeAmount} MIST)`);
+    console.log(`   Stake: ${stakeAmount / MIST_PER_TOKEN} HACK (${stakeAmount} MIST)`);
 
     const tx = new Transaction();
 
@@ -66,7 +66,7 @@ export function createSoloGameTransaction({ difficulty, coinObjectId }) {
     // Call create_solo_game function
     tx.moveCall({
         target: `${PACKAGE_ID}::multiplayer_game::create_solo_game`,
-        typeArguments: [OCT_COIN_TYPE],
+        typeArguments: [HACK_COIN_TYPE],
         arguments: [
             tx.object(SOLO_GAME_LOBBY_ID),  // solo_lobby: &mut SoloGameLobby
             tx.pure.u8(difficulty),          // difficulty: u8
@@ -89,12 +89,12 @@ export function getStakeAmount(difficulty) {
 }
 
 /**
- * Get stake amount in OCT (human readable)
+ * Get stake amount in HACK (human readable)
  * @param {number} difficulty - Difficulty level (0-3)
- * @returns {number} Stake amount in OCT
+ * @returns {number} Stake amount in HACK
  */
-export function getStakeAmountOCT(difficulty) {
-    return (STAKE_AMOUNTS[difficulty] || 0) / MIST_PER_OCT;
+export function getStakeAmountToken(difficulty) {
+    return (STAKE_AMOUNTS[difficulty] || 0) / MIST_PER_TOKEN;
 }
 
 /**
@@ -108,7 +108,7 @@ export function isContractConfigured() {
 const soloContractApi = {
     createSoloGameTransaction,
     getStakeAmount,
-    getStakeAmountOCT,
+    getStakeAmountToken,
     isContractConfigured,
 };
 

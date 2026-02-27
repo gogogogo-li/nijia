@@ -34,16 +34,16 @@ export function validateContractConfig() {
   return true;
 }
 
-// Token decimals (OCT uses 9 decimals like SUI)
-export const OCT_DECIMALS = 9;
-export const MIST_PER_OCT = 1_000_000_000;
+// Token decimals (HACKATHON uses 9 decimals like SUI)
+export const HACK_DECIMALS = 9;
+export const MIST_PER_HACK = 1_000_000_000;
 
-// Convert OCT to MIST (smallest unit)
-export function octToMist(oct) {
-  return BigInt(Math.floor(oct * MIST_PER_OCT));
+// Convert HACK to MIST (smallest unit)
+export function tokenToMist(hack) {
+  return BigInt(Math.floor(hack * MIST_PER_HACK));
 }
 
-// Convert MIST to OCT
-export function mistToOct(mist) {
-  return Number(mist) / MIST_PER_OCT;
+// Convert MIST to HACK
+export function mistToToken(mist) {
+  return Number(mist) / MIST_PER_HACK;
 }

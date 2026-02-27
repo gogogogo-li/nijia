@@ -52,7 +52,7 @@ const GameScreen = ({
     // The lobby disconnects on unmount, so we need to reconnect here
     if (!multiplayerService.isConnected()) {
       console.log('🔌 Reconnecting socket for multiplayer game...');
-      multiplayerService.connect(onechain?.walletAddress);
+      multiplayerService.connect(onechain?.walletAddress, onechain?.walletSignature, onechain?.walletAuthMessage);
     }
 
     // Handle opponent finishing their game first (race mode)
@@ -510,7 +510,7 @@ const GameScreen = ({
                   letterSpacing: '6px',
                   textShadow: '0 0 30px rgba(0, 255, 136, 0.7)',
                   animation: 'pulseGlow 0.8s ease-in-out infinite'
-                }}>+0.196 OCT 💰</p>
+                }} >+0.196 HACK 💰</p>
               </>
             )}
             {gameOutcome === 'lost' && (

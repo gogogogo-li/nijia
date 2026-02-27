@@ -62,29 +62,35 @@ export async function authenticateWallet(req, res, next) {
       });
     }
     
-    // If signature provided, verify it
-    if (signature && message) {
-      try {
-        const isValid = await verifyPersonalMessageSignature(
-          message,
-          signature,
-          address
-        );
-        
-        if (!isValid) {
-          return res.status(401).json({
-            success: false,
-            error: 'Invalid signature'
-          });
-        }
-        
-        req.authenticated = true;
-      } catch (error) {
-        logger.warn('Signature verification failed:', error);
-        req.authenticated = false;
+    // Signature is required for authenticated endpoints
+    if (!signature || !message) {
+      return res.status(401).json({
+        success: false,
+        error: 'Wallet signature required for authentication'
+      });
+    }
+
+    try {
+      const isValid = await verifyPersonalMessageSignature(
+        message,
+        signature,
+        address
+      );
+      
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid signature'
+        });
       }
-    } else {
-      req.authenticated = false;
+      
+      req.authenticated = true;
+    } catch (error) {
+      logger.warn('Signature verification failed:', error);
+      return res.status(401).json({
+        success: false,
+        error: 'Signature verification failed'
+      });
     }
     
     req.walletAddress = address;

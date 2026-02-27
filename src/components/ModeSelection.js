@@ -71,7 +71,7 @@ const ModeSelection = ({ onSelectMode, onBack, onSoloStakes, bestScores = {} }) 
       emoji: <GiCherry />,
       background: "linear-gradient(135deg, #f7971e 0%, #ffd200 100%)",
       shadow: "0 0 40px rgba(255, 210, 0, 0.6)",
-      description: "STAKE OCT • WIN DOUBLE",
+      description: "STAKE HACK • WIN DOUBLE",
       subtitle: "PLAY FOR REAL REWARDS",
       bestScore: 0,
       isSoloStakes: true,

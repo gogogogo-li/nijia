@@ -10,7 +10,7 @@ import logger from '../utils/logger.js';
 
 // Contract constants
 const CLOCK_OBJECT = '0x6';
-const OCT_COIN_TYPE = '0x2::oct::OCT';
+const HACK_COIN_TYPE = '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON';
 
 class OnChainSettlement {
     constructor() {
@@ -108,7 +108,7 @@ class OnChainSettlement {
             // Call admin_register_game function on the contract
             tx.moveCall({
                 target: `${PACKAGE_ID}::multiplayer_game::admin_register_game`,
-                typeArguments: [OCT_COIN_TYPE],
+                typeArguments: [HACK_COIN_TYPE],
                 arguments: [
                     tx.object(GAME_LOBBY_ID),           // lobby: &mut GameLobby
                     tx.pure.u64(game.game_id),          // game_id: u64
@@ -175,7 +175,7 @@ class OnChainSettlement {
             // Call submit_score function on the contract
             tx.moveCall({
                 target: `${PACKAGE_ID}::multiplayer_game::submit_score`,
-                typeArguments: [OCT_COIN_TYPE],
+                typeArguments: [HACK_COIN_TYPE],
                 arguments: [
                     tx.object(GAME_LOBBY_ID),           // lobby: &mut GameLobby
                     tx.object(STATS_REGISTRY_ID),       // stats_registry: &mut StatsRegistry
@@ -253,7 +253,7 @@ class OnChainSettlement {
             // Call forfeit_game function on the contract
             tx.moveCall({
                 target: `${PACKAGE_ID}::multiplayer_game::forfeit_game`,
-                typeArguments: [OCT_COIN_TYPE],
+                typeArguments: [HACK_COIN_TYPE],
                 arguments: [
                     tx.object(GAME_LOBBY_ID),           // lobby: &mut GameLobby
                     tx.object(STATS_REGISTRY_ID),       // stats_registry: &mut StatsRegistry
@@ -288,10 +288,10 @@ class OnChainSettlement {
     }
 
     /**
-     * Transfer OCT prize directly from admin treasury to winner
+     * Transfer HACK prize directly from admin treasury to winner
      * Used for Quick Match games where escrow isn't on-chain
      * @param {string} winnerAddress - Address of the winner
-     * @param {number|string} prizeAmountMist - Prize amount in MIST (1 OCT = 1,000,000,000 MIST)
+     * @param {number|string} prizeAmountMist - Prize amount in MIST (1 HACK = 1,000,000,000 MIST)
      * @param {number} gameId - Game ID for logging
      */
     async transferPrizeToWinner(winnerAddress, prizeAmountMist, gameId) {
@@ -309,15 +309,15 @@ class OnChainSettlement {
 
             logger.info(`💰 Quick Match Prize Transfer for game ${gameId}:`);
             logger.info(`   Winner: ${winnerAddress}`);
-            logger.info(`   Total Pool: ${prizeAmount} MIST (${Number(prizeAmount) / 1e9} OCT)`);
+            logger.info(`   Total Pool: ${prizeAmount} MIST (${Number(prizeAmount) / 1e9} HACK)`);
             logger.info(`   Platform Fee (2%): ${platformFee} MIST`);
-            logger.info(`   Winner Gets: ${winnerPrize} MIST (${Number(winnerPrize) / 1e9} OCT)`);
+            logger.info(`   Winner Gets: ${winnerPrize} MIST (${Number(winnerPrize) / 1e9} HACK)`);
 
             const tx = new Transaction();
             tx.setSender(this.adminAddress);
 
-            // Get admin's OCT coins to pay the winner
-            // We need to split the exact amount from admin's OCT balance
+            // Get admin's HACK coins to pay the winner
+            // We need to split the exact amount from admin's HACK balance
             const [winnerCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(winnerPrize)]);
 
             // Transfer to winner
@@ -336,7 +336,7 @@ class OnChainSettlement {
             if (result.effects?.status?.status === 'success') {
                 logger.info(`✅ Quick Match prize transferred for game ${gameId}!`);
                 logger.info(`   Transaction: ${result.digest}`);
-                logger.info(`   Winner ${winnerAddress.slice(0, 10)}... received ${Number(winnerPrize) / 1e9} OCT`);
+                logger.info(`   Winner ${winnerAddress.slice(0, 10)}... received ${Number(winnerPrize) / 1e9} HACK`);
                 return {
                     success: true,
                     digest: result.digest,
@@ -357,7 +357,7 @@ class OnChainSettlement {
             logger.error(`❌ Quick Match prize transfer error for game ${gameId}:`, error.message);
 
             if (error.message.includes('InsufficientGas') || error.message.includes('balance')) {
-                logger.error('   ⚠️  Admin wallet may have insufficient OCT balance for prize transfer');
+                logger.error('   ⚠️  Admin wallet may have insufficient HACK balance for prize transfer');
             }
 
             return { success: false, reason: error.message };

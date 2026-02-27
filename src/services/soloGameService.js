@@ -8,6 +8,29 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
 class SoloGameService {
     constructor() {
         this.currentGame = null;
+        this.walletAddress = null;
+        this.walletSignature = null;
+        this.walletMessage = null;
+    }
+
+    /**
+     * Set wallet credentials for authenticated requests
+     */
+    setWallet(address, signature, message) {
+        this.walletAddress = address;
+        this.walletSignature = signature;
+        this.walletMessage = message;
+    }
+
+    /**
+     * Build auth headers for authenticated requests
+     */
+    _authHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.walletAddress) headers['X-Wallet-Address'] = this.walletAddress;
+        if (this.walletSignature) headers['X-Wallet-Signature'] = this.walletSignature;
+        if (this.walletMessage) headers['X-Wallet-Message'] = this.walletMessage;
+        return headers;
     }
 
     /**
@@ -43,9 +66,7 @@ class SoloGameService {
 
             const response = await fetch(`${API_URL}/api/solo/games/create`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: this._authHeaders(),
                 body: JSON.stringify({
                     txHash,
                     playerAddress,
@@ -75,9 +96,7 @@ class SoloGameService {
         try {
             const response = await fetch(`${API_URL}/api/solo/games/${gameId}/score`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: this._authHeaders(),
                 body: JSON.stringify({
                     playerAddress,
                     score,
@@ -105,9 +124,7 @@ class SoloGameService {
 
             const response = await fetch(`${API_URL}/api/solo/games/${gameId}/lives`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: this._authHeaders(),
                 body: JSON.stringify({
                     playerAddress,
                     lives,
@@ -143,9 +160,7 @@ class SoloGameService {
 
             const response = await fetch(`${API_URL}/api/solo/games/${gameId}/complete`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: this._authHeaders(),
                 body: JSON.stringify({
                     playerAddress,
                     finalScore,
@@ -162,7 +177,7 @@ class SoloGameService {
 
             console.log('✅ Game completed:');
             console.log(`   Won: ${result.game.won}`);
-            console.log(`   Payout: ${result.game.payout_oct} OCT`);
+            console.log(`   Payout: ${result.game.payout_token} HACK`);
 
             return result.game;
         } catch (error) {

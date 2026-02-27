@@ -15,7 +15,7 @@ import {
 import { FaPlay, FaArrowLeft, FaCoins, FaCrosshairs, FaInfoCircle } from "react-icons/fa";
 import { IoFlash, IoSkull, IoRocketSharp, IoSparkles } from "react-icons/io5";
 
-const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) => {
+const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, tokenBalance }) => {
     const [selectedDifficulty, setSelectedDifficulty] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState(null);
@@ -28,10 +28,10 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
             background: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
             shadow: "0 0 40px rgba(67, 233, 123, 0.6)",
             stake: 0.5,
-            stakeDisplay: "0.5 OCT",
+            stakeDisplay: "0.5 HACK",
             target: 100,
             reward: 1,
-            rewardDisplay: "1 OCT",
+            rewardDisplay: "1 HACK",
             speed: 1.0,
             speedDisplay: "1.0x",
             description: "BEGINNER FRIENDLY",
@@ -45,10 +45,10 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
             background: "linear-gradient(135deg, #4158D0 0%, #C850C0 100%)",
             shadow: "0 0 40px rgba(200, 80, 192, 0.6)",
             stake: 1,
-            stakeDisplay: "1 OCT",
+            stakeDisplay: "1 HACK",
             target: 200,
             reward: 2,
-            rewardDisplay: "2 OCT",
+            rewardDisplay: "2 HACK",
             speed: 1.15,
             speedDisplay: "1.15x",
             description: "THE STANDARD CHALLENGE",
@@ -62,10 +62,10 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
             background: "linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)",
             shadow: "0 0 40px rgba(255, 107, 107, 0.6)",
             stake: 2,
-            stakeDisplay: "2 OCT",
+            stakeDisplay: "2 HACK",
             target: 300,
             reward: 4,
-            rewardDisplay: "4 OCT",
+            rewardDisplay: "4 HACK",
             speed: 1.3,
             speedDisplay: "1.3x",
             description: "FOR TRUE NINJAS",
@@ -79,10 +79,10 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
             background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
             shadow: "0 0 40px rgba(245, 87, 108, 0.8)",
             stake: 5,
-            stakeDisplay: "5 OCT",
+            stakeDisplay: "5 HACK",
             target: 400,
             reward: 10,
-            rewardDisplay: "10 OCT",
+            rewardDisplay: "10 HACK",
             speed: 1.5,
             speedDisplay: "1.5x",
             description: "LEGENDARY DIFFICULTY",
@@ -102,8 +102,8 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
         }
 
         // Check balance
-        if (octBalance < difficulty.stake) {
-            setError(`Insufficient OCT balance. You need ${difficulty.stakeDisplay}`);
+        if (tokenBalance < difficulty.stake) {
+            setError(`Insufficient HACK balance. You need ${difficulty.stakeDisplay}`);
             return;
         }
 
@@ -145,7 +145,7 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, octBalance }) =>
                 {onechain?.isConnected && (
                     <div className="solo-balance">
                         <FaCoins className="balance-icon" />
-                        <span className="balance-amount">{octBalance?.toFixed(2) || '0.00'} OCT</span>
+                        <span className="balance-amount">{tokenBalance?.toFixed(2) || '0.00'} HACK</span>
                     </div>
                 )}
             </div>

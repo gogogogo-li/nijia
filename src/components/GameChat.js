@@ -24,7 +24,7 @@ const GameChat = ({ gameId, walletAddress }) => {
         // Ensure socket is connected for game chat
         if (!multiplayerService.isConnected() && walletAddress) {
             console.log('🔌 Reconnecting socket for game chat...');
-            multiplayerService.connect(walletAddress);
+            multiplayerService.connect(walletAddress, multiplayerService.walletSignature, multiplayerService.walletAuthMessage);
         }
 
         // Join the game room for chat
