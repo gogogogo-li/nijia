@@ -114,7 +114,7 @@ const GameScreen = ({
       // Don't disconnect socket on cleanup - keep it connected for results screen
       multiplayerService.setListeners({});
     };
-  }, [multiplayerGameId, onEndGame, onechain?.walletAddress]);
+  }, [multiplayerGameId, onEndGame, onechain?.walletAddress, onechain?.walletSignature, onechain?.walletAuthMessage]);
 
   // Handle missed fruit without notification
   const handleMissedFruit = useCallback(() => {

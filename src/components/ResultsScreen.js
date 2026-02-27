@@ -156,7 +156,7 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
     };
 
     completeSoloGame();
-  }, [soloGameData, gameState.score, onechain?.walletAddress, soloGameCompleted]);
+  }, [soloGameData, gameState.score, onechain?.walletAddress, onechain?.walletSignature, onechain?.walletAuthMessage, soloGameCompleted]);
 
   return (
     <div className="unified-screen results-screen">

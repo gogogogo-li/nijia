@@ -202,7 +202,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
       // Disconnect multiplayer service
       multiplayerService.disconnect();
     };
-  }, [walletAddress, onStartGame]);
+  }, [walletAddress, onStartGame, onechain?.walletSignature, onechain?.walletAuthMessage]);
 
   const fetchAvailableGames = async () => {
     const games = await multiplayerService.getAvailableGames();
