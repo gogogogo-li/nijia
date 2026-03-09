@@ -171,10 +171,6 @@ Move contracts are located in `contracts/sources/`:
 4. Test thoroughly
 5. Submit a pull request
 
-## License
-
-MIT
-
 ## Support
 
 - [OneLabs Discord](https://discord.gg/onelabs)

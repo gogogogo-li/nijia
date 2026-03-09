@@ -59,9 +59,9 @@ export const useGameState = (walletAddress = null) => {
     if (now - lastScoreReportRef.current < 500) return; // Throttle: max every 500ms
     lastScoreReportRef.current = now;
     const headers = { 'Content-Type': 'application/json' };
-    if (ctx.walletAddress) headers['X-Wallet-Address'] = ctx.walletAddress;
-    if (ctx.signature) headers['X-Wallet-Signature'] = ctx.signature;
-    if (ctx.message) headers['X-Wallet-Message'] = ctx.message;
+    if (ctx.walletAddress && typeof ctx.walletAddress === 'string') headers['X-Wallet-Address'] = String(ctx.walletAddress).replace(/[\r\n]+/g, ' ');
+    if (ctx.signature && typeof ctx.signature === 'string') headers['X-Wallet-Signature'] = String(ctx.signature).replace(/[\r\n]+/g, ' ');
+    if (ctx.message && typeof ctx.message === 'string') headers['X-Wallet-Message'] = String(ctx.message).replace(/[\r\n]+/g, ' ');
     fetch(`${SOLO_API_URL}/api/solo/games/${ctx.gameId}/score`, {
       method: 'POST',
       headers,
@@ -78,9 +78,9 @@ export const useGameState = (walletAddress = null) => {
     const ctx = soloGameRef.current;
     if (!ctx) return;
     const headers = { 'Content-Type': 'application/json' };
-    if (ctx.walletAddress) headers['X-Wallet-Address'] = ctx.walletAddress;
-    if (ctx.signature) headers['X-Wallet-Signature'] = ctx.signature;
-    if (ctx.message) headers['X-Wallet-Message'] = ctx.message;
+    if (ctx.walletAddress && typeof ctx.walletAddress === 'string') headers['X-Wallet-Address'] = String(ctx.walletAddress).replace(/[\r\n]+/g, ' ');
+    if (ctx.signature && typeof ctx.signature === 'string') headers['X-Wallet-Signature'] = String(ctx.signature).replace(/[\r\n]+/g, ' ');
+    if (ctx.message && typeof ctx.message === 'string') headers['X-Wallet-Message'] = String(ctx.message).replace(/[\r\n]+/g, ' ');
     // Chain onto previous lives update so they execute sequentially
     livesQueueRef.current = livesQueueRef.current
       .then(() =>

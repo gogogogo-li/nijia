@@ -83,10 +83,17 @@ class MultiplayerService {
    * Build auth headers for authenticated API requests
    */
   _authHeaders() {
-    const headers = { 'Content-Type': 'application/json' };
-    if (this.walletAddress) headers['X-Wallet-Address'] = this.walletAddress;
-    if (this.walletSignature) headers['X-Wallet-Signature'] = this.walletSignature;
-    if (this.walletAuthMessage) headers['X-Wallet-Message'] = this.walletAuthMessage;
+    const headers = {};
+    headers['Content-Type'] = 'application/json';
+    if (this.walletAddress && typeof this.walletAddress === 'string' && this.walletAddress.length > 0) {
+      headers['X-Wallet-Address'] = String(this.walletAddress).replace(/[\r\n]+/g, ' ');
+    }
+    if (this.walletSignature && typeof this.walletSignature === 'string' && this.walletSignature.length > 0) {
+      headers['X-Wallet-Signature'] = String(this.walletSignature).replace(/[\r\n]+/g, ' ');
+    }
+    if (this.walletAuthMessage && typeof this.walletAuthMessage === 'string' && this.walletAuthMessage.length > 0) {
+      headers['X-Wallet-Message'] = String(this.walletAuthMessage).replace(/[\r\n]+/g, ' ');
+    }
     return headers;
   }
 
@@ -246,11 +253,7 @@ class MultiplayerService {
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/create`, {
         method: 'POST',
         headers: this._authHeaders(),
-        body: JSON.stringify({
-          betTierId,
-          transactionHash,
-          roomType
-        })
+        body: JSON.stringify({ betTierId, transactionHash, roomType })
       });
 
       const data = await response.json();

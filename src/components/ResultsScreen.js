@@ -99,8 +99,8 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
         const authHeaders = {
           'Content-Type': 'application/json',
           'X-Wallet-Address': onechain.walletAddress,
-          ...(onechain.walletSignature && { 'X-Wallet-Signature': onechain.walletSignature }),
-          ...(onechain.walletAuthMessage && { 'X-Wallet-Message': onechain.walletAuthMessage })
+          ...(onechain.walletSignature && typeof onechain.walletSignature === 'string' && { 'X-Wallet-Signature': String(onechain.walletSignature).replace(/[\r\n]+/g, ' ') }),
+          ...(onechain.walletAuthMessage && typeof onechain.walletAuthMessage === 'string' && { 'X-Wallet-Message': String(onechain.walletAuthMessage).replace(/[\r\n]+/g, ' ') })
         };
 
         // Flush final score to backend before completing so backend has the latest score

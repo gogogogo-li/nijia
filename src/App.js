@@ -246,8 +246,8 @@ function App() {
           headers: {
             'Content-Type': 'application/json',
             'X-Wallet-Address': onechain.walletAddress,
-            ...(onechain.walletSignature && { 'X-Wallet-Signature': onechain.walletSignature }),
-            ...(onechain.walletAuthMessage && { 'X-Wallet-Message': onechain.walletAuthMessage })
+            ...(onechain.walletSignature && typeof onechain.walletSignature === 'string' && { 'X-Wallet-Signature': String(onechain.walletSignature).replace(/[\r\n]+/g, ' ') }),
+            ...(onechain.walletAuthMessage && typeof onechain.walletAuthMessage === 'string' && { 'X-Wallet-Message': String(onechain.walletAuthMessage).replace(/[\r\n]+/g, ' ') })
           },
           body: JSON.stringify({
             txHash: txResult.transactionHash,

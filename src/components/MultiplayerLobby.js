@@ -924,10 +924,18 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
 
                         showNotification('Creating transaction...', 'info');
 
+                        // Fetch HACK coins to pay the bet (do NOT use tx.gas which is OCT)
+                        const coinObjects = await onechainService.getCoinObjects();
+                        let selectedCoinId = null;
+                        if (coinObjects.length > 0) {
+                          const bestCoin = coinObjects.sort((a, b) => Number(b.balance) - Number(a.balance))[0];
+                          selectedCoinId = bestCoin.objectId;
+                        }
+
                         // Create transaction
                         const tx = createGameTransaction({
                           betTierId: selectedTier.id,
-                          coinObjectId: null
+                          coinObjectId: selectedCoinId
                         });
 
                         const txResult = await onechainService.executeTransaction(tx);

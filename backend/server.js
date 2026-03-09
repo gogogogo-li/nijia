@@ -76,7 +76,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Wallet-Address', 'X-Wallet-Signature', 'client-sdk-version', 'client-sdk-type', 'client-target-api-version', 'client-request-method']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Wallet-Address', 'X-Wallet-Signature', 'X-Wallet-Message', 'client-sdk-version', 'client-sdk-type', 'client-target-api-version', 'client-request-method']
 }));
 
 // Body parsing middleware

@@ -2,12 +2,18 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useVisibility } from './useVisibility';
 import { ITEM_CONFIG, SPEED_CONFIG, DIFFICULTY_CONFIG, SUPER_FRUIT_CONFIG } from '../config/gameConfig';
 
-// OneChain tokens with different colored rings - each has different speed and difficulty
+// OneChain ecosystem tokens - distinct logos per coin
 const TOKEN_TYPES = [
-  { name: "Yellow Ring", image: "/logo.svg", color: "#FFD700", ringColor: "#FFD700", points: 10, speedMod: 1.0, difficulty: "Easy" },
-  { name: "Green Ring", image: "/logo.svg", color: "#00FF88", ringColor: "#00FF88", points: 15, speedMod: 1.3, difficulty: "Medium" },
-  { name: "Blue Ring", image: "/logo.svg", color: "#4169E1", ringColor: "#4169E1", points: 20, speedMod: 1.6, difficulty: "Hard" },
-  { name: "Red Ring", image: "/logo.svg", color: "#FF4444", ringColor: "#FF4444", points: 25, speedMod: 2.0, difficulty: "Expert" },
+  { name: "HACK", image: "/logo.svg", color: "#467DFF", ringColor: "#467DFF", glowColor: "#467DFF66", points: 10, speedMod: 1.0, size: 1.0, difficulty: "Easy", spawnWeight: 0.22, ringWidth: 3 },
+  { name: "OCT", image: "https://cryptologos.cc/logos/optimism-op-logo.svg?v=029", color: "#FF0420", ringColor: "#FF0420", glowColor: "#FF042066", points: 15, speedMod: 1.1, size: 1.0, difficulty: "Easy", spawnWeight: 0.20, ringWidth: 3 },
+  { name: "USDH", image: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=029", color: "#2775CA", ringColor: "#2775CA", glowColor: "#2775CA66", points: 20, speedMod: 1.2, size: 1.0, difficulty: "Easy", spawnWeight: 0.16, ringWidth: 4 },
+  { name: "USDO", image: "https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.svg?v=029", color: "#F5AC37", ringColor: "#F5AC37", glowColor: "#F5AC3766", points: 25, speedMod: 1.3, size: 1.05, difficulty: "Medium", spawnWeight: 0.12, ringWidth: 4 },
+  { name: "OUSDT", image: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=029", color: "#26A17B", ringColor: "#26A17B", glowColor: "#26A17B66", points: 30, speedMod: 1.4, size: 1.05, difficulty: "Medium", spawnWeight: 0.10, ringWidth: 4 },
+  { name: "Gold HACK", image: "/logo.svg", color: "#FFD700", ringColor: "#FFD700", glowColor: "#FFD70066", points: 40, speedMod: 1.6, size: 1.1, difficulty: "Hard", spawnWeight: 0.08, ringWidth: 5 },
+  { name: "Gold OCT", image: "https://cryptologos.cc/logos/optimism-op-logo.svg?v=029", color: "#F39C12", ringColor: "#F39C12", glowColor: "#F39C1266", points: 50, speedMod: 1.75, size: 1.15, difficulty: "Hard", spawnWeight: 0.05, ringWidth: 5 },
+  { name: "Diamond USDH", image: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=029", color: "#B9F2FF", ringColor: "#B9F2FF", glowColor: "#B9F2FF88", points: 60, speedMod: 1.9, size: 1.2, difficulty: "Expert", spawnWeight: 0.04, ringWidth: 5, shimmer: true },
+  { name: "Legendary HACK", image: "/logo.svg", color: "#FF4500", ringColor: "#FF4500", glowColor: "#FF450088", points: 75, speedMod: 2.0, size: 1.25, difficulty: "Expert", spawnWeight: 0.02, ringWidth: 6, shimmer: true, doubleRing: true },
+  { name: "Mythic OCT", image: "https://cryptologos.cc/logos/optimism-op-logo.svg?v=029", color: "#FF00FF", ringColor: "#FF00FF", glowColor: "#FF00FF88", points: 100, speedMod: 2.2, size: 1.3, difficulty: "Expert", spawnWeight: 0.01, ringWidth: 6, shimmer: true, doubleRing: true },
 ];
 
 const ITEM_TYPES = [
@@ -64,9 +70,16 @@ const getRandomItemType = (mode = null) => {
   return ITEM_TYPES[0];
 };
 
-// Get random token type from TOKEN_TYPES
+// Get random token type from TOKEN_TYPES using weighted selection
 const getRandomToken = () => {
-  return TOKEN_TYPES[Math.floor(Math.random() * TOKEN_TYPES.length)];
+  const totalWeight = TOKEN_TYPES.reduce((sum, t) => sum + t.spawnWeight, 0);
+  let random = Math.random() * totalWeight;
+
+  for (const token of TOKEN_TYPES) {
+    random -= token.spawnWeight;
+    if (random <= 0) return token;
+  }
+  return TOKEN_TYPES[0];
 };
 
 // REQ-P2-003: Get random super fruit type based on spawn weights
@@ -108,54 +121,22 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
   const [slashTrail, setSlashTrail] = useState([]);
   const [particles, setParticles] = useState([]);
   const [comboMessage, setComboMessage] = useState(null); // For on-screen combo display
-  const [tokenImages, setTokenImages] = useState({});
+  const [loadedImages, setLoadedImages] = useState({});
   const isVisible = useVisibility();
   const penalizedFruits = useRef(new Set()); // Track fruits that already had penalties applied
 
-  // Load all token images with better error handling
+  // Load all distinct coin images
   useEffect(() => {
-    const loadedImages = {};
-    let loadedCount = 0;
-    const totalTokens = TOKEN_TYPES.length;
+    const imagesToLoad = [...new Set(TOKEN_TYPES.map(t => t.image).filter(Boolean))];
 
-    console.log(`🔄 Loading OneChain token image...`);
-
-    TOKEN_TYPES.forEach((token) => {
+    imagesToLoad.forEach(src => {
       const img = new Image();
-
-      // Set crossOrigin if needed for CORS
       img.crossOrigin = 'anonymous';
-
       img.onload = () => {
-        loadedImages[token.name] = img;
-        loadedCount++;
-        console.log(`✅ Loaded ${token.name} (${loadedCount}/${totalTokens})`);
-
-        if (loadedCount === totalTokens) {
-          setTokenImages(loadedImages);
-          console.log('✨ OneChain token image loaded successfully!');
-        }
+        setLoadedImages(prev => ({ ...prev, [src]: img }));
       };
-
-      img.onerror = (error) => {
-        console.error(`❌ Failed to load ${token.name} from ${token.image}`, error);
-        // Still increment count to prevent hanging
-        loadedCount++;
-
-        if (loadedCount === totalTokens) {
-          setTokenImages(loadedImages);
-          console.log(`⚠️ Token loading complete with ${totalTokens - Object.keys(loadedImages).length} errors`);
-        }
-      };
-
-      // Set source last to trigger loading
-      img.src = token.image;
+      img.src = src;
     });
-
-    // Cleanup function
-    return () => {
-      console.log('🧹 Cleaning up token image loaders');
-    };
   }, []);
 
   // Clean up items when tab becomes visible again to prevent accumulation
@@ -183,7 +164,7 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
     const canvas = canvasRef.current;
     const itemType = getRandomItemType(gameState.mode);
 
-    // Randomly select a token for good items
+    // Select a weighted random token type for good items
     let randomToken = getRandomToken();
 
     // Calculate progressive difficulty based on elapsed time (Fruit Ninja style)
@@ -217,24 +198,24 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
         if (elapsed < DIFFICULTY_CONFIG.phases.tutorial) {
           speedMultiplier = SPEED_CONFIG.baseMultiplier * (0.6 + (elapsed / DIFFICULTY_CONFIG.phases.tutorial) * 0.4);
 
-          // Only use yellow (easy) tokens in tutorial for Easy/Medium
+          // Only spawn easy-difficulty fruits in tutorial for Easy/Medium
           if (itemType.isGood && difficultyLevel < 1.3) {
-            randomToken = TOKEN_TYPES[0]; // Force yellow ring (easiest)
+            const easyTokens = TOKEN_TYPES.filter(t => t.difficulty === 'Easy');
+            randomToken = easyTokens[Math.floor(Math.random() * easyTokens.length)];
           } else if (itemType.isGood && difficultyLevel >= 1.3) {
-            // Hard/Extreme: Allow green tokens from start
-            randomToken = Math.random() < 0.7 ? TOKEN_TYPES[0] : TOKEN_TYPES[1];
+            // Hard/Extreme: Allow Easy + Medium fruits from start
+            const allowedTokens = TOKEN_TYPES.filter(t => t.difficulty === 'Easy' || t.difficulty === 'Medium');
+            randomToken = allowedTokens[Math.floor(Math.random() * allowedTokens.length)];
           }
         }
         // Early game progression
         else if (elapsed < DIFFICULTY_CONFIG.phases.mid) {
           speedMultiplier = SPEED_CONFIG.baseMultiplier * (1.0 + ((elapsed - DIFFICULTY_CONFIG.phases.tutorial) / 35000) * 0.4);
 
-          // Token restrictions based on time
-          if (itemType.isGood && randomToken === TOKEN_TYPES[2]) {
-            randomToken = Math.random() < 0.5 ? TOKEN_TYPES[0] : TOKEN_TYPES[1];
-          }
-          if (itemType.isGood && randomToken === TOKEN_TYPES[3]) {
-            randomToken = Math.random() < 0.5 ? TOKEN_TYPES[0] : TOKEN_TYPES[1];
+          // Restrict Expert-tier fruits in early game - reroll to easier options
+          if (itemType.isGood && (randomToken.difficulty === 'Expert' || randomToken.difficulty === 'Hard')) {
+            const earlyTokens = TOKEN_TYPES.filter(t => t.difficulty === 'Easy' || t.difficulty === 'Medium');
+            randomToken = earlyTokens[Math.floor(Math.random() * earlyTokens.length)];
           }
         }
         // REQ-P2-002: Exponential difficulty progression after mid-game
@@ -340,8 +321,9 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
     const isSuperFruit = itemType.isGood && shouldSpawnSuperFruit(elapsed);
     const superFruitType = isSuperFruit ? getRandomSuperFruit() : null;
 
-    // Calculate radius based on whether it's a super fruit
-    let itemRadius = itemType.name === 'Bomb' ? 28 : 38;
+    // Calculate radius based on item type, token size, and super fruit
+    const baseRadius = itemType.name === 'Bomb' ? 28 : 38;
+    let itemRadius = itemType.isGood && randomToken.size ? baseRadius * randomToken.size : baseRadius;
     if (superFruitType) {
       itemRadius = 38 * superFruitType.size; // Apply size modifier
     }
@@ -661,55 +643,67 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
 
           ctx.restore();
         } else {
-          // Regular token rendering
-          // Draw circular background with subtle glow
+          // Regular token rendering - OneChain coin tiers with unique visuals
+          const tokenColor = item.token?.ringColor || item.token?.color || '#FFD700';
+          const rw = item.token?.ringWidth || 3;
+
+          // Shimmer effect for rare coins
+          if (item.token?.shimmer) {
+            ctx.shadowColor = item.token.glowColor || tokenColor;
+            ctx.shadowBlur = 22 + Math.sin(Date.now() / 150) * 6;
+          }
+
+          // Draw circular background with tier-colored gradient
           const gradient = ctx.createRadialGradient(
             0, 0, 0,
             0, 0, item.radius * 1.1
           );
-          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+          gradient.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
           gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
-          gradient.addColorStop(1, item.token?.ringColor || item.token?.color || '#FF8C00');
+          gradient.addColorStop(1, tokenColor);
 
           ctx.fillStyle = gradient;
           ctx.beginPath();
           ctx.arc(0, 0, item.radius, 0, Math.PI * 2);
           ctx.fill();
 
-          // Add subtle outer glow with ring color
-          ctx.shadowColor = item.token?.ringColor || item.token?.color || '#FF8C00';
-          ctx.shadowBlur = 20;
-          ctx.strokeStyle = item.token?.ringColor || item.token?.color || '#FF8C00';
-          ctx.lineWidth = 4;
-          ctx.stroke();
+          // Double ring effect for legendary/mythic
+          if (item.token?.doubleRing) {
+            ctx.strokeStyle = tokenColor;
+            ctx.lineWidth = rw;
+            ctx.stroke();
+            // Outer ring
+            ctx.beginPath();
+            ctx.arc(0, 0, item.radius + rw + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = tokenColor;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          } else {
+            // Single ring with tier-specific width
+            ctx.shadowColor = item.token?.glowColor || tokenColor;
+            ctx.shadowBlur = 18;
+            ctx.strokeStyle = tokenColor;
+            ctx.lineWidth = rw;
+            ctx.stroke();
+          }
 
           // Reset shadow for image drawing
           ctx.shadowColor = 'transparent';
           ctx.shadowBlur = 0;
 
-          // Draw token image if loaded - larger and centered
-          if (item.token && tokenImages[item.token.name]) {
-            const img = tokenImages[item.token.name];
-            const imgSize = item.radius * 1.6; // Larger image size
-
-            // Ensure image is fully loaded before drawing
-            if (img.complete && img.naturalHeight !== 0) {
-              ctx.drawImage(img, -imgSize / 2, -imgSize / 2, imgSize, imgSize);
-            } else {
-              // Fallback while loading
-              ctx.fillStyle = item.token?.color || '#FF8C00';
-              ctx.beginPath();
-              ctx.arc(0, 0, item.radius * 0.5, 0, Math.PI * 2);
-              ctx.fill();
-            }
+          // Draw individual coin logo image
+          const currentImg = loadedImages[item.token?.image];
+          if (currentImg && currentImg.complete && currentImg.naturalHeight !== 0) {
+            const imgSize = item.radius * 1.5;
+            ctx.drawImage(currentImg, -imgSize / 2, -imgSize / 2, imgSize, imgSize);
           } else {
-            // Fallback: draw colored circle with token name initial
-            ctx.fillStyle = item.token?.color || '#FF8C00';
+            // Fallback: draw token initial
+            ctx.fillStyle = tokenColor;
             ctx.beginPath();
-            ctx.arc(0, 0, item.radius * 0.6, 0, Math.PI * 2);
+            ctx.arc(0, 0, item.radius * 0.5, 0, Math.PI * 2);
             ctx.fill();
-
-            // Draw first letter of token name
             if (item.token?.name) {
               ctx.fillStyle = '#FFFFFF';
               ctx.font = `bold ${item.radius * 0.8}px Arial`;
@@ -717,6 +711,19 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
               ctx.textBaseline = 'middle';
               ctx.fillText(item.token.name[0], 0, 0);
             }
+          }
+
+          // Draw point value for coins worth more than base
+          if (item.token?.points && item.token.points > 10) {
+            ctx.font = `bold ${Math.max(10, item.radius * 0.35)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.lineWidth = 2;
+            const labelY = item.radius + 12;
+            ctx.strokeText(`+${item.token.points}`, 0, labelY);
+            ctx.fillText(`+${item.token.points}`, 0, labelY);
           }
 
           ctx.restore();
@@ -829,7 +836,7 @@ export const useGameLoop = (canvasRef, gameState, onEndGame, updateParticles, on
 
       ctx.restore();
     }
-  }, [canvasRef, tokenImages, comboMessage]);
+  }, [canvasRef, loadedImages, comboMessage]);
 
   const clearAllItems = useCallback(() => {
     setItems([]);

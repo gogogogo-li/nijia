@@ -27,9 +27,9 @@ class SoloGameService {
      */
     _authHeaders() {
         const headers = { 'Content-Type': 'application/json' };
-        if (this.walletAddress) headers['X-Wallet-Address'] = this.walletAddress;
-        if (this.walletSignature) headers['X-Wallet-Signature'] = this.walletSignature;
-        if (this.walletMessage) headers['X-Wallet-Message'] = this.walletMessage;
+        if (this.walletAddress && typeof this.walletAddress === 'string') headers['X-Wallet-Address'] = String(this.walletAddress).replace(/[\r\n]+/g, ' ');
+        if (this.walletSignature && typeof this.walletSignature === 'string') headers['X-Wallet-Signature'] = String(this.walletSignature).replace(/[\r\n]+/g, ' ');
+        if (this.walletMessage && typeof this.walletMessage === 'string') headers['X-Wallet-Message'] = String(this.walletMessage).replace(/[\r\n]+/g, ' ');
         return headers;
     }
 
