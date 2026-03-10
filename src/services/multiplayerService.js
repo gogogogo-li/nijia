@@ -1,4 +1,5 @@
 import io from 'socket.io-client';
+import onechainService from './onechainService';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
@@ -42,13 +43,14 @@ class MultiplayerService {
    * Connect to multiplayer server
    */
   async connect(walletAddress, signature = null, authMessage = null) {
-    if (this.connected) {
-      return;
-    }
-
+    // Always update credentials even if already connected
     this.walletAddress = walletAddress;
     this.walletSignature = signature;
     this.walletAuthMessage = authMessage;
+
+    if (this.connected) {
+      return;
+    }
     console.log('🔌 Connecting to multiplayer with wallet:', walletAddress);
 
     this.socket = io(API_BASE_URL, {
@@ -82,17 +84,42 @@ class MultiplayerService {
   /**
    * Build auth headers for authenticated API requests
    */
+  /**
+   * Ensure authentication credentials are available, requesting signature on demand if needed
+   */
+  async _ensureAuth() {
+    const sig = this.walletSignature || onechainService.sessionToken;
+    if (!sig) {
+      const result = await onechainService.ensureSignature();
+      if (result.signature) {
+        this.walletSignature = result.signature;
+        this.walletAuthMessage = result.authMessage;
+      }
+    }
+  }
+
   _authHeaders() {
     const headers = {};
     headers['Content-Type'] = 'application/json';
-    if (this.walletAddress && typeof this.walletAddress === 'string' && this.walletAddress.length > 0) {
-      headers['X-Wallet-Address'] = String(this.walletAddress).replace(/[\r\n]+/g, ' ');
+
+    // Fall back to onechainService for latest credentials if local values are missing
+    const address = this.walletAddress || onechainService.walletAddress;
+    const signature = this.walletSignature || onechainService.sessionToken;
+    const message = this.walletAuthMessage || onechainService.authMessage;
+
+    if (address && typeof address === 'string' && address.length > 0) {
+      headers['X-Wallet-Address'] = String(address).replace(/[\r\n]+/g, ' ');
     }
-    if (this.walletSignature && typeof this.walletSignature === 'string' && this.walletSignature.length > 0) {
-      headers['X-Wallet-Signature'] = String(this.walletSignature).replace(/[\r\n]+/g, ' ');
+    if (signature) {
+      const sigStr = typeof signature === 'string' ? signature :
+                     (signature instanceof Uint8Array ? btoa(String.fromCharCode(...signature)) :
+                     JSON.stringify(signature));
+      if (sigStr.length > 0) {
+        headers['X-Wallet-Signature'] = String(sigStr).replace(/[\r\n]+/g, ' ');
+      }
     }
-    if (this.walletAuthMessage && typeof this.walletAuthMessage === 'string' && this.walletAuthMessage.length > 0) {
-      headers['X-Wallet-Message'] = String(this.walletAuthMessage).replace(/[\r\n]+/g, ' ');
+    if (message && typeof message === 'string' && message.length > 0) {
+      headers['X-Wallet-Message'] = btoa(unescape(encodeURIComponent(message)));
     }
     return headers;
   }
@@ -250,6 +277,9 @@ class MultiplayerService {
    */
   async createGame(betTierId, transactionHash, roomType = 'public') {
     try {
+      // Ensure we have a valid signature before making authenticated request
+      await this._ensureAuth();
+
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/create`, {
         method: 'POST',
         headers: this._authHeaders(),
@@ -281,6 +311,8 @@ class MultiplayerService {
   async joinGame(gameId, transactionHash) {
     try {
       console.log('🎮 Joining game:', gameId, 'with wallet:', this.walletAddress);
+
+      await this._ensureAuth();
 
       const response = await fetch(`${API_BASE_URL}/api/multiplayer/games/${gameId}/join`, {
         method: 'POST',

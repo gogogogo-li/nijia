@@ -576,7 +576,7 @@ module ninja_addr::multiplayer_game {
         assert!(game_id < lobby.next_game_id, E_GAME_NOT_FOUND);
         let (coin, player1_addr) = {
             let game: &mut MultiplayerGame<T> = df::borrow_mut(&mut lobby.id, game_id);
-            assert!(sender == lobby.admin || sender != game.player1, E_NOT_ADMIN);
+            assert!(sender == lobby.admin || sender == game.player1, E_NOT_ADMIN);
             assert!(game.state == STATE_WAITING, E_GAME_ALREADY_STARTED);
             let refund = balance::withdraw_all(&mut game.escrow);
             (coin::from_balance(refund, ctx), game.player1)

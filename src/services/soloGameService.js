@@ -29,7 +29,7 @@ class SoloGameService {
         const headers = { 'Content-Type': 'application/json' };
         if (this.walletAddress && typeof this.walletAddress === 'string') headers['X-Wallet-Address'] = String(this.walletAddress).replace(/[\r\n]+/g, ' ');
         if (this.walletSignature && typeof this.walletSignature === 'string') headers['X-Wallet-Signature'] = String(this.walletSignature).replace(/[\r\n]+/g, ' ');
-        if (this.walletMessage && typeof this.walletMessage === 'string') headers['X-Wallet-Message'] = String(this.walletMessage).replace(/[\r\n]+/g, ' ');
+        if (this.walletMessage && typeof this.walletMessage === 'string') headers['X-Wallet-Message'] = btoa(unescape(encodeURIComponent(this.walletMessage)));
         return headers;
     }
 

@@ -33,12 +33,23 @@ export const useOneChain = () => {
           const balanceData = await onechainService.getBalance();
           setBalance(balanceData);
         } else if (window.onechain) {
-          // Check current connection without restoring
+          // Wallet is available but no saved session — do a full connect to get signature
           try {
             const account = await window.onechain.account();
             if (account && account.address) {
-              setWalletAddress(account.address);
-              setIsConnected(true);
+              console.log('🔄 Wallet detected without session, performing full connect for auth signature...');
+              const result = await onechainService.connectWallet();
+              if (result.success) {
+                setWalletAddress(result.address);
+                setIsConnected(true);
+                setUserProfile(result.profile);
+                setWalletSignature(onechainService.sessionToken);
+                setWalletAuthMessage(onechainService.authMessage);
+
+                // Load balance
+                const balanceData = await onechainService.getBalance();
+                setBalance(balanceData);
+              }
             }
           } catch (err) {
             console.log('No active wallet connection');
@@ -58,6 +69,8 @@ export const useOneChain = () => {
           setWalletAddress(data.address);
           setIsConnected(true);
           setUserProfile(data.profile);
+          setWalletSignature(onechainService.sessionToken);
+          setWalletAuthMessage(onechainService.authMessage);
           setError(null);
           break;
         case 'disconnect':

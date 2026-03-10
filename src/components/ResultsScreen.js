@@ -100,7 +100,7 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
           'Content-Type': 'application/json',
           'X-Wallet-Address': onechain.walletAddress,
           ...(onechain.walletSignature && typeof onechain.walletSignature === 'string' && { 'X-Wallet-Signature': String(onechain.walletSignature).replace(/[\r\n]+/g, ' ') }),
-          ...(onechain.walletAuthMessage && typeof onechain.walletAuthMessage === 'string' && { 'X-Wallet-Message': String(onechain.walletAuthMessage).replace(/[\r\n]+/g, ' ') })
+          ...(onechain.walletAuthMessage && typeof onechain.walletAuthMessage === 'string' && { 'X-Wallet-Message': btoa(unescape(encodeURIComponent(onechain.walletAuthMessage))) })
         };
 
         // Flush final score to backend before completing so backend has the latest score

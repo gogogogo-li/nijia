@@ -155,6 +155,60 @@ class OneChainService {
     localStorage.removeItem('onechain_session');
   }
 
+  // Ensure we have a valid signature, creating one on demand if needed
+  async ensureSignature() {
+    if (this.sessionToken && this.authMessage) {
+      return { signature: this.sessionToken, authMessage: this.authMessage };
+    }
+
+    if (!this.walletConnected || !this.walletAddress) {
+      return { signature: null, authMessage: null };
+    }
+
+    console.log('🔐 Creating on-demand auth signature...');
+    try {
+      const wallet = this.getWalletProvider();
+      if (!wallet) return { signature: null, authMessage: null };
+
+      const provider = wallet.provider;
+      const timestamp = Date.now();
+      const authMessage = `Welcome to OneNinja!\n\nWallet Address: ${this.walletAddress}\nTimestamp: ${timestamp}`;
+      const messageBytes = new TextEncoder().encode(authMessage);
+
+      // Use the stored wallet address to construct account - avoids "Invalid address"
+      // from provider.account() returning a different format
+      const account = { address: this.walletAddress };
+
+      let signature = null;
+      if (typeof provider.signPersonalMessage === 'function') {
+        const signResult = await provider.signPersonalMessage({ message: messageBytes, account });
+        console.log('🔐 signResult keys:', Object.keys(signResult || {}), 'signature type:', typeof signResult?.signature, 'bytes type:', typeof signResult?.bytes);
+        // Use .signature only — .bytes is the original message, not the crypto signature
+        signature = signResult.signature || signResult;
+      } else if (typeof provider.signMessage === 'function') {
+        const signResult = await provider.signMessage({ message: messageBytes, account });
+        signature = signResult.signature || signResult;
+      }
+
+      // Ensure signature is a string (base64)
+      if (signature && typeof signature !== 'string') {
+        console.warn('⚠️ Signature is not a string, type:', typeof signature);
+        signature = null;
+      }
+
+      if (signature) {
+        this.sessionToken = signature;
+        this.authMessage = authMessage;
+        this.saveSession();
+        console.log('✅ On-demand signature created, length:', signature.length);
+        return { signature, authMessage };
+      }
+    } catch (err) {
+      console.warn('⚠️ On-demand signature failed:', err.message);
+    }
+    return { signature: null, authMessage: null };
+  }
+
   // Restore session from localStorage
   async restoreSession() {
     try {
@@ -450,16 +504,18 @@ class OneChainService {
           console.log('   Using signPersonalMessage...');
           const signResult = await provider.signPersonalMessage({
             message: messageBytes,
-            account: account // Add account parameter
+            account: { address } // Use extracted address to avoid format mismatch
           });
-          signature = signResult.signature || signResult.bytes || signResult;
-          console.log('✅ Signature created via signPersonalMessage');
+          console.log('🔐 signResult keys:', Object.keys(signResult || {}), 'signature type:', typeof signResult?.signature, 'bytes type:', typeof signResult?.bytes);
+          // Use .signature only — .bytes is the original message, not the crypto signature
+          signature = signResult.signature || signResult;
+          console.log('✅ Signature created via signPersonalMessage, length:', typeof signature === 'string' ? signature.length : 'non-string');
         } else if (typeof provider.signMessage === 'function') {
           // Fallback to signMessage
           console.log('   Using signMessage...');
           const signResult = await provider.signMessage({
             message: messageBytes,
-            account: account // Add account parameter
+            account: { address } // Use extracted address to avoid format mismatch
           });
           signature = signResult.signature || signResult;
           console.log('✅ Signature created via signMessage');
