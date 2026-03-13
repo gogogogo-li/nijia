@@ -28,10 +28,10 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, tokenBalance }) 
             background: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
             shadow: "0 0 40px rgba(67, 233, 123, 0.6)",
             stake: 0.5,
-            stakeDisplay: "0.5 HACK",
+            stakeDisplay: "0.5 DIAMOND",
             target: 100,
             reward: 1,
-            rewardDisplay: "1 HACK",
+            rewardDisplay: "1 DIAMOND",
             speed: 1.0,
             speedDisplay: "1.0x",
             description: "BEGINNER FRIENDLY",
@@ -45,10 +45,10 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, tokenBalance }) 
             background: "linear-gradient(135deg, #4158D0 0%, #C850C0 100%)",
             shadow: "0 0 40px rgba(200, 80, 192, 0.6)",
             stake: 1,
-            stakeDisplay: "1 HACK",
+            stakeDisplay: "1 DIAMOND",
             target: 200,
             reward: 2,
-            rewardDisplay: "2 HACK",
+            rewardDisplay: "2 DIAMOND",
             speed: 1.15,
             speedDisplay: "1.15x",
             description: "THE STANDARD CHALLENGE",
@@ -62,10 +62,10 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, tokenBalance }) 
             background: "linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)",
             shadow: "0 0 40px rgba(255, 107, 107, 0.6)",
             stake: 2,
-            stakeDisplay: "2 HACK",
+            stakeDisplay: "2 DIAMOND",
             target: 300,
             reward: 4,
-            rewardDisplay: "4 HACK",
+            rewardDisplay: "4 DIAMOND",
             speed: 1.3,
             speedDisplay: "1.3x",
             description: "FOR TRUE NINJAS",
@@ -79,10 +79,10 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, tokenBalance }) 
             background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
             shadow: "0 0 40px rgba(245, 87, 108, 0.8)",
             stake: 5,
-            stakeDisplay: "5 HACK",
+            stakeDisplay: "5 DIAMOND",
             target: 400,
             reward: 10,
-            rewardDisplay: "10 HACK",
+            rewardDisplay: "10 DIAMOND",
             speed: 1.5,
             speedDisplay: "1.5x",
             description: "LEGENDARY DIFFICULTY",
@@ -103,7 +103,7 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, tokenBalance }) 
 
         // Check balance
         if (tokenBalance < difficulty.stake) {
-            setError(`Insufficient HACK balance. You need ${difficulty.stakeDisplay}`);
+            setError(`Insufficient DIAMOND balance. You need ${difficulty.stakeDisplay}`);
             return;
         }
 
@@ -145,7 +145,7 @@ const SoloModeSelect = ({ onSelectDifficulty, onBack, onechain, tokenBalance }) 
                 {onechain?.isConnected && (
                     <div className="solo-balance">
                         <FaCoins className="balance-icon" />
-                        <span className="balance-amount">{tokenBalance?.toFixed(2) || '0.00'} HACK</span>
+                        <span className="balance-amount">{tokenBalance?.toFixed(2) || '0.00'} DIAMOND</span>
                     </div>
                 )}
             </div>

@@ -510,7 +510,7 @@ const GameScreen = ({
                   letterSpacing: '6px',
                   textShadow: '0 0 30px rgba(0, 255, 136, 0.7)',
                   animation: 'pulseGlow 0.8s ease-in-out infinite'
-                }} >+0.196 HACK 💰</p>
+                }} >+0.196 DIAMOND 💰</p>
               </>
             )}
             {gameOutcome === 'lost' && (

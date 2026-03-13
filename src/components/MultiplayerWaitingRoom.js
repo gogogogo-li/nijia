@@ -162,7 +162,7 @@ const MultiplayerWaitingRoom = ({
                     {roomStatus === 'countdown' ? 'GET READY!' : 'WAITING FOR PLAYERS'}
                 </h1>
                 <p className="stake-info">
-                    Stake: <span className="amount">{betAmount} HACK</span> per player
+                    Stake: <span className="amount">{betAmount} DIAMOND</span> per player
                 </p>
             </div>
 
@@ -239,7 +239,7 @@ const MultiplayerWaitingRoom = ({
                     <div className="pool-info">
                         <div className="pool-label">Total Prize Pool</div>
                         <div className="pool-amount">
-                            {(betAmount * players.length).toFixed(2)} HACK
+                            {(betAmount * players.length).toFixed(2)} DIAMOND
                         </div>
                     </div>
                 </div>

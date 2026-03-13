@@ -1,7 +1,10 @@
 // OneChain Service - Handles all blockchain interactions with OneChain network
 // Integrates OneWallet, OneDEX, OneID, and OneRWA
 import onelabsApiClient from './onelabsApiClient';
+import { ONECHAIN_EXPLORER_BASE } from '../utils/explorer';
 
+// Mainnet default: DIAMONDCOI
+const DEFAULT_COIN_TYPE = '0x4061df8aee9971dee4b2b21a065abc7b63502d26b732f35bf1ecd8db64d1b5dd::diamondcoi::DIAMONDCOI';
 
 class OneChainService {
   constructor() {
@@ -24,14 +27,14 @@ class OneChainService {
     // Use REACT_APP_API_BASE_URL for consistency with multiplayer service
     const backendUrl = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
 
-    // OneChain configuration
+    // OneChain configuration (default mainnet)
     this.ONECHAIN_CONFIG = {
       apiEndpoint: process.env.REACT_APP_ONECHAIN_API || 'https://api.onelabs.cc',
       // Use backend proxy for RPC to bypass CORS
       rpcEndpoint: `${backendUrl}/api/rpc`,
       // Keep original RPC URL for reference
-      originalRpcEndpoint: process.env.REACT_APP_ONECHAIN_RPC || 'https://rpc-testnet.onelabs.cc:443',
-      network: process.env.REACT_APP_ONECHAIN_NETWORK || 'testnet',
+      originalRpcEndpoint: process.env.REACT_APP_ONECHAIN_RPC || 'https://rpc-mainnet.onelabs.cc:443',
+      network: process.env.REACT_APP_ONECHAIN_NETWORK || 'mainnet',
       projectId: process.env.REACT_APP_ONECHAIN_PROJECT_ID || 'oneninja',
       gameContractAddress: process.env.REACT_APP_GAME_CONTRACT_ADDRESS,
       // OneChain Infrastructure Flags
@@ -44,6 +47,9 @@ class OneChainService {
     };
 
     console.log('📡 OneChainService initialized with RPC proxy:', this.ONECHAIN_CONFIG.rpcEndpoint);
+
+    // Chain ID for wallet signing (onechain:mainnet | onechain:testnet)
+    this.getChainId = () => `onechain:${this.ONECHAIN_CONFIG.network || 'mainnet'}`;
 
     // Wait for wallet to inject before restoring session
     this.waitForWallet().then(() => {
@@ -353,8 +359,9 @@ class OneChainService {
       // Last resort: use sui-compatible provider with chain override
       // OneChain is built on Sui's framework, so we use sui provider but specify onechain network
       if (window.onechain.sui && typeof window.onechain.sui.connect === 'function') {
+        const chainId = `onechain:${this.ONECHAIN_CONFIG.network || 'mainnet'}`;
         console.log('   ⚠️ Using window.onechain.sui provider (Sui-compatible)');
-        console.log('      IMPORTANT: Will specify chain: onechain:testnet in all transactions');
+        console.log('      IMPORTANT: Will specify chain:', chainId, 'in all transactions');
         return { provider: window.onechain.sui, name: 'OneWallet', chain: 'sui' };
       }
 
@@ -685,11 +692,11 @@ class OneChainService {
     console.log('\nStep 2: Validating wallet address format...');
     if (!this.walletAddress || typeof this.walletAddress !== 'string') {
       console.error('❌ Invalid wallet address type:', typeof this.walletAddress);
-      return { amount: '0.0000', symbol: 'HACK', error: 'Invalid address type' };
+      return { amount: '0.0000', symbol: 'DIAMOND', error: 'Invalid address type' };
     }
     if (!this.walletAddress.startsWith('0x')) {
       console.error('❌ Address does not start with 0x:', this.walletAddress);
-      return { amount: '0.0000', symbol: 'HACK', error: 'Invalid address format' };
+      return { amount: '0.0000', symbol: 'DIAMOND', error: 'Invalid address format' };
     }
     console.log('✅ Address format valid');
 
@@ -699,12 +706,12 @@ class OneChainService {
       console.log('   Target address:', this.walletAddress);
 
       try {
-        const hackCoinType = process.env.REACT_APP_HACK_COIN_TYPE || '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON';
+        const hackCoinType = process.env.REACT_APP_HACK_COIN_TYPE || DEFAULT_COIN_TYPE;
         const balance = await this.apiClient.getBalance(this.walletAddress, hackCoinType);
         console.log('   Raw API response:', JSON.stringify(balance));
 
         if (balance && balance.totalBalance !== undefined) {
-          // Convert from MIST (smallest unit) to HACK (9 decimals)
+          // Convert from MIST (smallest unit) to DIAMOND (9 decimals)
           const rawBalance = balance.totalBalance;
           console.log('   Raw totalBalance:', rawBalance, '(type:', typeof rawBalance, ')');
 
@@ -713,13 +720,13 @@ class OneChainService {
 
           console.log('═══════════════════════════════════════════════════════');
           console.log('✅ BALANCE FETCH SUCCESSFUL');
-          console.log('   Balance:', formattedBalance, 'HACK');
+          console.log('   Balance:', formattedBalance, 'DIAMOND');
           console.log('   Coin Type:', balance.coinType || 'unknown');
           console.log('═══════════════════════════════════════════════════════\n');
 
           return {
             amount: formattedBalance,
-            symbol: 'HACK',
+            symbol: 'DIAMOND',
             coinType: balance.coinType
           };
         } else {
@@ -751,10 +758,10 @@ class OneChainService {
 
             if (result && result.totalBalance) {
               const balanceInToken = (Number(result.totalBalance) / 1_000_000_000).toFixed(4);
-              console.log('✅ Balance from provider:', balanceInToken, 'HACK\n');
+              console.log('✅ Balance from provider:', balanceInToken, 'DIAMOND\n');
               return {
                 amount: balanceInToken,
-                symbol: 'HACK'
+                symbol: 'DIAMOND'
               };
             }
           } catch (err) {
@@ -770,17 +777,17 @@ class OneChainService {
             console.log('   Provider all balances result:', JSON.stringify(result));
 
             if (result && result.length > 0) {
-              // Only look for HACK coin - do NOT fallback to SUI
-              const hackCoinType = process.env.REACT_APP_HACK_COIN_TYPE || '::hackathon::HACKATHON';
+              // Only look for DIAMOND coin - do NOT fallback to SUI
+              const hackCoinType = process.env.REACT_APP_HACK_COIN_TYPE || DEFAULT_COIN_TYPE;
               const targetBalance = result.find(b => b.coinType && b.coinType.includes(hackCoinType));
 
               if (targetBalance && targetBalance.totalBalance) {
                 const balanceInToken = (Number(targetBalance.totalBalance) / 1_000_000_000).toFixed(4);
-                console.log('✅ Balance from provider.getAllBalances():', balanceInToken, 'HACK');
+                console.log('✅ Balance from provider.getAllBalances():', balanceInToken, 'DIAMOND');
                 console.log('   Coin type:', targetBalance.coinType, '\n');
                 return {
                   amount: balanceInToken,
-                  symbol: 'HACK'
+                  symbol: 'DIAMOND'
                 };
               }
             }
@@ -795,9 +802,9 @@ class OneChainService {
       // All methods failed
       console.log('═══════════════════════════════════════════════════════');
       console.warn('⚠️ ALL BALANCE FETCH METHODS FAILED');
-      console.warn('   Returning 0.0000 HACK');
+      console.warn('   Returning 0.0000 DIAMOND');
       console.log('═══════════════════════════════════════════════════════\n');
-      return { amount: '0.0000', symbol: 'HACK', error: 'All fetch methods failed' };
+      return { amount: '0.0000', symbol: 'DIAMOND', error: 'All fetch methods failed' };
 
     } catch (error) {
       console.log('═══════════════════════════════════════════════════════');
@@ -805,13 +812,13 @@ class OneChainService {
       console.error('   Error:', error.message);
       console.error('   Stack:', error.stack);
       console.log('═══════════════════════════════════════════════════════\n');
-      return { amount: '0.0000', symbol: 'HACK', error: error.message };
+      return { amount: '0.0000', symbol: 'DIAMOND', error: error.message };
     }
   }
 
   /**
    * Get coin objects for transaction building
-   * @param {number} minAmount - Minimum amount needed in HACK
+   * @param {number} minAmount - Minimum amount needed in DIAMOND
    * @returns {Promise<Array>} Array of coin objects
    */
   async getCoinObjects(minAmount = 0) {
@@ -821,7 +828,7 @@ class OneChainService {
       }
 
       console.log(`🪙 Fetching coin objects for: ${this.walletAddress}`);
-      const hackCoinType = process.env.REACT_APP_HACK_COIN_TYPE || '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON';
+      const hackCoinType = process.env.REACT_APP_HACK_COIN_TYPE || DEFAULT_COIN_TYPE;
 
       // Use OneLabs API SDK to get specific coins
       if (this.apiClient && this.apiClient.getSuiClient()) {
@@ -933,7 +940,7 @@ class OneChainService {
       const nftDescription = gameStats.isWelcomeNFT
         ? 'Welcome to OneNinja! Your journey begins here.'
         : gameStats.isWinnerNFT
-          ? `🏆 Victory in multiplayer! Won with score ${gameStats.score} and claimed ${gameStats.prizeAmount || '?'} HACK!`
+          ? `🏆 Victory in multiplayer! Won with score ${gameStats.score} and claimed ${gameStats.prizeAmount || '?'} DIAMOND!`
           : `${gameStats.tierIcon || '🎮'} Achieved ${gameStats.tierName} tier with ${gameStats.totalScore} total score!`;
 
       // Generate proper NFT image URL
@@ -1007,7 +1014,7 @@ class OneChainService {
       return {
         success: true,
         transactionHash: txDigest,
-        explorerUrl: `https://onescan.cc/testnet/tx/${txDigest}`,
+        explorerUrl: `${ONECHAIN_EXPLORER_BASE}/tx/${txDigest}`,
         name: nftName,
         tier: gameStats.tierName,
         score: gameStats.score,
@@ -1052,7 +1059,7 @@ class OneChainService {
       success: true,
       transactionHash: mockTxHash,
       tokenId: Date.now(),
-      explorerUrl: `https://onescan.cc/testnet/tx/${mockTxHash}`,
+      explorerUrl: `${ONECHAIN_EXPLORER_BASE}/tx/${mockTxHash}`,
       name: nftName,
       tier: gameStats.tierName,
       score: gameStats.score,
@@ -1169,7 +1176,7 @@ class OneChainService {
   async getTokenPrice() {
     try {
       // In production this would call a real DEX or oracle
-      const data = await this.apiClient.getTokenPrice('HACK');
+      const data = await this.apiClient.getTokenPrice('DIAMOND');
       return data.price;
     } catch (error) {
       console.error('Error fetching token price:', error);
@@ -1399,9 +1406,9 @@ class OneChainService {
   }
 
   /**
-   * Transfer HACK to a recipient
+   * Transfer DIAMOND to a recipient
    * @param {string} recipient - Recipient address
-   * @param {number} amount - Amount in HACK (will be converted to MIST)
+   * @param {number} amount - Amount in DIAMOND (will be converted to MIST)
    */
   async transferToken(recipient, amount) {
     console.log('💸 transferToken called');
@@ -1411,9 +1418,9 @@ class OneChainService {
     }
 
     try {
-      console.log(`💸 Transferring ${amount} HACK to ${recipient}...`);
+      console.log(`💸 Transferring ${amount} DIAMOND to ${recipient}...`);
 
-      // Convert HACK to MIST (1 HACK = 10^9 MIST)
+      // Convert DIAMOND to MIST (1 DIAMOND = 10^9 MIST)
       if (!this.walletConnected || !this.walletAddress) {
         throw new Error('Wallet not connected');
       }
@@ -1423,9 +1430,9 @@ class OneChainService {
         throw new Error('Wallet provider not available');
       }
 
-      console.log(`💸 Transferring ${amount} HACK to ${recipient}...`);
+      console.log(`💸 Transferring ${amount} DIAMOND to ${recipient}...`);
 
-      // Convert HACK to MIST (1 HACK = 10^9 MIST)
+      // Convert DIAMOND to MIST (1 DIAMOND = 10^9 MIST)
       // eslint-disable-next-line no-undef
       const amountInMist = BigInt(Math.floor(amount * 1_000_000_000));
 
@@ -1457,14 +1464,15 @@ class OneChainService {
 
       console.log('   Using account:', account?.address || account);
 
+      const chainId = this.getChainId();
       // Try different methods based on what the wallet supports
       if (typeof wallet.provider.signAndExecuteTransaction === 'function') {
         // Newer wallet standard
-        console.log('   Using signAndExecuteTransaction with chain: onechain:testnet...');
+        console.log('   Using signAndExecuteTransaction with chain:', chainId, '...');
         result = await wallet.provider.signAndExecuteTransaction({
           transaction: tx,
           account: account,
-          chain: 'onechain:testnet', // CRITICAL: Specify OneChain network
+          chain: chainId,
           options: {
             showEffects: true,
             showEvents: true,
@@ -1473,7 +1481,7 @@ class OneChainService {
         });
       } else if (typeof wallet.provider.signAndExecuteTransactionBlock === 'function') {
         // Older wallet standard - serialize the transaction first
-        console.log('   Using signAndExecuteTransactionBlock with chain: onechain:testnet...');
+        console.log('   Using signAndExecuteTransactionBlock with chain:', chainId, '...');
 
         // Build the transaction bytes first using the API client
         try {
@@ -1486,7 +1494,7 @@ class OneChainService {
           result = await wallet.provider.signAndExecuteTransactionBlock({
             transactionBlock: txBytes,
             account: account,
-            chain: 'onechain:testnet', // CRITICAL: Specify OneChain network
+            chain: chainId,
             options: {
               showEffects: true,
               showEvents: true,
@@ -1500,7 +1508,7 @@ class OneChainService {
           result = await wallet.provider.signAndExecuteTransactionBlock({
             transactionBlock: tx,
             account: account,
-            chain: 'onechain:testnet', // CRITICAL: Specify OneChain network
+            chain: chainId,
             options: {
               showEffects: true,
               showEvents: true,
@@ -1604,13 +1612,14 @@ class OneChainService {
       console.log('   Wallet methods: signAndExecuteTransaction=' + hasSignAndExecute +
         ', signAndExecuteTransactionBlock=' + hasSignAndExecuteBlock);
 
+      const chainId = this.getChainId();
       if (hasSignAndExecute) {
         // Newer Sui wallet standard - pass Transaction directly with account
         console.log('   Using signAndExecuteTransaction (newer API)...');
         result = await provider.signAndExecuteTransaction({
           transaction: transaction,
-          account: account, // Add account parameter for OneWallet
-          chain: 'onechain:testnet', // Specify OneChain network for multi-chain wallets
+          account: account,
+          chain: chainId,
           options: {
             showEffects: true,
             showEvents: true,
@@ -1632,7 +1641,7 @@ class OneChainService {
           result = await provider.signAndExecuteTransactionBlock({
             transactionBlock: txBytes,
             account: account,
-            chain: 'onechain:testnet', // CRITICAL: Specify OneChain network
+            chain: chainId,
             options: {
               showEffects: true,
               showEvents: true,
@@ -1648,7 +1657,7 @@ class OneChainService {
           result = await provider.signAndExecuteTransactionBlock({
             transactionBlock: transaction,
             account: account,
-            chain: 'onechain:testnet', // CRITICAL: Specify OneChain network
+            chain: chainId,
             options: {
               showEffects: true,
               showEvents: true,

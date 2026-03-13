@@ -19,8 +19,8 @@ class OnelabsApiClient {
       // Use backend proxy for RPC to bypass CORS
       rpcEndpoint: config.rpcEndpoint || `${backendUrl}/api/rpc`,
       // Keep original RPC URL for reference
-      originalRpcEndpoint: process.env.REACT_APP_ONECHAIN_RPC || 'https://rpc-testnet.onelabs.cc:443',
-      network: config.network || process.env.REACT_APP_ONECHAIN_NETWORK || 'testnet',
+      originalRpcEndpoint: process.env.REACT_APP_ONECHAIN_RPC || 'https://rpc-mainnet.onelabs.cc:443',
+      network: config.network || process.env.REACT_APP_ONECHAIN_NETWORK || 'mainnet',
       projectId: config.projectId || process.env.REACT_APP_ONECHAIN_PROJECT_ID || 'oneninja',
       timeout: config.timeout || 30000, // 30 seconds default
     };

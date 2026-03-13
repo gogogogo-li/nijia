@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaWallet, FaTrophy, FaCoins, FaSignOutAlt, FaCheckCircle, FaUser, FaSync, FaCopy, FaArrowLeft } from 'react-icons/fa';
 import { getWalletData } from '../utils/walletStorage';
 import { getTierByScore, TIERS } from '../utils/tierSystem';
+import { explorerAccountUrl } from '../utils/explorer';
 import './OneWallet.css';
 
 // Helper functions
@@ -13,7 +14,7 @@ const formatAddress = (address) => {
 const formatBalance = (balance) => {
   console.log('💰 formatBalance called with:', balance, 'type:', typeof balance);
   if (!balance) return '0.0000';
-  // Balance is already formatted from service (HACK with 9 decimals: 1 HACK = 1,000,000,000 MIST)
+  // Balance is already formatted from service (DIAMOND with 9 decimals: 1 DIAMOND = 1,000,000,000 MIST)
   if (typeof balance === 'object' && balance.amount) {
     console.log('   Using balance.amount:', balance.amount);
     return balance.amount;
@@ -307,9 +308,9 @@ const OneWallet = ({ onechain }) => {
                     <div className="balance-item">
                       <FaCoins className="balance-icon" />
                       <div className="balance-info">
-                        <span className="balance-label">Balance:</span>
+                        <span className="balance-label">Balance (DIAMOND):</span>
                         <span className="balance-value">
-                          {onechain.balance ? formatBalance(onechain.balance) : '...'} HACK
+                          {onechain.balance ? formatBalance(onechain.balance) : '...'} DIAMOND
                         </span>
                       </div>
                       <button
@@ -378,7 +379,7 @@ const OneWallet = ({ onechain }) => {
                       )}
                       {onechain?.walletAddress && (
                         <a
-                          href={`https://onescan.cc/testnet/account?address=${onechain.walletAddress}`}
+                          href={explorerAccountUrl(onechain.walletAddress)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="view-on-explorer"

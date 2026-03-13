@@ -8,9 +8,9 @@ import { Ed25519Keypair } from '@onelabs/sui/keypairs/ed25519';
 import { suiClient, PACKAGE_ID, GAME_LOBBY_ID, STATS_REGISTRY_ID } from '../config/onechain.js';
 import logger from '../utils/logger.js';
 
-// Contract constants
+// Contract constants (mainnet default: DIAMONDCOI)
 const CLOCK_OBJECT = '0x6';
-const HACK_COIN_TYPE = '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON';
+const HACK_COIN_TYPE = process.env.HACK_COIN_TYPE || '0x4061df8aee9971dee4b2b21a065abc7b63502d26b732f35bf1ecd8db64d1b5dd::diamondcoi::DIAMONDCOI';
 
 class OnChainSettlement {
     constructor() {

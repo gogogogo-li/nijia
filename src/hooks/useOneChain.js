@@ -133,7 +133,7 @@ export const useOneChain = () => {
               return loadBalance(attempt + 1);
             }
             console.error('❌ All balance fetch attempts failed');
-            setBalance({ amount: '0.0000', symbol: 'HACK', error: 'Failed to fetch' });
+            setBalance({ amount: '0.0000', symbol: 'DIAMOND', error: 'Failed to fetch' });
             return null;
           }
         };
@@ -189,7 +189,7 @@ export const useOneChain = () => {
       return balanceData;
     } catch (error) {
       console.error('Error refreshing balance:', error);
-      return balance || { amount: '0', symbol: 'HACK' };
+      return balance || { amount: '0', symbol: 'DIAMOND' };
     }
   }, [balance]);
 
@@ -240,9 +240,9 @@ export const useOneChain = () => {
     try {
       console.log('🎮 Creating solo game on-chain...');
       console.log(`   Difficulty: ${difficulty}`);
-      console.log(`   Stake: ${getStakeAmountToken(difficulty)} HACK`);
+      console.log(`   Stake: ${getStakeAmountToken(difficulty)} DIAMOND`);
 
-      // 1. Fetch available HACK coin objects
+      // 1. Fetch available DIAMOND coin objects
       const coinObjects = await onechainService.getCoinObjects();
       console.log('   Available coins:', coinObjects);
 
@@ -255,7 +255,7 @@ export const useOneChain = () => {
         selectedCoinId = bestCoin.objectId;
         console.log('   Selected coin for payment:', selectedCoinId);
       } else {
-        console.warn('   ⚠️ No HACK coins found! Transaction might fail if not simulating.');
+        console.warn('   ⚠️ No DIAMOND coins found! Transaction might fail if not simulating.');
       }
 
       // Build the transaction with selected coin

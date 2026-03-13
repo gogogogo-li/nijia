@@ -15,7 +15,7 @@ const IS_DEV_MODE = !PACKAGE_ID || !GAME_LOBBY_ID;
 
 // OneChain constants
 const CLOCK_OBJECT = '0x6'; // Standard clock object on Sui/OneChain
-const HACK_COIN_TYPE = process.env.REACT_APP_HACK_COIN_TYPE || '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON'; // HACK coin type on OneChain
+const HACK_COIN_TYPE = process.env.REACT_APP_HACK_COIN_TYPE || '0x4061df8aee9971dee4b2b21a065abc7b63502d26b732f35bf1ecd8db64d1b5dd::diamondcoi::DIAMONDCOI';
 
 // Bet tier mapping (matching contract)
 const BET_TIERS = {

@@ -5,6 +5,7 @@ import QuickEmotes, { EmoteTrigger } from './QuickEmotes';
 import EmotePopup from './EmotePopup';
 import { canMintNFTAtTier, getTierByScore } from '../utils/tierSystem';
 import { getWalletData, setWalletData } from '../utils/walletStorage';
+import { explorerTxUrl, explorerAccountUrl, explorerTxBlocksDetailUrl } from '../utils/explorer';
 import '../styles/unified-design.css';
 import './ResultsScreen.css';
 import { GiTrophyCup, GiCrossedSwords } from 'react-icons/gi';
@@ -223,8 +224,8 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
                 }}>
                   <p className={`payout ${soloGameData.won ? 'positive' : 'negative'}`}>
                     {soloGameData.won
-                      ? `+${(soloGameData.stake * 2 * 0.98).toFixed(2)} HACK`
-                      : `-${soloGameData.stake} HACK`}
+                      ? `+${(soloGameData.stake * 2 * 0.98).toFixed(2)} DIAMOND`
+                      : `-${soloGameData.stake} DIAMOND`}
                   </p>
                 </div>
               </div>
@@ -259,7 +260,7 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
                     <div style={{ flex: 1 }}>
                       <span style={{ color: '#4ade80', fontSize: '0.9rem' }}>Payout sent! </span>
                       <a
-                        href={`https://onescan.cc/testnet/transactionBlocksDetail?digest=${soloPayoutTxHash}`}
+                        href={explorerTxBlocksDetailUrl(soloPayoutTxHash)}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ color: '#60a5fa', fontSize: '0.85rem', textDecoration: 'underline' }}
@@ -366,7 +367,7 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
                 <div className="nft-links">
                   {transactionHash && (
                     <a
-                      href={`https://onescan.cc/testnet/tx/${transactionHash}`}
+                      href={explorerTxUrl(transactionHash)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="unified-button unified-button-secondary nft-link"
@@ -377,7 +378,7 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
                   )}
 
                   <a
-                    href={`https://onescan.cc/testnet/account?address=${onechain.walletAddress}`}
+                    href={explorerAccountUrl(onechain.walletAddress)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="unified-button unified-button-secondary nft-link"

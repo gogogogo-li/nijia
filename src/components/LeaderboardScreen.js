@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import onechainService from '../services/onechainService';
+import { explorerAccountUrl } from '../utils/explorer';
 
 const LeaderboardScreen = ({ onShowStartScreen }) => {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -264,7 +265,7 @@ const LeaderboardScreen = ({ onShowStartScreen }) => {
                           fontFamily: 'monospace'
                         }}>
                           <a
-                            href={`https://explorer.testnet.citrea.xyz/address/${entry.address}`}
+                            href={explorerAccountUrl(entry.address)}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{

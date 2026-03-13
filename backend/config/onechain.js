@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const RPC_URL = process.env.ONECHAIN_RPC || 'https://rpc-testnet.onelabs.cc:443';
-const NETWORK = process.env.ONECHAIN_NETWORK || 'testnet';
+const RPC_URL = process.env.ONECHAIN_RPC || 'https://rpc-mainnet.onelabs.cc:443';
+const NETWORK = process.env.ONECHAIN_NETWORK || 'mainnet';
 
 export const suiClient = new SuiClient({ url: RPC_URL });
 

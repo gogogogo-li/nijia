@@ -4,15 +4,15 @@ import { ITEM_CONFIG, SPEED_CONFIG, DIFFICULTY_CONFIG, SUPER_FRUIT_CONFIG } from
 
 // OneChain ecosystem tokens - distinct logos per coin
 const TOKEN_TYPES = [
-  { name: "HACK", image: "/logo.svg", color: "#467DFF", ringColor: "#467DFF", glowColor: "#467DFF66", points: 10, speedMod: 1.0, size: 1.0, difficulty: "Easy", spawnWeight: 0.22, ringWidth: 3 },
   { name: "OCT", image: "https://cryptologos.cc/logos/optimism-op-logo.svg?v=029", color: "#FF0420", ringColor: "#FF0420", glowColor: "#FF042066", points: 15, speedMod: 1.1, size: 1.0, difficulty: "Easy", spawnWeight: 0.20, ringWidth: 3 },
   { name: "USDH", image: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=029", color: "#2775CA", ringColor: "#2775CA", glowColor: "#2775CA66", points: 20, speedMod: 1.2, size: 1.0, difficulty: "Easy", spawnWeight: 0.16, ringWidth: 4 },
   { name: "USDO", image: "https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.svg?v=029", color: "#F5AC37", ringColor: "#F5AC37", glowColor: "#F5AC3766", points: 25, speedMod: 1.3, size: 1.05, difficulty: "Medium", spawnWeight: 0.12, ringWidth: 4 },
   { name: "OUSDT", image: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=029", color: "#26A17B", ringColor: "#26A17B", glowColor: "#26A17B66", points: 30, speedMod: 1.4, size: 1.05, difficulty: "Medium", spawnWeight: 0.10, ringWidth: 4 },
-  { name: "Gold HACK", image: "/logo.svg", color: "#FFD700", ringColor: "#FFD700", glowColor: "#FFD70066", points: 40, speedMod: 1.6, size: 1.1, difficulty: "Hard", spawnWeight: 0.08, ringWidth: 5 },
   { name: "Gold OCT", image: "https://cryptologos.cc/logos/optimism-op-logo.svg?v=029", color: "#F39C12", ringColor: "#F39C12", glowColor: "#F39C1266", points: 50, speedMod: 1.75, size: 1.15, difficulty: "Hard", spawnWeight: 0.05, ringWidth: 5 },
   { name: "Diamond USDH", image: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=029", color: "#B9F2FF", ringColor: "#B9F2FF", glowColor: "#B9F2FF88", points: 60, speedMod: 1.9, size: 1.2, difficulty: "Expert", spawnWeight: 0.04, ringWidth: 5, shimmer: true },
-  { name: "Legendary HACK", image: "/logo.svg", color: "#FF4500", ringColor: "#FF4500", glowColor: "#FF450088", points: 75, speedMod: 2.0, size: 1.25, difficulty: "Expert", spawnWeight: 0.02, ringWidth: 6, shimmer: true, doubleRing: true },
+  { name: "DIAMOND", image: "/logo.svg", color: "#467DFF", ringColor: "#467DFF", glowColor: "#467DFF66", points: 10, speedMod: 1.0, size: 1.0, difficulty: "Easy", spawnWeight: 0.22, ringWidth: 3 },
+  { name: "Gold DIAMOND", image: "/logo.svg", color: "#FFD700", ringColor: "#FFD700", glowColor: "#FFD70066", points: 40, speedMod: 1.6, size: 1.1, difficulty: "Hard", spawnWeight: 0.08, ringWidth: 5 },
+  { name: "Legendary DIAMOND", image: "/logo.svg", color: "#FF4500", ringColor: "#FF4500", glowColor: "#FF450088", points: 75, speedMod: 2.0, size: 1.25, difficulty: "Expert", spawnWeight: 0.02, ringWidth: 6, shimmer: true, doubleRing: true },
   { name: "Mythic OCT", image: "https://cryptologos.cc/logos/optimism-op-logo.svg?v=029", color: "#FF00FF", ringColor: "#FF00FF", glowColor: "#FF00FF88", points: 100, speedMod: 2.2, size: 1.3, difficulty: "Expert", spawnWeight: 0.01, ringWidth: 6, shimmer: true, doubleRing: true },
 ];
 

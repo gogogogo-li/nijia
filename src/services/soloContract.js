@@ -8,7 +8,7 @@ import { Transaction } from '@onelabs/sui/transactions';
 // Contract configuration from environment
 const PACKAGE_ID = process.env.REACT_APP_PACKAGE_ID;
 const SOLO_GAME_LOBBY_ID = process.env.REACT_APP_SOLO_GAME_LOBBY_ID;
-const HACK_COIN_TYPE = process.env.REACT_APP_HACK_COIN_TYPE || '0x8b76fc2a2317d45118770cefed7e57171a08c477ed16283616b15f099391f120::hackathon::HACKATHON';
+const HACK_COIN_TYPE = process.env.REACT_APP_HACK_COIN_TYPE || '0x4061df8aee9971dee4b2b21a065abc7b63502d26b732f35bf1ecd8db64d1b5dd::diamondcoi::DIAMONDCOI';
 const CLOCK_OBJECT = '0x6';
 
 // Development mode check

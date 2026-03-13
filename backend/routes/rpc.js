@@ -5,7 +5,7 @@ const router = express.Router();
 
 // RPC Proxy endpoint to bypass CORS issues
 // This forwards JSON-RPC requests to the OneLabs RPC endpoint
-const RPC_URL = process.env.ONECHAIN_RPC || 'https://rpc-testnet.onelabs.cc:443';
+const RPC_URL = process.env.ONECHAIN_RPC || 'https://rpc-mainnet.onelabs.cc:443';
 
 /**
  * POST /api/rpc

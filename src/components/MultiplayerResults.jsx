@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import multiplayerService from '../services/multiplayerService';
 import onechainService from '../services/onechainService';
+import { explorerTxUrl } from '../utils/explorer';
 import './MultiplayerResults.css';
 import {
     GiTrophyCup,
@@ -148,12 +149,12 @@ const MultiplayerResults = ({ game, walletAddress, onPlayAgain, onMainMenu }) =>
                     <div className="payout-details">
                         <div className="payout-row">
                             <span className="payout-label">Total Pot:</span>
-                            <span className="payout-value">{totalPot.toFixed(2)} HACK</span>
+                            <span className="payout-value">{totalPot.toFixed(2)} DIAMOND</span>
                         </div>
 
                         <div className="payout-row">
                             <span className="payout-label">Platform Fee ({feePercentage}%):</span>
-                            <span className="payout-value fee">-{platformFee.toFixed(4)} HACK</span>
+                            <span className="payout-value fee">-{platformFee.toFixed(4)} DIAMOND</span>
                         </div>
 
                         <div className="payout-divider"></div>
@@ -161,7 +162,7 @@ const MultiplayerResults = ({ game, walletAddress, onPlayAgain, onMainMenu }) =>
                         <div className="payout-row total">
                             <span className="payout-label">Your Payout:</span>
                             <span className={`payout-value ${isWinner ? 'win' : ''}`}>
-                                {isWinner ? '+' : ''}{payout.toFixed(4)} HACK
+                                {isWinner ? '+' : ''}{payout.toFixed(4)} DIAMOND
                             </span>
                         </div>
 
@@ -175,7 +176,7 @@ const MultiplayerResults = ({ game, walletAddress, onPlayAgain, onMainMenu }) =>
 
                         {game.transaction_hash && (
                             <a
-                                href={`https://onescan.cc/testnet/tx/${game.transaction_hash}`}
+                                href={explorerTxUrl(game.transaction_hash)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="view-tx-btn"
@@ -199,7 +200,7 @@ const MultiplayerResults = ({ game, walletAddress, onPlayAgain, onMainMenu }) =>
                                 <p className="nft-success-text">Victory NFT Minted!</p>
                                 {mintedNftTx && (
                                     <a
-                                        href={`https://onescan.cc/testnet/tx/${mintedNftTx}`}
+                                        href={explorerTxUrl(mintedNftTx)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="view-tx-btn"
