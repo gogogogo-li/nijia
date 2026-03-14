@@ -33,10 +33,17 @@ const httpServer = createServer(app);
 // Trust proxy for Render deployment (required for rate limiting)
 app.set('trust proxy', 1);
 
-// Parse allowed origins
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+// Allowed CORS origins: code defaults + FRONTEND_URL env (comma-separated)
+const defaultOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3002',
+  'https://ninja.onechainops.com'
+];
+const envOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
-  .map(s => s.trim());
+  .map(s => s.trim())
+  .filter(Boolean);
+const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
 
 // Socket.IO setup with enhanced security
 const io = new Server(httpServer, {
@@ -64,18 +71,21 @@ app.use(helmet({
 
 app.use(compression());
 
-// CORS configuration
+// CORS configuration: set CORS_ALLOW_ALL=true to allow any origin; otherwise use FRONTEND_URL whitelist
+const corsAllowAll = process.env.CORS_ALLOW_ALL === 'true';
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      logger.warn(`Blocked CORS request from: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: corsAllowAll
+    ? true
+    : (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          logger.warn(`Blocked CORS request from: ${origin}`);
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Wallet-Address', 'X-Wallet-Signature', 'X-Wallet-Message', 'client-sdk-version', 'client-sdk-type', 'client-target-api-version', 'client-request-method']
 }));
 
