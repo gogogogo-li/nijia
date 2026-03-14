@@ -92,6 +92,9 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Health check (no rate limit)
+app.get('/api/health', (req, res) => res.status(200).end());
+
 app.use('/api/', limiter);
 
 // Request logging
