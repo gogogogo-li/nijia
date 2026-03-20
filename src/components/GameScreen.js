@@ -52,7 +52,12 @@ const GameScreen = ({
     // The lobby disconnects on unmount, so we need to reconnect here
     if (!multiplayerService.isConnected()) {
       console.log('🔌 Reconnecting socket for multiplayer game...');
-      multiplayerService.connect(onechain?.walletAddress, onechain?.walletSignature, onechain?.walletAuthMessage);
+      multiplayerService.connect(
+        multiplayerService.walletAddress || onechain?.walletAddress,
+        multiplayerService.walletSignature || onechain?.walletSignature,
+        multiplayerService.walletAuthMessage || onechain?.walletAuthMessage,
+        { token: multiplayerService.jwtToken }
+      );
     }
 
     // Handle opponent finishing their game first (race mode)

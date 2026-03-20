@@ -11,15 +11,18 @@ import FruitNinjaLeaderboard from './components/FruitNinjaLeaderboard';
 import { useGameState } from './hooks/useGameState';
 import { useTaskbarControls } from './hooks/useTaskbarControls';
 import { useOneChain } from './hooks/useOneChain';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 import { SpeedInsights } from "@vercel/speed-insights/react"
 import { Analytics } from "@vercel/analytics/react"
 import MultiplayerLobby from './components/MultiplayerLobby';
 import multiplayerService from './services/multiplayerService';
 
-function App() {
-  // OneChain wallet and blockchain integration - must be first to get wallet address
-  const onechain = useOneChain();
+function AppInner() {
+  const auth = useAuth();
+  const onechain = auth.onechain;
+
+  const effectiveWalletAddress = auth.walletAddress || onechain?.walletAddress;
 
   const {
     gameState,
@@ -33,7 +36,7 @@ function App() {
     createScreenFlash,
     decrementTimer,
     setSoloGameContext
-  } = useGameState(onechain?.walletAddress); // Pass wallet address for wallet-scoped storage
+  } = useGameState(effectiveWalletAddress);
   const [particles, setParticles] = useState([]);
   const [showLanding, setShowLanding] = useState(true);
   const [showMultiplayer, setShowMultiplayer] = useState(false);
@@ -43,7 +46,6 @@ function App() {
   const [soloGameData, setSoloGameData] = useState(null);
   const [multiplayerGameId, setMultiplayerGameId] = useState(null);
 
-  // Set solo game context for mid-game score/lives reporting
   useEffect(() => {
     if (soloGameData && soloGameData.gameId && onechain?.walletAddress) {
       setSoloGameContext({
@@ -155,8 +157,7 @@ function App() {
   const handleModeSelect = (mode) => {
     setShowModeSelection(false);
     startGame(mode);
-    // Start blockchain game session if wallet is connected
-    if (onechain.isConnected) {
+    if (onechain?.isConnected) {
       onechain.startGameSession();
     }
   };
@@ -174,7 +175,7 @@ function App() {
   };
 
   const handleShowMultiplayer = () => {
-    if (!onechain.isConnected) {
+    if (!auth.isConnected && !onechain?.isConnected) {
       alert('Please connect your OneWallet to play multiplayer games!');
       return;
     }
@@ -204,9 +205,13 @@ function App() {
     multiplayerService.clearCurrentGame();
   };
 
-  // Solo Mode Handlers
+  // Solo Mode Handlers (requires wallet -- not available in Telegram)
   const handleShowSoloMode = () => {
-    if (!onechain.isConnected) {
+    if (auth.isTelegram) {
+      alert('Staked solo games require a wallet and are not available in Telegram yet.');
+      return;
+    }
+    if (!onechain?.isConnected) {
       alert('Please connect your OneWallet to play staked solo games!');
       return;
     }
@@ -283,8 +288,7 @@ function App() {
       // 4. Start the game with 60-second timer for solo stakes
       startGame('classic', { timeLimit: 60 });
 
-      // 5. Track game start with blockchain session
-      if (onechain.isConnected) {
+      if (onechain?.isConnected) {
         onechain.startGameSession();
       }
 
@@ -301,8 +305,9 @@ function App() {
         <BladeCursor />
 
         <MultiplayerLobby
-          walletAddress={onechain.walletAddress}
+          walletAddress={effectiveWalletAddress}
           onechain={onechain}
+          auth={auth}
           onStartGame={handleStartMultiplayerGame}
           onBack={handleBackToLanding}
         />
@@ -321,7 +326,7 @@ function App() {
           onSelectDifficulty={handleSoloDifficultySelect}
           onBack={() => { setShowSoloMode(false); setShowModeSelection(true); }}
           onechain={onechain}
-          tokenBalance={onechain.tokenBalance || 0}
+          tokenBalance={onechain?.tokenBalance || 0}
         />
         <SpeedInsights />
         <Analytics />
@@ -337,7 +342,7 @@ function App() {
         <ModeSelection
           onSelectMode={handleModeSelect}
           onBack={handleBackToLanding}
-          onSoloStakes={handleShowSoloMode}
+          onSoloStakes={auth.isTelegram ? null : handleShowSoloMode}
           bestScores={{
             classic: gameState.bestScoreClassic,
             arcade: gameState.bestScoreArcade,
@@ -360,11 +365,12 @@ function App() {
           onMultiplayer={handleShowMultiplayer}
           onLeaderboard={handleShowLeaderboard}
           onechain={onechain}
+          auth={auth}
         />
         {showLeaderboard && (
           <FruitNinjaLeaderboard
             onClose={handleCloseLeaderboard}
-            walletAddress={onechain.walletAddress}
+            walletAddress={effectiveWalletAddress}
           />
         )}
         <SpeedInsights />
@@ -381,6 +387,16 @@ function App() {
       <SpeedInsights />
       <Analytics />
     </div>
+  );
+}
+
+function App() {
+  const onechain = useOneChain();
+
+  return (
+    <AuthProvider onechain={onechain}>
+      <AppInner />
+    </AuthProvider>
   );
 }
 

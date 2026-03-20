@@ -134,7 +134,7 @@ const ModeSelection = ({ onSelectMode, onBack, onSoloStakes, bestScores = {} }) 
 
       {/* Mode Cards */}
       <div className="modes-container">
-        {modes.map((mode, index) => (
+        {modes.filter(mode => !mode.isSoloStakes || onSoloStakes).map((mode, index) => (
           <div
             key={mode.id}
             className="game-mode-card"

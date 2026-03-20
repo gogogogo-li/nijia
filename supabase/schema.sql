@@ -6,6 +6,9 @@ CREATE TABLE IF NOT EXISTS players (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   wallet_address TEXT UNIQUE NOT NULL,
   display_name TEXT,
+  telegram_user_id TEXT,
+  auth_provider TEXT DEFAULT 'wallet',
+  avatar_url TEXT,
   total_games INTEGER DEFAULT 0,
   total_wins INTEGER DEFAULT 0,
   total_losses INTEGER DEFAULT 0,
@@ -139,6 +142,8 @@ CREATE INDEX IF NOT EXISTS idx_players_wallet ON players(wallet_address);
 CREATE INDEX IF NOT EXISTS idx_players_rating ON players(rating DESC);
 CREATE INDEX IF NOT EXISTS idx_players_earnings ON players(total_earnings DESC);
 CREATE INDEX IF NOT EXISTS idx_players_last_active ON players(last_active DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_players_telegram_user_id ON players(telegram_user_id) WHERE telegram_user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_players_auth_provider ON players(auth_provider);
 
 CREATE INDEX IF NOT EXISTS idx_games_game_id ON multiplayer_games(game_id);
 CREATE INDEX IF NOT EXISTS idx_games_status ON multiplayer_games(status);

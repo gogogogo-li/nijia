@@ -25,6 +25,7 @@ class MultiplayerService {
 
     this.walletSignature = null;
     this.walletAuthMessage = null;
+    this.jwtToken = null;
 
     this.listeners = {
       onGameCreated: null,
@@ -40,24 +41,26 @@ class MultiplayerService {
   }
 
   /**
-   * Connect to multiplayer server
+   * Connect to multiplayer server.
+   * Accepts an optional `options.token` for JWT-based auth (Telegram).
    */
-  async connect(walletAddress, signature = null, authMessage = null) {
-    // Always update credentials even if already connected
+  async connect(walletAddress, signature = null, authMessage = null, options = {}) {
     this.walletAddress = walletAddress;
     this.walletSignature = signature;
     this.walletAuthMessage = authMessage;
+    if (options.token) this.jwtToken = options.token;
 
     if (this.connected) {
       return;
     }
     console.log('🔌 Connecting to multiplayer with wallet:', walletAddress);
 
+    const authPayload = this.jwtToken
+      ? { token: this.jwtToken, address: walletAddress }
+      : { address: walletAddress, signature };
+
     this.socket = io(API_BASE_URL, {
-      auth: {
-        address: walletAddress,
-        signature
-      },
+      auth: authPayload,
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -70,7 +73,7 @@ class MultiplayerService {
       this.socket.on('connect', () => {
         console.log('✅ Connected to multiplayer server');
         this.connected = true;
-        this.authenticated = !!signature;
+        this.authenticated = !!(signature || this.jwtToken);
         resolve();
       });
 
@@ -102,7 +105,11 @@ class MultiplayerService {
     const headers = {};
     headers['Content-Type'] = 'application/json';
 
-    // Fall back to onechainService for latest credentials if local values are missing
+    if (this.jwtToken) {
+      headers['Authorization'] = `Bearer ${this.jwtToken}`;
+      return headers;
+    }
+
     const address = this.walletAddress || onechainService.walletAddress;
     const signature = this.walletSignature || onechainService.sessionToken;
     const message = this.walletAuthMessage || onechainService.authMessage;

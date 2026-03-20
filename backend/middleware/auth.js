@@ -1,6 +1,22 @@
 import { verifyPersonalMessageSignature, publicKeyFromRawBytes } from '@onelabs/sui/verify';
 import { parseSerializedSignature } from '@onelabs/sui/cryptography';
+import { verifyAccessToken } from '../utils/jwt.js';
 import logger from '../utils/logger.js';
+
+/**
+ * Try to authenticate via JWT Bearer token.
+ * Returns the decoded payload on success, or null if no token / invalid.
+ */
+function tryJwtAuth(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+
+  try {
+    return verifyAccessToken(authHeader.slice(7));
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Decode the message header value. Supports base64-encoded and raw strings.
@@ -52,10 +68,19 @@ async function verifyWalletSignature(messageStr, signature, address) {
 }
 
 /**
- * Optional authentication - allows requests without auth but sets req.walletAddress if provided
+ * Optional authentication - allows requests without auth but sets req.walletAddress if provided.
+ * Tries JWT Bearer token first, then falls back to wallet signature headers.
  */
 export async function optionalAuth(req, res, next) {
   try {
+    const jwtPayload = tryJwtAuth(req);
+    if (jwtPayload) {
+      req.walletAddress = jwtPayload.walletAddress;
+      req.authenticated = true;
+      req.authProvider = jwtPayload.provider || 'jwt';
+      return next();
+    }
+
     const address = req.headers['x-wallet-address'];
     
     if (address) {
@@ -65,7 +90,6 @@ export async function optionalAuth(req, res, next) {
       const signature = req.headers['x-wallet-signature'];
       const message = req.headers['x-wallet-message'];
       
-      // If signature provided, verify it
       if (signature && message) {
         const decodedMessage = decodeMessageHeader(message);
         const ok = await verifyWalletSignature(decodedMessage, signature, address);
@@ -79,15 +103,24 @@ export async function optionalAuth(req, res, next) {
     next();
   } catch (error) {
     logger.error('Optional auth error:', error);
-    next(); // Continue anyway for optional auth
+    next();
   }
 }
 
 /**
- * Authenticate wallet by verifying signature
+ * Authenticate via JWT Bearer token or wallet signature.
+ * JWT is tried first; if absent, falls back to wallet header verification.
  */
 export async function authenticateWallet(req, res, next) {
   try {
+    const jwtPayload = tryJwtAuth(req);
+    if (jwtPayload) {
+      req.authenticated = true;
+      req.walletAddress = jwtPayload.walletAddress;
+      req.authProvider = jwtPayload.provider || 'jwt';
+      return next();
+    }
+
     const address = req.headers['x-wallet-address'];
     const signature = req.headers['x-wallet-signature'];
     const message = req.headers['x-wallet-message'];
@@ -101,7 +134,6 @@ export async function authenticateWallet(req, res, next) {
       });
     }
     
-    // Signature is required for authenticated endpoints
     if (!signature || !message) {
       return res.status(401).json({
         success: false,

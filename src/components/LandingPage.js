@@ -3,7 +3,8 @@ import OneWallet from './OneWallet';
 import './LandingPage.css';
 import { GiCrossedSwords, GiTrophyCup } from 'react-icons/gi';
 
-const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain }) => {
+const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain, auth }) => {
+  const isTelegram = auth?.isTelegram;
   const handlePlayClick = (e) => {
     e.preventDefault();
     onStartGame();
@@ -33,10 +34,17 @@ const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain }) =>
 
       {/* Floating Navigation Buttons */}
       <div className="floating-nav-buttons">
-        {/* OneWallet Component */}
-        <div className="wallet-container">
-          <OneWallet onechain={onechain} />
-        </div>
+        {!isTelegram && (
+          <div className="wallet-container">
+            <OneWallet onechain={onechain} />
+          </div>
+        )}
+        {isTelegram && auth?.user && (
+          <div className="wallet-container tg-user-badge">
+            {auth.user.avatarUrl && <img src={auth.user.avatarUrl} alt="" className="tg-avatar" />}
+            <span className="tg-name">{auth.user.displayName}</span>
+          </div>
+        )}
         <button onClick={handleLeaderboardClick} className="nav-link leaderboard-btn">
           <GiTrophyCup style={{ marginRight: '6px' }} />
           Leaderboard

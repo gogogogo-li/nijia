@@ -1691,6 +1691,34 @@
   }
 }
 
+/* Telegram user badge */
+.tg-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.tg-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.tg-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
 /* Prevent iOS Safari bounce */
 @supports (-webkit-touch-callout: none) {
   .landing-page {

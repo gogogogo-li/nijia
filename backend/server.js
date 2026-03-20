@@ -15,6 +15,8 @@ import rpcRouter from './routes/rpc.js';
 import createSoloRouter from './routes/solo.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { authenticateWallet } from './middleware/auth.js';
+import { verifyAccessToken } from './utils/jwt.js';
+import authRouter from './routes/auth.js';
 import { GameManager } from './services/gameManager.js';
 import SoloGameManager from './services/soloGameManager.js';
 import RoomManager from './services/roomManager.js';
@@ -170,6 +172,7 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRouter);
 app.use('/api/games', gamesRouter);
 app.use('/api/players', playersRouter);
 app.use('/api/multiplayer', multiplayerRouter);
@@ -179,8 +182,20 @@ app.use('/api/solo', createSoloRouter(soloGameManager));
 
 // Socket.IO authentication and event handling
 io.use(async (socket, next) => {
-  const address = socket.handshake.auth.address;
-  const signature = socket.handshake.auth.signature;
+  const { address, signature, token } = socket.handshake.auth;
+
+  if (token) {
+    try {
+      const payload = verifyAccessToken(token);
+      socket.walletAddress = payload.walletAddress;
+      socket.authenticated = true;
+      socket.authProvider = payload.provider || 'jwt';
+      logger.info(`Socket connected via JWT: ${socket.id} (${payload.walletAddress})`);
+      return next();
+    } catch {
+      return next(new Error('Invalid token'));
+    }
+  }
 
   if (!address) {
     return next(new Error('Authentication required'));

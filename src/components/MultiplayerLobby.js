@@ -8,7 +8,7 @@ import { FaChartLine } from 'react-icons/fa';
 import { IoMdRefresh } from 'react-icons/io';
 import LobbyChat from './LobbyChat';
 
-const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
+const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }) => {
   const [activeTab, setActiveTab] = useState('create'); // 'create', 'join', 'stats'
   const [selectedTier, setSelectedTier] = useState(null);
   const [roomType, setRoomType] = useState('public'); // 'public' or 'private'
@@ -120,7 +120,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, onStartGame, onBack }) => {
 
     // Initialize multiplayer service with wallet address
     console.log('🔌 Connecting multiplayer service with wallet:', walletAddress);
-    multiplayerService.connect(walletAddress, onechain?.walletSignature, onechain?.walletAuthMessage).then(() => {
+    multiplayerService.connect(walletAddress, onechain?.walletSignature, onechain?.walletAuthMessage, { token: auth?.token }).then(() => {
       console.log('✅ Multiplayer service connected');
       // Subscribe to game updates
       multiplayerService.subscribeToGames();
