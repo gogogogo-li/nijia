@@ -77,14 +77,14 @@ export const useTelegram = () => {
     setUser(null);
   }, []);
 
-  const login = useCallback(async () => {
+  const login = useCallback(async (retryCount = 0) => {
     const webApp = getTelegramWebApp();
     if (!webApp?.initData) {
       console.warn('[TG-AUTH] login() aborted: no initData available');
       return;
     }
 
-    console.log('[TG-AUTH] login() starting, initData length:', webApp.initData.length);
+    console.log('[TG-AUTH] login() starting, initData length:', webApp.initData.length, 'retry:', retryCount);
     setIsAuthenticating(true);
     setError(null);
 
@@ -108,6 +108,13 @@ export const useTelegram = () => {
     } catch (err) {
       console.error('[TG-AUTH] login() exception:', err.message);
       setError(err.message);
+
+      if (retryCount < 2) {
+        const delay = (retryCount + 1) * 2000;
+        console.log(`[TG-AUTH] login() will retry in ${delay}ms (attempt ${retryCount + 1}/2)`);
+        setTimeout(() => login(retryCount + 1), delay);
+        return;
+      }
       clearAuth();
     } finally {
       setIsAuthenticating(false);

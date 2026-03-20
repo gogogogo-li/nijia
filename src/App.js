@@ -178,14 +178,22 @@ function AppInner() {
     console.log('[TG-AUTH] handleShowMultiplayer called:', {
       'auth.isTelegram': auth.isTelegram,
       'auth.isConnected': auth.isConnected,
+      'auth.isAuthenticating': auth.isAuthenticating,
       'auth.authProvider': auth.authProvider,
       'auth.walletAddress': auth.walletAddress,
+      'auth.error': auth.error || 'none',
       'onechain?.isConnected': onechain?.isConnected,
     });
 
     if (auth.isTelegram) {
       if (!auth.isConnected) {
-        alert('Telegram login in progress, please wait...');
+        if (auth.error) {
+          console.log('[TG-AUTH] handleShowMultiplayer: previous login error, retrying...');
+          auth.telegram?.login();
+          alert('Login failed, retrying... Please try again in a moment.');
+        } else {
+          alert('Telegram login in progress, please wait...');
+        }
         return;
       }
     } else if (!onechain?.isConnected) {
