@@ -118,14 +118,17 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
   useEffect(() => {
     if (!walletAddress) return;
 
-    // Initialize multiplayer service with wallet address
-    console.log('🔌 Connecting multiplayer service with wallet:', walletAddress);
+    console.log('[TG-AUTH] MultiplayerLobby connecting:', {
+      walletAddress,
+      authProvider: auth?.authProvider,
+      hasJwtToken: !!auth?.token,
+      hasWalletSignature: !!onechain?.walletSignature,
+    });
     multiplayerService.connect(walletAddress, onechain?.walletSignature, onechain?.walletAuthMessage, { token: auth?.token }).then(() => {
-      console.log('✅ Multiplayer service connected');
-      // Subscribe to game updates
+      console.log('[TG-AUTH] MultiplayerLobby: multiplayer service connected OK');
       multiplayerService.subscribeToGames();
     }).catch(err => {
-      console.error('Failed to connect multiplayer service:', err);
+      console.error('[TG-AUTH] MultiplayerLobby: connect FAILED:', err.message || err);
     });
 
     // Use multiplayerService's socket for event listening

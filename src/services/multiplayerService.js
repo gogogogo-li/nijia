@@ -78,15 +78,20 @@ class MultiplayerService {
 
     return new Promise((resolve, reject) => {
       this.socket.on('connect', () => {
-        console.log('✅ Connected to multiplayer server');
+        console.log('[TG-AUTH] Socket connected OK, id:', this.socket.id);
         this.connected = true;
         this.authenticated = !!(signature || this.jwtToken);
         resolve();
       });
 
       this.socket.on('connect_error', (error) => {
-        console.error('❌ Connection error:', error);
+        console.error('[TG-AUTH] Socket connect_error:', error.message || error);
         reject(error);
+      });
+
+      this.socket.on('disconnect', (reason) => {
+        console.warn('[TG-AUTH] Socket disconnected, reason:', reason);
+        this.connected = false;
       });
     });
   }

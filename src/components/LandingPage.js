@@ -4,7 +4,16 @@ import './LandingPage.css';
 import { GiCrossedSwords, GiTrophyCup } from 'react-icons/gi';
 
 const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain, auth }) => {
-  const isTelegram = auth?.isTelegram;
+  const isTelegram = auth?.isTelegram || !!window.Telegram?.WebApp?.platform;
+  console.log('[TG-AUTH] LandingPage render:', {
+    isTelegram,
+    'auth?.isTelegram': auth?.isTelegram,
+    'auth?.isConnected': auth?.isConnected,
+    'auth?.authProvider': auth?.authProvider,
+    'auth?.user': auth?.user?.displayName || null,
+    'onechain?.isConnected': onechain?.isConnected,
+    'window.Telegram?.WebApp?.platform': window.Telegram?.WebApp?.platform || 'N/A',
+  });
   const handlePlayClick = (e) => {
     e.preventDefault();
     onStartGame();
