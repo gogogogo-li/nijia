@@ -67,7 +67,7 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
   // Submit multiplayer score when game ends
   useEffect(() => {
     const submitMultiplayerScore = async () => {
-      if (multiplayerGameId && onechain.isConnected && !multiplayerSubmitted) {
+      if (multiplayerGameId && !multiplayerSubmitted) {
         setMultiplayerSubmitted(true);
         console.log('🎮 Submitting multiplayer score:', gameState.score);
 
@@ -86,7 +86,7 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
     };
 
     submitMultiplayerScore();
-  }, [multiplayerGameId, gameState.score, onechain.isConnected, multiplayerSubmitted]);
+  }, [multiplayerGameId, gameState.score, multiplayerSubmitted]);
 
   // Complete solo game and trigger payout when game ends
   useEffect(() => {
@@ -377,15 +377,17 @@ const ResultsScreen = ({ gameState, onStartGame, onShowStartScreen, onechain, mu
                     </a>
                   )}
 
-                  <a
-                    href={explorerAccountUrl(onechain.walletAddress)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="unified-button unified-button-secondary nft-link"
-                  >
-                    <span className="link-text">View Your NFTs</span>
-                    <span className="link-arrow">→</span>
-                  </a>
+                  {onechain?.walletAddress && (
+                    <a
+                      href={explorerAccountUrl(onechain.walletAddress)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="unified-button unified-button-secondary nft-link"
+                    >
+                      <span className="link-text">View Your NFTs</span>
+                      <span className="link-arrow">→</span>
+                    </a>
+                  )}
                 </div>
 
                 <div className="nft-details">

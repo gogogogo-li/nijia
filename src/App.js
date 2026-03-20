@@ -175,7 +175,12 @@ function AppInner() {
   };
 
   const handleShowMultiplayer = () => {
-    if (!auth.isConnected && !onechain?.isConnected) {
+    if (auth.isTelegram) {
+      if (!auth.isConnected) {
+        alert('Telegram login in progress, please wait...');
+        return;
+      }
+    } else if (!onechain?.isConnected) {
       alert('Please connect your OneWallet to play multiplayer games!');
       return;
     }
