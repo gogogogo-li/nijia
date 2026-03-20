@@ -10,19 +10,28 @@ function getTelegramWebApp() {
   return window.Telegram?.WebApp;
 }
 
-export function isTelegramEnvironment() {
+function detectTelegramEnvironment() {
   const webApp = getTelegramWebApp();
-  const result = !!(webApp && webApp.initData && webApp.initData.length > 0);
-  console.log('[TG-AUTH] isTelegramEnvironment:', result, {
+  const hasInitData = !!(webApp && webApp.initData && webApp.initData.length > 0);
+  const platform = webApp?.platform;
+  const isTgPlatform = !!(platform && platform !== 'unknown');
+  const result = hasInitData || isTgPlatform;
+  console.log('[TG-AUTH] detectTelegramEnvironment:', result, {
     hasWebApp: !!webApp,
-    hasInitData: !!webApp?.initData,
+    hasInitData,
     initDataLength: webApp?.initData?.length || 0,
+    platform: platform || 'N/A',
+    isTgPlatform,
   });
   return result;
 }
 
+export function isTelegramEnvironment() {
+  return detectTelegramEnvironment();
+}
+
 export const useTelegram = () => {
-  const isTelegram = isTelegramEnvironment();
+  const [isTelegram, setIsTelegram] = useState(() => detectTelegramEnvironment());
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [user, setUser] = useState(() => {
     try {
@@ -35,6 +44,22 @@ export const useTelegram = () => {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY));
   const [error, setError] = useState(null);
   const loginAttempted = useRef(false);
+
+  // Re-check Telegram environment after mount (handles late SDK init)
+  useEffect(() => {
+    const check = () => {
+      const detected = detectTelegramEnvironment();
+      setIsTelegram(prev => {
+        if (prev !== detected) {
+          console.log('[TG-AUTH] isTelegram changed:', prev, '->', detected);
+        }
+        return detected;
+      });
+    };
+    check();
+    const timer = setTimeout(check, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const saveAuth = useCallback((tokenVal, refreshVal, userVal) => {
     localStorage.setItem(TOKEN_KEY, tokenVal);
@@ -133,15 +158,23 @@ export const useTelegram = () => {
       return;
     }
 
-    console.log('[TG-AUTH] useEffect: Telegram detected, calling webApp.ready() + expand()');
     const webApp = getTelegramWebApp();
-    webApp.ready();
-    webApp.expand();
+    if (webApp) {
+      console.log('[TG-AUTH] useEffect: Telegram detected, calling webApp.ready() + expand(), platform:', webApp.platform);
+      webApp.ready();
+      webApp.expand();
+    } else {
+      console.warn('[TG-AUTH] useEffect: isTelegram=true but webApp is null');
+    }
 
     if (!token && !loginAttempted.current) {
-      console.log('[TG-AUTH] useEffect: no stored token, starting auto-login...');
-      loginAttempted.current = true;
-      login();
+      if (webApp?.initData) {
+        console.log('[TG-AUTH] useEffect: no stored token, starting auto-login...');
+        loginAttempted.current = true;
+        login();
+      } else {
+        console.warn('[TG-AUTH] useEffect: no stored token and no initData, cannot auto-login');
+      }
     } else {
       console.log('[TG-AUTH] useEffect: token already present or login already attempted, token:', !!token);
     }

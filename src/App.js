@@ -175,6 +175,14 @@ function AppInner() {
   };
 
   const handleShowMultiplayer = () => {
+    console.log('[TG-AUTH] handleShowMultiplayer called:', {
+      'auth.isTelegram': auth.isTelegram,
+      'auth.isConnected': auth.isConnected,
+      'auth.authProvider': auth.authProvider,
+      'auth.walletAddress': auth.walletAddress,
+      'onechain?.isConnected': onechain?.isConnected,
+    });
+
     if (auth.isTelegram) {
       if (!auth.isConnected) {
         alert('Telegram login in progress, please wait...');
