@@ -42,7 +42,7 @@ const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain, auth
     <div className="landing-page">
 
       {/* Floating Navigation Buttons */}
-      <div className="floating-nav-buttons">
+      <div className={`floating-nav-buttons${isTelegram ? ' tg-nav' : ''}`}>
         {!isTelegram && (
           <div className="wallet-container">
             <OneWallet onechain={onechain} />
