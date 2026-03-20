@@ -51,13 +51,20 @@ class MultiplayerService {
     if (options.token) this.jwtToken = options.token;
 
     if (this.connected) {
+      console.log('[TG-AUTH] multiplayerService.connect: already connected, skipping');
       return;
     }
-    console.log('🔌 Connecting to multiplayer with wallet:', walletAddress);
 
     const authPayload = this.jwtToken
       ? { token: this.jwtToken, address: walletAddress }
       : { address: walletAddress, signature };
+
+    console.log('[TG-AUTH] multiplayerService.connect:', {
+      walletAddress,
+      authMode: this.jwtToken ? 'JWT' : 'wallet-signature',
+      hasToken: !!this.jwtToken,
+      hasSignature: !!signature,
+    });
 
     this.socket = io(API_BASE_URL, {
       auth: authPayload,

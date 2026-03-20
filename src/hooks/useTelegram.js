@@ -12,7 +12,13 @@ function getTelegramWebApp() {
 
 export function isTelegramEnvironment() {
   const webApp = getTelegramWebApp();
-  return !!(webApp && webApp.initData && webApp.initData.length > 0);
+  const result = !!(webApp && webApp.initData && webApp.initData.length > 0);
+  console.log('[TG-AUTH] isTelegramEnvironment:', result, {
+    hasWebApp: !!webApp,
+    hasInitData: !!webApp?.initData,
+    initDataLength: webApp?.initData?.length || 0,
+  });
+  return result;
 }
 
 export const useTelegram = () => {
@@ -48,8 +54,12 @@ export const useTelegram = () => {
 
   const login = useCallback(async () => {
     const webApp = getTelegramWebApp();
-    if (!webApp?.initData) return;
+    if (!webApp?.initData) {
+      console.warn('[TG-AUTH] login() aborted: no initData available');
+      return;
+    }
 
+    console.log('[TG-AUTH] login() starting, initData length:', webApp.initData.length);
     setIsAuthenticating(true);
     setError(null);
 
@@ -60,14 +70,18 @@ export const useTelegram = () => {
         body: JSON.stringify({ initData: webApp.initData }),
       });
 
+      console.log('[TG-AUTH] login() response status:', res.status);
       const data = await res.json();
 
       if (!res.ok || !data.success) {
+        console.error('[TG-AUTH] login() failed:', data.error);
         throw new Error(data.error || 'Telegram login failed');
       }
 
+      console.log('[TG-AUTH] login() success, user:', data.user?.displayName, 'walletAddress:', data.user?.walletAddress, 'isNewUser:', data.isNewUser);
       saveAuth(data.token, data.refreshToken, data.user);
     } catch (err) {
+      console.error('[TG-AUTH] login() exception:', err.message);
       setError(err.message);
       clearAuth();
     } finally {
@@ -78,10 +92,12 @@ export const useTelegram = () => {
   const refreshAccessToken = useCallback(async () => {
     const refreshToken = localStorage.getItem(REFRESH_KEY);
     if (!refreshToken) {
+      console.warn('[TG-AUTH] refreshAccessToken: no refresh token, clearing auth');
       clearAuth();
       return null;
     }
 
+    console.log('[TG-AUTH] refreshAccessToken: requesting new token...');
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
         method: 'POST',
@@ -92,16 +108,19 @@ export const useTelegram = () => {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
+        console.warn('[TG-AUTH] refreshAccessToken: refresh failed (status', res.status, '), re-login...');
         clearAuth();
         await login();
         return localStorage.getItem(TOKEN_KEY);
       }
 
+      console.log('[TG-AUTH] refreshAccessToken: success');
       localStorage.setItem(TOKEN_KEY, data.token);
       localStorage.setItem(REFRESH_KEY, data.refreshToken);
       setToken(data.token);
       return data.token;
-    } catch {
+    } catch (err) {
+      console.error('[TG-AUTH] refreshAccessToken: exception:', err.message, ', re-login...');
       clearAuth();
       await login();
       return localStorage.getItem(TOKEN_KEY);
@@ -109,15 +128,22 @@ export const useTelegram = () => {
   }, [clearAuth, login]);
 
   useEffect(() => {
-    if (!isTelegram) return;
+    if (!isTelegram) {
+      console.log('[TG-AUTH] useEffect: not Telegram environment, skipping auto-login');
+      return;
+    }
 
+    console.log('[TG-AUTH] useEffect: Telegram detected, calling webApp.ready() + expand()');
     const webApp = getTelegramWebApp();
     webApp.ready();
     webApp.expand();
 
     if (!token && !loginAttempted.current) {
+      console.log('[TG-AUTH] useEffect: no stored token, starting auto-login...');
       loginAttempted.current = true;
       login();
+    } else {
+      console.log('[TG-AUTH] useEffect: token already present or login already attempted, token:', !!token);
     }
   }, [isTelegram, token, login]);
 

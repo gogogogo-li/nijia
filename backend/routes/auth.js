@@ -18,23 +18,34 @@ const router = express.Router();
 router.post(
   '/telegram',
   asyncHandler(async (req, res) => {
+    logger.info('[TG-AUTH] POST /api/auth/telegram received', {
+      hasInitData: !!req.body.initData,
+      initDataLength: req.body.initData?.length || 0,
+    });
+
     const { initData } = req.body;
 
     if (!initData) {
+      logger.warn('[TG-AUTH] Missing initData in request body');
       return res.status(400).json({ success: false, error: 'initData is required' });
     }
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) {
-      logger.error('TELEGRAM_BOT_TOKEN not configured');
+      logger.error('[TG-AUTH] TELEGRAM_BOT_TOKEN not configured on server');
       return res.status(500).json({ success: false, error: 'Server misconfiguration' });
     }
 
     let tgUser;
     try {
       tgUser = validateAndParseTelegramInitData(initData, botToken);
+      logger.info('[TG-AUTH] initData validated ok', {
+        telegramUserId: tgUser.telegramUserId,
+        username: tgUser.username,
+        firstName: tgUser.firstName,
+      });
     } catch (err) {
-      logger.warn('Telegram initData validation failed', { error: err.message });
+      logger.warn('[TG-AUTH] initData validation FAILED', { error: err.message });
       return res.status(401).json({ success: false, error: `Invalid initData: ${err.message}` });
     }
 
@@ -44,6 +55,8 @@ router.post(
       [tgUser.firstName, tgUser.lastName].filter(Boolean).join(' ') ||
       `tg_${tgUser.telegramUserId}`;
 
+    logger.info('[TG-AUTH] Looking up player in DB', { telegramUserId: tgUser.telegramUserId });
+
     const { data: existing, error: lookupErr } = await supabase
       .from('players')
       .select('*')
@@ -51,7 +64,7 @@ router.post(
       .maybeSingle();
 
     if (lookupErr) {
-      logger.error('Player lookup failed', { error: lookupErr.message });
+      logger.error('[TG-AUTH] Player lookup failed', { error: lookupErr.message });
       throw lookupErr;
     }
 
@@ -59,6 +72,7 @@ router.post(
     let isNewUser = false;
 
     if (existing) {
+      logger.info('[TG-AUTH] Existing player found, updating', { playerId: existing.id });
       const { data: updated, error: updateErr } = await supabase
         .from('players')
         .update({
@@ -73,6 +87,7 @@ router.post(
       if (updateErr) throw updateErr;
       player = updated;
     } else {
+      logger.info('[TG-AUTH] New player, inserting', { walletAddress, displayName });
       const { data: created, error: createErr } = await supabase
         .from('players')
         .insert({
@@ -100,9 +115,10 @@ router.post(
     const token = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
 
-    logger.info('Telegram login successful', {
+    logger.info('[TG-AUTH] Login complete, JWT issued', {
       telegramUserId: tgUser.telegramUserId,
       playerId: player.id,
+      walletAddress: player.wallet_address,
       isNewUser,
     });
 
@@ -129,16 +145,24 @@ router.post(
 router.post(
   '/refresh',
   asyncHandler(async (req, res) => {
+    logger.info('[TG-AUTH] POST /api/auth/refresh received');
+
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
+      logger.warn('[TG-AUTH] refresh: missing refreshToken');
       return res.status(400).json({ success: false, error: 'refreshToken is required' });
     }
 
     let payload;
     try {
       payload = verifyRefreshToken(refreshToken);
+      logger.info('[TG-AUTH] refresh: token verified', {
+        provider: payload.provider,
+        walletAddress: payload.walletAddress,
+      });
     } catch (err) {
+      logger.warn('[TG-AUTH] refresh: invalid/expired refresh token', { error: err.message });
       return res.status(401).json({ success: false, error: 'Invalid or expired refresh token' });
     }
 
@@ -151,6 +175,8 @@ router.post(
 
     const newToken = generateAccessToken(newPayload);
     const newRefreshToken = generateRefreshToken(newPayload);
+
+    logger.info('[TG-AUTH] refresh: new tokens issued', { walletAddress: payload.walletAddress });
 
     res.json({
       success: true,

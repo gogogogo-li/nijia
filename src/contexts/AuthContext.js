@@ -16,11 +16,17 @@ export function AuthProvider({ onechain, children }) {
 
   const value = useMemo(() => {
     if (telegram.isTelegram) {
+      const isConnected = !!telegram.token && !!telegram.user;
+      console.log('[TG-AUTH] AuthContext: provider=telegram, isConnected:', isConnected,
+        ', isAuthenticating:', telegram.isAuthenticating,
+        ', walletAddress:', telegram.walletAddress,
+        ', user:', telegram.user?.displayName || null,
+        ', error:', telegram.error || 'none');
       return {
         authProvider: 'telegram',
         isTelegram: true,
         walletAddress: telegram.walletAddress,
-        isConnected: !!telegram.token && !!telegram.user,
+        isConnected,
         isAuthenticating: telegram.isAuthenticating,
         token: telegram.token,
         user: telegram.user,
@@ -31,6 +37,7 @@ export function AuthProvider({ onechain, children }) {
       };
     }
 
+    console.log('[TG-AUTH] AuthContext: provider=wallet, isConnected:', onechain?.isConnected || false);
     return {
       authProvider: 'wallet',
       isTelegram: false,

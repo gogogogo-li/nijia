@@ -9,11 +9,19 @@ import logger from '../utils/logger.js';
  */
 function tryJwtAuth(req) {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
 
   try {
-    return verifyAccessToken(authHeader.slice(7));
-  } catch {
+    const payload = verifyAccessToken(authHeader.slice(7));
+    logger.info('[TG-AUTH] JWT auth success', {
+      provider: payload.provider,
+      walletAddress: payload.walletAddress,
+    });
+    return payload;
+  } catch (err) {
+    logger.warn('[TG-AUTH] JWT auth failed', { error: err.message });
     return null;
   }
 }
@@ -75,6 +83,11 @@ export async function optionalAuth(req, res, next) {
   try {
     const jwtPayload = tryJwtAuth(req);
     if (jwtPayload) {
+      logger.info('[TG-AUTH] optionalAuth: authenticated via JWT', {
+        provider: jwtPayload.provider,
+        walletAddress: jwtPayload.walletAddress,
+        path: req.path,
+      });
       req.walletAddress = jwtPayload.walletAddress;
       req.authenticated = true;
       req.authProvider = jwtPayload.provider || 'jwt';
@@ -115,6 +128,11 @@ export async function authenticateWallet(req, res, next) {
   try {
     const jwtPayload = tryJwtAuth(req);
     if (jwtPayload) {
+      logger.info('[TG-AUTH] authenticateWallet: authenticated via JWT', {
+        provider: jwtPayload.provider,
+        walletAddress: jwtPayload.walletAddress,
+        path: req.path,
+      });
       req.authenticated = true;
       req.walletAddress = jwtPayload.walletAddress;
       req.authProvider = jwtPayload.provider || 'jwt';
@@ -125,7 +143,7 @@ export async function authenticateWallet(req, res, next) {
     const signature = req.headers['x-wallet-signature'];
     const message = req.headers['x-wallet-message'];
     
-    logger.info(`Auth check - Address: ${address}, Has signature: ${!!signature}`);
+    logger.info(`[TG-AUTH] authenticateWallet: wallet path, address=${address}, hasSignature=${!!signature}`);
     
     if (!address) {
       return res.status(401).json({

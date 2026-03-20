@@ -184,27 +184,31 @@ app.use('/api/solo', createSoloRouter(soloGameManager));
 io.use(async (socket, next) => {
   const { address, signature, token } = socket.handshake.auth;
 
+  logger.info(`[TG-AUTH] Socket auth attempt: socketId=${socket.id}, hasToken=${!!token}, hasAddress=${!!address}, hasSignature=${!!signature}`);
+
   if (token) {
     try {
       const payload = verifyAccessToken(token);
       socket.walletAddress = payload.walletAddress;
       socket.authenticated = true;
       socket.authProvider = payload.provider || 'jwt';
-      logger.info(`Socket connected via JWT: ${socket.id} (${payload.walletAddress})`);
+      logger.info(`[TG-AUTH] Socket auth via JWT OK: socketId=${socket.id}, provider=${payload.provider}, walletAddress=${payload.walletAddress}`);
       return next();
-    } catch {
+    } catch (err) {
+      logger.warn(`[TG-AUTH] Socket JWT auth FAILED: socketId=${socket.id}, error=${err.message}`);
       return next(new Error('Invalid token'));
     }
   }
 
   if (!address) {
+    logger.warn(`[TG-AUTH] Socket auth REJECTED: socketId=${socket.id}, no token and no address`);
     return next(new Error('Authentication required'));
   }
 
   socket.walletAddress = address;
   socket.authenticated = !!signature;
 
-  logger.info(`Socket connected: ${socket.id} (${address})`);
+  logger.info(`[TG-AUTH] Socket auth via wallet: socketId=${socket.id}, address=${address}, authenticated=${!!signature}`);
   next();
 });
 
