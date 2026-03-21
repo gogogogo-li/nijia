@@ -4,11 +4,34 @@ import logger from '../utils/logger.js';
  * Global error handler middleware
  */
 export function errorHandler(err, req, res, next) {
-  logger.error('Error occurred:', {
-    error: err.message,
-    stack: err.stack,
+  const requestId = req.headers['x-request-id'] || `req_${Date.now()}`;
+  const isPgError = typeof err?.code === 'string' && !!err?.severity;
+
+  logger.error('Error occurred', {
+    requestId,
+    errorName: err?.name,
+    error: err?.message,
+    stack: err?.stack,
+    statusCode: err?.statusCode,
     path: req.path,
-    method: req.method
+    method: req.method,
+    query: req.query,
+    bodyKeys: Object.keys(req.body || {}),
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+    pg: isPgError
+      ? {
+          code: err.code,
+          severity: err.severity,
+          detail: err.detail,
+          hint: err.hint,
+          table: err.table,
+          column: err.column,
+          constraint: err.constraint,
+          routine: err.routine,
+          where: err.where,
+        }
+      : undefined,
   });
   
   // Don't leak error details in production
@@ -19,6 +42,7 @@ export function errorHandler(err, req, res, next) {
   res.status(err.statusCode || 500).json({
     success: false,
     error: message,
+    requestId,
     ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
   });
 }

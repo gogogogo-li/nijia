@@ -57,40 +57,109 @@ router.post(
 
     logger.info('[TG-AUTH] Looking up player in DB', { telegramUserId: tgUser.telegramUserId });
 
-    const { rows } = await pool.query(
-      'select * from players where telegram_user_id = $1 limit 1',
-      [tgUser.telegramUserId]
-    );
-    const existing = rows[0] || null;
+    let existing = null;
+    try {
+      logger.info('[TG-AUTH] DB query start: select player by telegram_user_id', {
+        telegramUserId: tgUser.telegramUserId,
+      });
+      const { rows } = await pool.query(
+        'select * from players where telegram_user_id = $1 limit 1',
+        [tgUser.telegramUserId]
+      );
+      existing = rows[0] || null;
+      logger.info('[TG-AUTH] DB query ok: select player by telegram_user_id', {
+        telegramUserId: tgUser.telegramUserId,
+        found: !!existing,
+        playerId: existing?.id,
+      });
+    } catch (dbErr) {
+      logger.error('[TG-AUTH] DB query failed: select player by telegram_user_id', {
+        telegramUserId: tgUser.telegramUserId,
+        error: dbErr.message,
+        code: dbErr.code,
+        detail: dbErr.detail,
+        hint: dbErr.hint,
+        table: dbErr.table,
+        column: dbErr.column,
+        constraint: dbErr.constraint,
+      });
+      throw dbErr;
+    }
 
     let player;
     let isNewUser = false;
 
     if (existing) {
       logger.info('[TG-AUTH] Existing player found, updating', { playerId: existing.id });
-      const { rows: updatedRows } = await pool.query(
-        `
-          update players
-          set display_name = $1,
-              avatar_url = $2,
-              last_active = $3
-          where id = $4
-          returning *
-        `,
-        [displayName, tgUser.photoUrl || null, new Date().toISOString(), existing.id]
-      );
-      player = updatedRows[0];
+      try {
+        logger.info('[TG-AUTH] DB query start: update existing player', {
+          playerId: existing.id,
+          telegramUserId: tgUser.telegramUserId,
+        });
+        const { rows: updatedRows } = await pool.query(
+          `
+            update players
+            set display_name = $1,
+                avatar_url = $2,
+                last_active = $3
+            where id = $4
+            returning *
+          `,
+          [displayName, tgUser.photoUrl || null, new Date().toISOString(), existing.id]
+        );
+        player = updatedRows[0];
+        logger.info('[TG-AUTH] DB query ok: update existing player', {
+          playerId: player?.id,
+        });
+      } catch (dbErr) {
+        logger.error('[TG-AUTH] DB query failed: update existing player', {
+          playerId: existing.id,
+          telegramUserId: tgUser.telegramUserId,
+          error: dbErr.message,
+          code: dbErr.code,
+          detail: dbErr.detail,
+          hint: dbErr.hint,
+          table: dbErr.table,
+          column: dbErr.column,
+          constraint: dbErr.constraint,
+        });
+        throw dbErr;
+      }
     } else {
       logger.info('[TG-AUTH] New player, inserting', { walletAddress, displayName });
-      const { rows: createdRows } = await pool.query(
-        `
-          insert into players (wallet_address, display_name, telegram_user_id, auth_provider, avatar_url)
-          values ($1, $2, $3, $4, $5)
-          returning *
-        `,
-        [walletAddress, displayName, tgUser.telegramUserId, 'telegram', tgUser.photoUrl || null]
-      );
-      player = createdRows[0];
+      try {
+        logger.info('[TG-AUTH] DB query start: insert new player', {
+          telegramUserId: tgUser.telegramUserId,
+          walletAddress,
+          displayName,
+        });
+        const { rows: createdRows } = await pool.query(
+          `
+            insert into players (wallet_address, display_name, telegram_user_id, auth_provider, avatar_url)
+            values ($1, $2, $3, $4, $5)
+            returning *
+          `,
+          [walletAddress, displayName, tgUser.telegramUserId, 'telegram', tgUser.photoUrl || null]
+        );
+        player = createdRows[0];
+        logger.info('[TG-AUTH] DB query ok: insert new player', {
+          playerId: player?.id,
+          telegramUserId: tgUser.telegramUserId,
+        });
+      } catch (dbErr) {
+        logger.error('[TG-AUTH] DB query failed: insert new player', {
+          telegramUserId: tgUser.telegramUserId,
+          walletAddress,
+          error: dbErr.message,
+          code: dbErr.code,
+          detail: dbErr.detail,
+          hint: dbErr.hint,
+          table: dbErr.table,
+          column: dbErr.column,
+          constraint: dbErr.constraint,
+        });
+        throw dbErr;
+      }
       isNewUser = true;
     }
 
