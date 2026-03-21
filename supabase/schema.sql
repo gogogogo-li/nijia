@@ -1,5 +1,9 @@
 -- OneNinja Multiplayer Database Schema
 -- This schema supports secure backend-driven multiplayer gaming with bet pools
+--
+-- NOTE (greenfield / new DB): use the consolidated baseline instead:
+--   postgres/schema.sql
+-- This file is kept for backward compatibility and Supabase-style workflows.
 
 -- Players table
 CREATE TABLE IF NOT EXISTS players (
