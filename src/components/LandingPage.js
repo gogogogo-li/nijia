@@ -4,7 +4,7 @@ import './LandingPage.css';
 import { GiCrossedSwords, GiTrophyCup } from 'react-icons/gi';
 
 const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain, auth }) => {
-  const isTelegram = auth?.isTelegram || !!window.Telegram?.WebApp?.platform;
+  const isTelegram = auth?.isTelegram || !!window.Telegram?.WebApp?.initDataUnsafe?.user;
   console.log('[TG-AUTH] LandingPage render:', {
     isTelegram,
     'auth?.isTelegram': auth?.isTelegram,
