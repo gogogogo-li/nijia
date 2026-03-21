@@ -11,7 +11,6 @@ export function errorHandler(err, req, res, next) {
     requestId,
     errorName: err?.name,
     error: err?.message,
-    stack: err?.stack,
     statusCode: err?.statusCode,
     path: req.path,
     method: req.method,
