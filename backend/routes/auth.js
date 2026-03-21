@@ -1,6 +1,6 @@
 import express from 'express';
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { supabase } from '../config/supabase.js';
+import { pool } from '../config/postgres.js';
 import { validateAndParseTelegramInitData } from '../utils/telegram.js';
 import {
   generateAccessToken,
@@ -57,51 +57,40 @@ router.post(
 
     logger.info('[TG-AUTH] Looking up player in DB', { telegramUserId: tgUser.telegramUserId });
 
-    const { data: existing, error: lookupErr } = await supabase
-      .from('players')
-      .select('*')
-      .eq('telegram_user_id', tgUser.telegramUserId)
-      .maybeSingle();
-
-    if (lookupErr) {
-      logger.error('[TG-AUTH] Player lookup failed', { error: lookupErr.message });
-      throw lookupErr;
-    }
+    const { rows } = await pool.query(
+      'select * from players where telegram_user_id = $1 limit 1',
+      [tgUser.telegramUserId]
+    );
+    const existing = rows[0] || null;
 
     let player;
     let isNewUser = false;
 
     if (existing) {
       logger.info('[TG-AUTH] Existing player found, updating', { playerId: existing.id });
-      const { data: updated, error: updateErr } = await supabase
-        .from('players')
-        .update({
-          display_name: displayName,
-          avatar_url: tgUser.photoUrl || null,
-          last_active: new Date().toISOString(),
-        })
-        .eq('id', existing.id)
-        .select()
-        .single();
-
-      if (updateErr) throw updateErr;
-      player = updated;
+      const { rows: updatedRows } = await pool.query(
+        `
+          update players
+          set display_name = $1,
+              avatar_url = $2,
+              last_active = $3
+          where id = $4
+          returning *
+        `,
+        [displayName, tgUser.photoUrl || null, new Date().toISOString(), existing.id]
+      );
+      player = updatedRows[0];
     } else {
       logger.info('[TG-AUTH] New player, inserting', { walletAddress, displayName });
-      const { data: created, error: createErr } = await supabase
-        .from('players')
-        .insert({
-          wallet_address: walletAddress,
-          display_name: displayName,
-          telegram_user_id: tgUser.telegramUserId,
-          auth_provider: 'telegram',
-          avatar_url: tgUser.photoUrl || null,
-        })
-        .select()
-        .single();
-
-      if (createErr) throw createErr;
-      player = created;
+      const { rows: createdRows } = await pool.query(
+        `
+          insert into players (wallet_address, display_name, telegram_user_id, auth_provider, avatar_url)
+          values ($1, $2, $3, $4, $5)
+          returning *
+        `,
+        [walletAddress, displayName, tgUser.telegramUserId, 'telegram', tgUser.photoUrl || null]
+      );
+      player = createdRows[0];
       isNewUser = true;
     }
 

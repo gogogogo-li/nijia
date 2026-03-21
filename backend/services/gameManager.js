@@ -295,36 +295,36 @@ export class GameManager {
       this.playerGames.set(player1Address, playerActiveGames);
 
       // Store in database
-      const { data, error } = await this.supabase
-        .from('multiplayer_games')
-        .insert({
-          game_id: gameId,
-          bet_tier: betTierId,
-          bet_amount: betAmountMist.toString(),
-          pool_amount: (betAmountMist * 2n).toString(),
-          status: 'waiting',
-          room_type: roomType,
-          join_code: joinCode,
-          player1_address: player1Address,
-          player1_tx_hash: transactionHash,
-          created_at: game.created_at,
-          expires_at: game.expires_at
-        })
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('Error storing game in database:', JSON.stringify(error, null, 2));
-        logger.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
+      try {
+        await this.supabase.query(
+          `
+            insert into multiplayer_games (
+              game_id, bet_tier, bet_amount, pool_amount, status,
+              room_type, join_code,
+              player1_address, player1_tx_hash,
+              created_at, expires_at
+            )
+            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+          `,
+          [
+            gameId,
+            betTierId,
+            betAmountMist.toString(),
+            (betAmountMist * 2n).toString(),
+            'waiting',
+            roomType,
+            joinCode,
+            player1Address,
+            transactionHash,
+            game.created_at,
+            game.expires_at,
+          ]
+        );
+        logger.info('✅ Game stored in database successfully');
+      } catch (error) {
+        logger.error('Error storing game in database:', error.message);
         logger.warn('Database storage failed - game only exists in memory cache');
         // Continue even if database fails (cache fallback)
-      } else {
-        logger.info('✅ Game stored in database successfully');
       }
 
       // Only broadcast PUBLIC games to the game list
@@ -443,18 +443,20 @@ export class GameManager {
       this.playerGames.set(player2Address, player2ActiveGames);
 
       // Update database - use 'player2', 'state', and 'player2_tx_hash' to match current schema
-      const { error } = await this.supabase
-        .from('multiplayer_games')
-        .update({
-          player2: player2Address,
-          player2_tx_hash: transactionHash,
-          state: 'in_progress',
-          started_at: game.started_at,
-          player2_lives: 3
-        })
-        .eq('game_id', numericGameId);
-
-      if (error) {
+      try {
+        await this.supabase.query(
+          `
+            update multiplayer_games
+            set player2 = $1,
+                player2_tx_hash = $2,
+                state = $3,
+                started_at = $4,
+                player2_lives = $5
+            where game_id = $6
+          `,
+          [player2Address, transactionHash, 'in_progress', game.started_at, 3, numericGameId]
+        );
+      } catch (error) {
         logger.error('Error updating game in database:', error.message);
         // Don't fail the join if database update fails - game is in memory
         logger.warn('   Game joined in memory but database update failed');
@@ -869,18 +871,29 @@ export class GameManager {
       this.activeGames.set(gameId, game);
 
       // Update database
-      await this.supabase
-        .from('multiplayer_games')
-        .update({
+      await this.supabase.query(
+        `
+          update multiplayer_games
+          set winner = $1,
+              status = 'completed',
+              state = 'completed',
+              completed_at = $2,
+              winner_payout = $3,
+              platform_fee = $4,
+              player1_score = $5,
+              player2_score = $6
+          where game_id = $7
+        `,
+        [
           winner,
-          status: 'completed',
-          completed_at: game.completed_at,
-          winner_payout: game.winnings,
-          platform_fee: game.platform_fee,
-          player1_score: game.player1_score,
-          player2_score: game.player2_score
-        })
-        .eq('game_id', gameId);
+          game.completed_at,
+          game.winnings,
+          game.platform_fee,
+          game.player1_score,
+          game.player2_score,
+          gameId,
+        ]
+      );
 
       // Notify both players via their rooms
       this.io.to(`player:${game.player1}`).emit('game:completed', game);
@@ -964,18 +977,29 @@ export class GameManager {
       this.activeGames.set(gameId, game);
 
       // Update database
-      await this.supabase
-        .from('multiplayer_games')
-        .update({
-          winner: game.winner,
-          status: 'completed',
-          completed_at: game.completed_at,
-          winner_payout: game.winnings,
-          platform_fee: game.platform_fee,
-          player1_score: game.player1_score,
-          player2_score: game.player2_score
-        })
-        .eq('game_id', gameId);
+      await this.supabase.query(
+        `
+          update multiplayer_games
+          set winner = $1,
+              status = 'completed',
+              state = 'completed',
+              completed_at = $2,
+              winner_payout = $3,
+              platform_fee = $4,
+              player1_score = $5,
+              player2_score = $6
+          where game_id = $7
+        `,
+        [
+          game.winner,
+          game.completed_at,
+          game.winnings,
+          game.platform_fee,
+          game.player1_score,
+          game.player2_score,
+          gameId,
+        ]
+      );
 
       // ⛓️ ON-CHAIN SETTLEMENT: Transfer winnings to winner
       // This calls the smart contract to actually move funds
@@ -1145,13 +1169,16 @@ export class GameManager {
       game.cancel_reason = reason;
 
       // Update database
-      await this.supabase
-        .from('multiplayer_games')
-        .update({
-          status: 'cancelled',
-          cancellation_reason: reason
-        })
-        .eq('game_id', gameId);
+      await this.supabase.query(
+        `
+          update multiplayer_games
+          set status = 'cancelled',
+              state = 'cancelled',
+              cancellation_reason = $1
+          where game_id = $2
+        `,
+        [reason, gameId]
+      );
 
       // Notify players
       if (game.player1) {
@@ -1476,12 +1503,17 @@ export class GameManager {
       }
 
       // Check if player already in queue (use maybeSingle to avoid error when not found)
-      const { data: existingEntry, error: checkError } = await this.supabase
-        .from('matchmaking_queue')
-        .select('*')
-        .eq('player_address', playerAddress)
-        .eq('status', 'waiting')
-        .maybeSingle();
+      const { rows: existingRows } = await this.supabase.query(
+        `
+          select *
+          from matchmaking_queue
+          where player_address = $1
+            and status = $2
+          limit 1
+        `,
+        [playerAddress, 'waiting']
+      );
+      const existingEntry = existingRows[0];
 
       if (existingEntry) {
         logger.info(`   Player already in queue, returning existing entry`);
@@ -1489,28 +1521,34 @@ export class GameManager {
       }
 
       // Look for an opponent in the same tier
-      const { data: opponent } = await this.supabase
-        .from('matchmaking_queue')
-        .select('*')
-        .eq('bet_tier', betTierId)
-        .eq('status', 'waiting')
-        .neq('player_address', playerAddress)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
+      const { rows: opponentRows } = await this.supabase.query(
+        `
+          select *
+          from matchmaking_queue
+          where bet_tier = $1
+            and status = $2
+            and player_address <> $3
+          order by created_at asc
+          limit 1
+        `,
+        [betTierId, 'waiting', playerAddress]
+      );
+      const opponent = opponentRows[0];
 
       if (opponent) {
         // Found a match! Create game immediately
         logger.info(`   ✅ MATCHED with ${opponent.player_address.slice(0, 10)}...`);
 
         // Update opponent's queue entry
-        await this.supabase
-          .from('matchmaking_queue')
-          .update({
-            status: 'matched',
-            matched_at: new Date().toISOString()
-          })
-          .eq('id', opponent.id);
+        await this.supabase.query(
+          `
+            update matchmaking_queue
+            set status = $1,
+                matched_at = $2
+            where id = $3
+          `,
+          ['matched', new Date().toISOString(), opponent.id]
+        );
 
         // Generate a unique game_id for Quick Match (no on-chain create, just register)
         // Use a combination of timestamp and random to avoid collisions
@@ -1554,26 +1592,41 @@ export class GameManager {
         // Store in cache first
         this.activeGames.set(quickMatchGameId, game);
 
-        // Store in database
-        const { error: dbError } = await this.supabase
-          .from('multiplayer_games')
-          .insert({
-            game_id: quickMatchGameId,
-            bet_tier: betTierId,
-            bet_amount: betAmountMist.toString(),
-            pool_amount: (betAmountMist * 2n).toString(),
-            status: 'in_progress',
-            room_type: 'public',
-            player1_address: opponent.player_address,
-            player1_tx_hash: opponent.tx_hash,
-            player2: playerAddress,
-            player2_tx_hash: txHash,
-            created_at: game.created_at,
-            started_at: game.started_at,
-            expires_at: game.expires_at,
-          });
-
-        if (dbError) {
+        // Store in database (still allow gameplay in memory if DB fails)
+        try {
+          await this.supabase.query(
+            `
+              insert into multiplayer_games (
+                game_id, bet_tier, bet_amount, pool_amount, status,
+                room_type,
+                player1_address, player1_tx_hash,
+                player2, player2_tx_hash,
+                created_at, started_at, expires_at,
+                state
+              )
+              values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+            `,
+            [
+              quickMatchGameId,
+              betTierId,
+              betAmountMist.toString(),
+              (betAmountMist * 2n).toString(),
+              // multiplayer_games.status in schema is waiting/active/completed/cancelled/expired.
+              // This quick match flow uses in-memory 'countdown' -> 'in_progress',
+              // so we store as 'active' to keep it discoverable if needed.
+              'active',
+              'public',
+              opponent.player_address,
+              opponent.tx_hash,
+              playerAddress,
+              txHash,
+              game.created_at,
+              game.started_at,
+              game.expires_at,
+              'in_progress',
+            ]
+          );
+        } catch (dbError) {
           logger.error(`   Database error: ${dbError.message}`);
         }
 
@@ -1664,34 +1717,21 @@ export class GameManager {
       }
 
       // No opponent found, add to queue (use upsert to handle race conditions)
-      const { data: queueEntry, error } = await this.supabase
-        .from('matchmaking_queue')
-        .upsert({
-          player_address: playerAddress,
-          bet_tier: betTierId,
-          tx_hash: txHash,
-          status: 'waiting',
-          expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString() // 5 min TTL
-        }, {
-          onConflict: 'player_address',
-          ignoreDuplicates: false
-        })
-        .select()
-        .single();
-
-      if (error) {
-        logger.error(`   Queue insert error: ${error.message}`);
-        // If duplicate, try to fetch the existing entry
-        const { data: existing } = await this.supabase
-          .from('matchmaking_queue')
-          .select('*')
-          .eq('player_address', playerAddress)
-          .maybeSingle();
-        if (existing) {
-          return { success: true, status: 'waiting', queueEntry: existing };
-        }
-        throw new Error('Failed to join matchmaking queue');
-      }
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 min TTL
+      const { rows: queueRows } = await this.supabase.query(
+        `
+          insert into matchmaking_queue (player_address, bet_tier, tx_hash, status, expires_at)
+          values ($1, $2, $3, 'waiting', $4)
+          on conflict (player_address) do update
+            set bet_tier = excluded.bet_tier,
+                tx_hash = excluded.tx_hash,
+                status = 'waiting',
+                expires_at = excluded.expires_at
+          returning *
+        `,
+        [playerAddress, betTierId, txHash, expiresAt]
+      );
+      const queueEntry = queueRows[0];
 
       logger.info(`   ⏳ Added to queue, waiting for opponent...`);
 
@@ -1718,15 +1758,14 @@ export class GameManager {
     try {
       logger.info(`🚪 Quick Match: ${playerAddress.slice(0, 10)}... leaving queue`);
 
-      const { error } = await this.supabase
-        .from('matchmaking_queue')
-        .delete()
-        .eq('player_address', playerAddress)
-        .eq('status', 'waiting');
-
-      if (error) {
-        logger.error(`   Queue delete error: ${error.message}`);
-      }
+      await this.supabase.query(
+        `
+          delete from matchmaking_queue
+          where player_address = $1
+            and status = $2
+        `,
+        [playerAddress, 'waiting']
+      );
 
       // Notify player they left
       this.io.to(`player:${playerAddress}`).emit('quickmatch:cancelled', {
@@ -1747,24 +1786,34 @@ export class GameManager {
    */
   async getQuickMatchStatus(playerAddress) {
     try {
-      const { data: queueEntry } = await this.supabase
-        .from('matchmaking_queue')
-        .select('*')
-        .eq('player_address', playerAddress)
-        .eq('status', 'waiting')
-        .single();
+      const { rows } = await this.supabase.query(
+        `
+          select *
+          from matchmaking_queue
+          where player_address = $1
+            and status = $2
+          limit 1
+        `,
+        [playerAddress, 'waiting']
+      );
+      const queueEntry = rows[0];
 
       if (!queueEntry) {
         return { success: true, inQueue: false };
       }
 
       // Get queue position
-      const { count } = await this.supabase
-        .from('matchmaking_queue')
-        .select('*', { count: 'exact', head: true })
-        .eq('bet_tier', queueEntry.bet_tier)
-        .eq('status', 'waiting')
-        .lt('created_at', queueEntry.created_at);
+      const { rows: countRows } = await this.supabase.query(
+        `
+          select count(*)::int as count
+          from matchmaking_queue
+          where bet_tier = $1
+            and status = 'waiting'
+            and created_at < $2
+        `,
+        [queueEntry.bet_tier, queueEntry.created_at]
+      );
+      const count = countRows[0]?.count || 0;
 
       return {
         success: true,
@@ -1784,12 +1833,14 @@ export class GameManager {
    */
   async cleanupExpiredQueueEntries() {
     try {
-      const { data: expired } = await this.supabase
-        .from('matchmaking_queue')
-        .delete()
-        .lt('expires_at', new Date().toISOString())
-        .eq('status', 'waiting')
-        .select();
+      const { rows: expired } = await this.supabase.query(
+        `
+          delete from matchmaking_queue
+          where expires_at < NOW()
+            and status = 'waiting'
+          returning *
+        `
+      );
 
       if (expired && expired.length > 0) {
         logger.info(`🧹 Cleaned up ${expired.length} expired queue entries`);

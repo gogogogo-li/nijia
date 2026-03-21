@@ -225,13 +225,13 @@ router.get('/games/:gameId',
 
     if (!game) {
       // Try to fetch from database
-      const { data, error } = await global.gameManager.supabase
-        .from('multiplayer_games')
-        .select('*')
-        .eq('game_id', gameId)
-        .single();
+      const { rows } = await global.gameManager.supabase.query(
+        'select * from multiplayer_games where game_id = $1 limit 1',
+        [gameId]
+      );
+      const data = rows[0] || null;
 
-      if (error || !data) {
+      if (!data) {
         return res.status(404).json({
           success: false,
           error: 'Game not found'
@@ -296,10 +296,12 @@ router.get('/stats', asyncHandler(async (req, res) => {
   const activePlayers = global.gameManager.playerGames.size;
 
   // Get completed games count from database
-  const { count: completedGames } = await global.gameManager.supabase
-    .from('multiplayer_games')
-    .select('*', { count: 'exact', head: true })
-    .eq('state', 'completed');
+  const { rows } = await global.gameManager.supabase.query(
+    `select count(*)::int as count
+     from multiplayer_games
+     where state = 'completed'`
+  );
+  const completedGames = rows[0]?.count || 0;
 
   res.json({
     success: true,

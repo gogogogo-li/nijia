@@ -1,6 +1,6 @@
 import express from 'express';
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { supabase } from '../config/supabase.js';
+import { pool } from '../config/postgres.js';
 
 const router = express.Router();
 
@@ -11,14 +11,13 @@ const router = express.Router();
 router.get('/:address/stats', asyncHandler(async (req, res) => {
   const { address } = req.params;
   
-  const { data, error } = await supabase
-    .from('players')
-    .select('*')
-    .eq('wallet_address', address)
-    .single();
-  
-  if (error && error.code !== 'PGRST116') {
-    // Not found is okay, return default stats
+  const { rows } = await pool.query(
+    'select * from players where wallet_address = $1 limit 1',
+    [address]
+  );
+  const data = rows[0] || null;
+
+  if (!data) {
     return res.json({
       success: true,
       stats: {
@@ -31,7 +30,7 @@ router.get('/:address/stats', asyncHandler(async (req, res) => {
     });
   }
   
-  res.json({
+  return res.json({
     success: true,
     stats: {
       totalGames: data?.total_games || 0,
@@ -52,15 +51,11 @@ router.get('/:address/stats', asyncHandler(async (req, res) => {
 router.get('/:address', asyncHandler(async (req, res) => {
   const { address } = req.params;
   
-  const { data, error } = await supabase
-    .from('players')
-    .select('*')
-    .eq('wallet_address', address)
-    .single();
-  
-  if (error && error.code !== 'PGRST116') {
-    throw error;
-  }
+  const { rows } = await pool.query(
+    'select * from players where wallet_address = $1 limit 1',
+    [address]
+  );
+  const data = rows[0] || null;
   
   res.json({
     success: true,
@@ -82,19 +77,19 @@ router.post('/register', asyncHandler(async (req, res) => {
     });
   }
   
-  const { data, error } = await supabase
-    .from('players')
-    .upsert({
-      address,
-      username: username || null,
-      last_seen: new Date().toISOString()
-    })
-    .select()
-    .single();
-  
-  if (error) {
-    throw error;
-  }
+  const { rows } = await pool.query(
+    `
+      insert into players (wallet_address, display_name, last_active)
+      values ($1, $2, $3)
+      on conflict (wallet_address)
+      do update
+        set display_name = excluded.display_name,
+            last_active = excluded.last_active
+      returning *
+    `,
+    [address, username || null, new Date().toISOString()]
+  );
+  const data = rows[0];
   
   res.json({
     success: true,

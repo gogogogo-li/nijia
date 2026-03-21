@@ -6,7 +6,7 @@
  * and contribution-based scoring distribution
  */
 
-import { supabase } from '../config/supabase.js';
+import { pool } from '../config/postgres.js';
 import seedrandom from 'seedrandom';
 
 // Room states
@@ -93,45 +93,61 @@ class RoomManager {
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
         // Insert room into database
-        const { data: room, error } = await supabase
-            .from('multiplayer_rooms')
-            .insert({
-                room_code: roomCode,
-                max_players: maxPlayers,
-                min_players: 2,
-                bet_tier: betTierId,
-                bet_amount: tier.amount,
-                status: ROOM_STATUS.WAITING,
-                game_seed: gameSeed,
-                game_duration: 90,
-                total_pool: tier.amount, // Creator's bet
-                platform_fee_percent: tier.platformFee * 100,
-                expires_at: expiresAt.toISOString(),
-                created_by: creatorAddress
-            })
-            .select()
-            .single();
-
-        if (error) {
+        let room;
+        try {
+            const { rows } = await pool.query(
+                `
+                  insert into multiplayer_rooms (
+                    room_code,
+                    max_players,
+                    min_players,
+                    bet_tier,
+                    bet_amount,
+                    status,
+                    game_seed,
+                    game_duration,
+                    total_pool,
+                    platform_fee_percent,
+                    expires_at,
+                    created_by
+                  )
+                  values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+                  returning *
+                `,
+                [
+                    roomCode,
+                    maxPlayers,
+                    2,
+                    betTierId,
+                    tier.amount,
+                    ROOM_STATUS.WAITING,
+                    gameSeed,
+                    90,
+                    tier.amount, // Creator's bet
+                    tier.platformFee * 100,
+                    expiresAt.toISOString(),
+                    creatorAddress,
+                ]
+            );
+            room = rows[0];
+        } catch (error) {
             console.error('Error creating room:', error);
             throw new Error('Failed to create room');
         }
 
         // Add creator as first player
-        const { error: playerError } = await supabase
-            .from('room_players')
-            .insert({
-                room_id: room.id,
-                player_address: creatorAddress,
-                join_order: 1,
-                tx_hash: transactionHash,
-                status: PLAYER_STATUS.JOINED
-            });
-
-        if (playerError) {
+        try {
+            await pool.query(
+                `
+                  insert into room_players (room_id, player_address, join_order, tx_hash, status)
+                  values ($1,$2,$3,$4,$5)
+                `,
+                [room.id, creatorAddress, 1, transactionHash, PLAYER_STATUS.JOINED]
+            );
+        } catch (playerError) {
             console.error('Error adding creator to room:', playerError);
             // Cleanup: delete the room
-            await supabase.from('multiplayer_rooms').delete().eq('id', room.id);
+            await pool.query('delete from multiplayer_rooms where id = $1', [room.id]);
             throw new Error('Failed to add player to room');
         }
 
@@ -171,13 +187,13 @@ class RoomManager {
      */
     async joinRoom({ roomCode, playerAddress, transactionHash }) {
         // Find room by code
-        const { data: room, error } = await supabase
-            .from('multiplayer_rooms')
-            .select('*')
-            .eq('room_code', roomCode)
-            .single();
+        const { rows: roomRows } = await pool.query(
+            'select * from multiplayer_rooms where room_code = $1 limit 1',
+            [roomCode]
+        );
+        const room = roomRows[0] || null;
 
-        if (error || !room) {
+        if (!room) {
             throw new Error('Room not found');
         }
 
@@ -190,12 +206,17 @@ class RoomManager {
         }
 
         // Check if player already in room
-        const { data: existingPlayer } = await supabase
-            .from('room_players')
-            .select('*')
-            .eq('room_id', room.id)
-            .eq('player_address', playerAddress)
-            .single();
+        const { rows: existingPlayerRows } = await pool.query(
+            `
+              select *
+              from room_players
+              where room_id = $1
+                and player_address = $2
+              limit 1
+            `,
+            [room.id, playerAddress]
+        );
+        const existingPlayer = existingPlayerRows[0] || null;
 
         if (existingPlayer) {
             throw new Error('Already in this room');
@@ -205,27 +226,25 @@ class RoomManager {
         const joinOrder = room.current_player_count + 1;
 
         // Add player to room
-        const { error: playerError } = await supabase
-            .from('room_players')
-            .insert({
-                room_id: room.id,
-                player_address: playerAddress,
-                join_order: joinOrder,
-                tx_hash: transactionHash,
-                status: PLAYER_STATUS.JOINED
-            });
-
-        if (playerError) {
+        try {
+            await pool.query(
+                `
+                  insert into room_players (room_id, player_address, join_order, tx_hash, status)
+                  values ($1,$2,$3,$4,$5)
+                `,
+                [room.id, playerAddress, joinOrder, transactionHash, PLAYER_STATUS.JOINED]
+            );
+        } catch (playerError) {
             console.error('Error joining room:', playerError);
             throw new Error('Failed to join room');
         }
 
         // Update pool
         const newPool = parseFloat(room.total_pool) + tier.amount;
-        await supabase
-            .from('multiplayer_rooms')
-            .update({ total_pool: newPool })
-            .eq('id', room.id);
+        await pool.query(
+            'update multiplayer_rooms set total_pool = $1 where id = $2',
+            [newPool, room.id]
+        );
 
         // Update cached room
         const cachedRoom = this.activeRooms.get(room.id);
@@ -268,27 +287,24 @@ class RoomManager {
      * Player indicates they are ready
      */
     async setPlayerReady(roomId, playerAddress) {
-        const { error } = await supabase
-            .from('room_players')
-            .update({
-                is_ready: true,
-                status: PLAYER_STATUS.READY,
-                ready_at: new Date().toISOString()
-            })
-            .eq('room_id', roomId)
-            .eq('player_address', playerAddress);
-
-        if (error) {
-            throw new Error('Failed to set ready status');
-        }
+        await pool.query(
+            `
+              update room_players
+              set is_ready = true,
+                  status = $1,
+                  ready_at = $2
+              where room_id = $3
+                and player_address = $4
+            `,
+            [PLAYER_STATUS.READY, new Date().toISOString(), roomId, playerAddress]
+        );
 
         // Check if all players are ready
-        const { data: players } = await supabase
-            .from('room_players')
-            .select('is_ready')
-            .eq('room_id', roomId);
-
-        const allReady = players && players.every(p => p.is_ready);
+        const { rows: players } = await pool.query(
+            'select is_ready from room_players where room_id = $1',
+            [roomId]
+        );
+        const allReady = players.length > 0 && players.every(p => p.is_ready);
 
         return { success: true, allReady };
     }
@@ -297,13 +313,15 @@ class RoomManager {
      * Start countdown for game start
      */
     async startCountdown(roomId) {
-        await supabase
-            .from('multiplayer_rooms')
-            .update({
-                status: ROOM_STATUS.COUNTDOWN,
-                countdown_started_at: new Date().toISOString()
-            })
-            .eq('id', roomId);
+        await pool.query(
+            `
+              update multiplayer_rooms
+              set status = $1,
+                  countdown_started_at = $2
+              where id = $3
+            `,
+            [ROOM_STATUS.COUNTDOWN, new Date().toISOString(), roomId]
+        );
 
         console.log(`⏱️ Countdown started for room ${roomId}`);
 
@@ -322,19 +340,25 @@ class RoomManager {
         }
 
         // Update all players to playing
-        await supabase
-            .from('room_players')
-            .update({ status: PLAYER_STATUS.PLAYING })
-            .eq('room_id', roomId);
+        await pool.query(
+            `
+              update room_players
+              set status = $1
+              where room_id = $2
+            `,
+            [PLAYER_STATUS.PLAYING, roomId]
+        );
 
         // Update room status
-        await supabase
-            .from('multiplayer_rooms')
-            .update({
-                status: ROOM_STATUS.ACTIVE,
-                started_at: new Date().toISOString()
-            })
-            .eq('id', roomId);
+        await pool.query(
+            `
+              update multiplayer_rooms
+              set status = $1,
+                  started_at = $2
+              where id = $3
+            `,
+            [ROOM_STATUS.ACTIVE, new Date().toISOString(), roomId]
+        );
 
         console.log(`🎮 Game started for room ${roomId}`);
     }
@@ -348,34 +372,40 @@ class RoomManager {
         const finalHitBonus = isFinalHit ? Math.floor(hitPoints * 0.15) : 0; // 15% bonus for final hit
         const totalPoints = hitPoints + finalHitBonus;
 
-        const { error } = await supabase
-            .from('super_fruit_hits')
-            .insert({
-                room_id: roomId,
-                fruit_id: fruitId,
-                player_address: playerAddress,
-                hit_number: hitNumber,
-                damage,
-                fruit_type: fruitType,
-                fruit_max_hp: fruitMaxHp,
-                points_awarded: totalPoints,
-                is_final_hit: isFinalHit
-            });
-
-        if (error) {
+        try {
+            await pool.query(
+                `
+                  insert into super_fruit_hits (
+                    room_id,
+                    fruit_id,
+                    player_address,
+                    hit_number,
+                    damage,
+                    fruit_type,
+                    fruit_max_hp,
+                    points_awarded,
+                    is_final_hit
+                  )
+                  values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+                `,
+                [roomId, fruitId, playerAddress, hitNumber, damage, fruitType, fruitMaxHp, totalPoints, isFinalHit]
+            );
+        } catch (error) {
             console.error('Error recording super fruit hit:', error);
             return { success: false };
         }
 
         // Update player's super fruit stats
-        await supabase
-            .from('room_players')
-            .update({
-                super_fruit_hits: supabase.raw('super_fruit_hits + 1'),
-                contribution_score: supabase.raw(`contribution_score + ${totalPoints}`)
-            })
-            .eq('room_id', roomId)
-            .eq('player_address', playerAddress);
+        await pool.query(
+            `
+              update room_players
+              set super_fruit_hits = super_fruit_hits + 1,
+                  contribution_score = contribution_score + $1
+              where room_id = $2
+                and player_address = $3
+            `,
+            [totalPoints, roomId, playerAddress]
+        );
 
         return { success: true, points: totalPoints, isFinalHit };
     }
@@ -384,27 +414,34 @@ class RoomManager {
      * Update player score and lives
      */
     async updatePlayerState(roomId, playerAddress, score, lives) {
-        const { error } = await supabase
-            .from('room_players')
-            .update({ score, lives })
-            .eq('room_id', roomId)
-            .eq('player_address', playerAddress);
-
-        if (error) {
+        try {
+            await pool.query(
+                `
+                  update room_players
+                  set score = $1,
+                      lives = $2
+                  where room_id = $3
+                    and player_address = $4
+                `,
+                [score, lives, roomId, playerAddress]
+            );
+        } catch (error) {
             console.error('Error updating player state:', error);
             return { success: false };
         }
 
         // Check if player lost all lives
         if (lives <= 0) {
-            await supabase
-                .from('room_players')
-                .update({
-                    status: PLAYER_STATUS.FINISHED,
-                    finished_at: new Date().toISOString()
-                })
-                .eq('room_id', roomId)
-                .eq('player_address', playerAddress);
+            await pool.query(
+                `
+                  update room_players
+                  set status = $1,
+                      finished_at = $2
+                  where room_id = $3
+                    and player_address = $4
+                `,
+                [PLAYER_STATUS.FINISHED, new Date().toISOString(), roomId, playerAddress]
+            );
 
             // Check if game should end
             await this.checkGameEnd(roomId);
@@ -417,10 +454,10 @@ class RoomManager {
      * Check if game should end
      */
     async checkGameEnd(roomId) {
-        const { data: players } = await supabase
-            .from('room_players')
-            .select('*')
-            .eq('room_id', roomId);
+        const { rows: players } = await pool.query(
+            'select * from room_players where room_id = $1',
+            [roomId]
+        );
 
         // Game ends when all but one player has finished
         const activePlayers = players.filter(p => p.status === PLAYER_STATUS.PLAYING);
@@ -434,22 +471,26 @@ class RoomManager {
      * End the game and distribute payouts
      */
     async endGame(roomId) {
-        const { data: room } = await supabase
-            .from('multiplayer_rooms')
-            .select('*')
-            .eq('id', roomId)
-            .single();
+        const { rows: roomRows } = await pool.query(
+            'select * from multiplayer_rooms where id = $1 limit 1',
+            [roomId]
+        );
+        const room = roomRows[0] || null;
 
         if (!room || room.status === ROOM_STATUS.COMPLETED) {
             return;
         }
 
         // Get all players sorted by score
-        const { data: players } = await supabase
-            .from('room_players')
-            .select('*')
-            .eq('room_id', roomId)
-            .order('score', { ascending: false });
+        const { rows: players } = await pool.query(
+            `
+              select *
+              from room_players
+              where room_id = $1
+              order by score desc
+            `,
+            [roomId]
+        );
 
         const playerCount = players.length;
         const distribution = PAYOUT_DISTRIBUTION[playerCount];
@@ -463,28 +504,38 @@ class RoomManager {
             const payoutPercent = distribution[rank] || 0;
             const payout = distributablePool * payoutPercent;
 
-            await supabase
-                .from('room_players')
-                .update({
-                    final_rank: rank,
-                    payout,
-                    status: PLAYER_STATUS.FINISHED,
-                    finished_at: new Date().toISOString()
-                })
-                .eq('id', players[i].id);
+            await pool.query(
+                `
+                  update room_players
+                  set final_rank = $1,
+                      payout = $2,
+                      status = $3,
+                      finished_at = $4
+                  where id = $5
+                `,
+                [rank, payout, PLAYER_STATUS.FINISHED, new Date().toISOString(), players[i].id]
+            );
         }
 
         // Update room as completed
         const winnerAddress = players[0]?.player_address;
-        await supabase
-            .from('multiplayer_rooms')
-            .update({
-                status: ROOM_STATUS.COMPLETED,
-                completed_at: new Date().toISOString(),
-                winner_address: winnerAddress,
-                winner_payout: distributablePool * (distribution[1] || 0)
-            })
-            .eq('id', roomId);
+        await pool.query(
+            `
+              update multiplayer_rooms
+              set status = $1,
+                  completed_at = $2,
+                  winner_address = $3,
+                  winner_payout = $4
+              where id = $5
+            `,
+            [
+                ROOM_STATUS.COMPLETED,
+                new Date().toISOString(),
+                winnerAddress,
+                distributablePool * (distribution[1] || 0),
+                roomId,
+            ]
+        );
 
         console.log(`🏆 Game completed for room ${roomId}. Winner: ${winnerAddress}`);
 
@@ -508,25 +559,17 @@ class RoomManager {
      * Get available rooms for quick match
      */
     async getAvailableRooms(betTierId) {
-        const { data: rooms, error } = await supabase
-            .from('multiplayer_rooms')
-            .select(`
-        *,
-        room_players (
-          player_address,
-          join_order,
-          status
-        )
-      `)
-            .eq('status', ROOM_STATUS.WAITING)
-            .eq('bet_tier', betTierId)
-            .gt('expires_at', new Date().toISOString())
-            .order('created_at', { ascending: true });
-
-        if (error) {
-            console.error('Error fetching available rooms:', error);
-            return [];
-        }
+        const { rows: rooms } = await pool.query(
+            `
+              select *
+              from multiplayer_rooms
+              where status = $1
+                and bet_tier = $2
+                and expires_at > NOW()
+              order by created_at asc
+            `,
+            [ROOM_STATUS.WAITING, betTierId]
+        );
 
         return rooms.filter(r => r.current_player_count < r.max_players);
     }
@@ -535,29 +578,35 @@ class RoomManager {
      * Get room details
      */
     async getRoomDetails(roomId) {
-        const { data: room, error } = await supabase
-            .from('multiplayer_rooms')
-            .select(`
-        *,
-        room_players (
-          player_address,
-          join_order,
-          status,
-          is_ready,
-          score,
-          lives,
-          final_rank,
-          payout
-        )
-      `)
-            .eq('id', roomId)
-            .single();
+        const { rows: roomRows } = await pool.query(
+            'select * from multiplayer_rooms where id = $1 limit 1',
+            [roomId]
+        );
+        const room = roomRows[0] || null;
+        if (!room) return null;
 
-        if (error) {
-            return null;
-        }
+        const { rows: roomPlayers } = await pool.query(
+            `
+              select
+                player_address,
+                join_order,
+                status,
+                is_ready,
+                score,
+                lives,
+                final_rank,
+                payout
+              from room_players
+              where room_id = $1
+              order by join_order asc
+            `,
+            [roomId]
+        );
 
-        return room;
+        return {
+            ...room,
+            room_players: roomPlayers,
+        };
     }
 }
 

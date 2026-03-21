@@ -583,73 +583,13 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- -----------------------------------------------------------------------------
--- 12. Row Level Security + policies
+-- 12. Permissions (Postgres direct mode)
 -- -----------------------------------------------------------------------------
-ALTER TABLE players ENABLE ROW LEVEL SECURITY;
-ALTER TABLE multiplayer_games ENABLE ROW LEVEL SECURITY;
-ALTER TABLE game_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE game_transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE multiplayer_rooms ENABLE ROW LEVEL SECURITY;
-ALTER TABLE room_players ENABLE ROW LEVEL SECURITY;
-ALTER TABLE super_fruit_hits ENABLE ROW LEVEL SECURITY;
-ALTER TABLE matchmaking_queue ENABLE ROW LEVEL SECURITY;
-ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Public players read" ON players;
-CREATE POLICY "Public players read" ON players FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Players update own profile" ON players;
-CREATE POLICY "Players update own profile" ON players FOR UPDATE
-  USING (wallet_address = current_setting('app.current_user', true));
-
-DROP POLICY IF EXISTS "Public games read" ON multiplayer_games;
-CREATE POLICY "Public games read" ON multiplayer_games FOR SELECT
-  USING (
-    status IN ('completed', 'cancelled', 'expired')
-    OR player1_address = current_setting('app.current_user', true)
-    OR player2_address = current_setting('app.current_user', true)
-  );
-
-DROP POLICY IF EXISTS "Players read own events" ON game_events;
-CREATE POLICY "Players read own events" ON game_events FOR SELECT
-  USING (player_address = current_setting('app.current_user', true));
-
-DROP POLICY IF EXISTS "Players read own transactions" ON game_transactions;
-CREATE POLICY "Players read own transactions" ON game_transactions FOR SELECT
-  USING (player_address = current_setting('app.current_user', true));
-
-DROP POLICY IF EXISTS rooms_select_policy ON multiplayer_rooms;
-CREATE POLICY rooms_select_policy ON multiplayer_rooms FOR SELECT USING (true);
-DROP POLICY IF EXISTS rooms_insert_policy ON multiplayer_rooms;
-CREATE POLICY rooms_insert_policy ON multiplayer_rooms FOR INSERT WITH CHECK (true);
-DROP POLICY IF EXISTS rooms_update_policy ON multiplayer_rooms;
-CREATE POLICY rooms_update_policy ON multiplayer_rooms FOR UPDATE USING (true);
-
-DROP POLICY IF EXISTS room_players_select_policy ON room_players;
-CREATE POLICY room_players_select_policy ON room_players FOR SELECT USING (true);
-DROP POLICY IF EXISTS room_players_insert_policy ON room_players;
-CREATE POLICY room_players_insert_policy ON room_players FOR INSERT WITH CHECK (true);
-DROP POLICY IF EXISTS room_players_update_policy ON room_players;
-CREATE POLICY room_players_update_policy ON room_players FOR UPDATE USING (true);
-
-DROP POLICY IF EXISTS super_hits_select_policy ON super_fruit_hits;
-CREATE POLICY super_hits_select_policy ON super_fruit_hits FOR SELECT USING (true);
-DROP POLICY IF EXISTS super_hits_insert_policy ON super_fruit_hits;
-CREATE POLICY super_hits_insert_policy ON super_fruit_hits FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public read access for matchmaking_queue" ON matchmaking_queue;
-CREATE POLICY "Public read access for matchmaking_queue" ON matchmaking_queue FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Allow matchmaking_queue inserts" ON matchmaking_queue;
-CREATE POLICY "Allow matchmaking_queue inserts" ON matchmaking_queue FOR INSERT WITH CHECK (true);
-DROP POLICY IF EXISTS "Allow matchmaking_queue updates" ON matchmaking_queue;
-CREATE POLICY "Allow matchmaking_queue updates" ON matchmaking_queue FOR UPDATE USING (true);
-DROP POLICY IF EXISTS "Allow matchmaking_queue deletes" ON matchmaking_queue;
-CREATE POLICY "Allow matchmaking_queue deletes" ON matchmaking_queue FOR DELETE USING (true);
-
-DROP POLICY IF EXISTS "Anyone can read chat messages" ON chat_messages;
-CREATE POLICY "Anyone can read chat messages" ON chat_messages FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Users can insert chat messages" ON chat_messages;
-CREATE POLICY "Users can insert chat messages" ON chat_messages FOR INSERT WITH CHECK (true);
+-- This repository can run without Supabase/RLS. In that case:
+--   - keep RLS OFF (or do not enable it)
+--   - rely on backend authorization (JWT/wallet signature middleware)
+--
+-- If you want DB-level enforcement later, we can add RLS policies here.
 
 -- -----------------------------------------------------------------------------
 -- 13. Comments

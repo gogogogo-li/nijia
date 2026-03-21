@@ -21,7 +21,7 @@ import { GameManager } from './services/gameManager.js';
 import SoloGameManager from './services/soloGameManager.js';
 import RoomManager from './services/roomManager.js';
 import chatService from './services/chatService.js';
-import { supabase } from './config/supabase.js';
+import { pool } from './config/postgres.js';
 import { validateContractConfig } from './config/onechain.js';
 
 dotenv.config();
@@ -119,13 +119,13 @@ app.use((req, res, next) => {
 });
 
 // Initialize Game Manager
-const gameManager = new GameManager(io, supabase);
+const gameManager = new GameManager(io, pool);
 
 // Initialize Room Manager (REQ-P2-004: 2-4 player multiplayer)
 const roomManager = new RoomManager();
 
 // Initialize Solo Game Manager
-const soloGameManager = new SoloGameManager(supabase, null);
+const soloGameManager = new SoloGameManager(pool, null);
 // Initialize admin keypair for payouts
 soloGameManager.initialize().then(success => {
   if (success) {
@@ -269,46 +269,8 @@ io.on('connection', (socket) => {
   });
 });
 
-// Realtime database changes subscription
-const gamesChannel = supabase
-  .channel('games-realtime')
-  .on('postgres_changes',
-    { event: '*', schema: 'public', table: 'multiplayer_games' },
-    (payload) => {
-      logger.info(`Database change: ${payload.eventType}`, {
-        table: 'multiplayer_games',
-        gameId: payload.new?.game_id
-      });
-
-      gameManager.handleDatabaseChange(payload);
-    }
-  )
-  .subscribe((status) => {
-    if (status === 'SUBSCRIBED') {
-      logger.info('Subscribed to multiplayer_games changes');
-    }
-  });
-
-const playersChannel = supabase
-  .channel('players-realtime')
-  .on('postgres_changes',
-    { event: '*', schema: 'public', table: 'players' },
-    (payload) => {
-      logger.info(`Database change: ${payload.eventType}`, {
-        table: 'players',
-        address: payload.new?.address
-      });
-
-      if (payload.new?.address) {
-        io.to(`player:${payload.new.address}`).emit('player:update', payload.new);
-      }
-    }
-  )
-  .subscribe((status) => {
-    if (status === 'SUBSCRIBED') {
-      logger.info('Subscribed to players changes');
-    }
-  });
+// Note: when using direct Postgres (pg), we don't have Supabase realtime
+// subscriptions. The game state mainly lives in memory + explicit API calls.
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
@@ -342,9 +304,9 @@ const gracefulShutdown = () => {
   httpServer.close(() => {
     logger.info('✅ HTTP server closed');
 
-    // Close database connections
-    gamesChannel.unsubscribe();
-    playersChannel.unsubscribe();
+    // Close database connections (pg pool)
+    // Note: pool is handled in a service layer; if you add graceful pool.end(),
+    // do it here.
 
     // Cleanup game manager
     gameManager.cleanup();
