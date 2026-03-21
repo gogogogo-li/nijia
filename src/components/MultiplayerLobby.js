@@ -32,6 +32,14 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
   const isTelegram = auth?.isTelegram;
   const telegramDisplayName = auth?.user?.displayName || '';
 
+  console.log('[LOBBY-UI] render:', {
+    walletAddress,
+    isTelegram,
+    telegramDisplayName,
+    authUser: auth?.user,
+    playerNickname,
+  });
+
   // Load nickname from localStorage on mount
   React.useEffect(() => {
     if (walletAddress) {
@@ -53,10 +61,14 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
   };
 
   const handleCopyAddress = () => {
+    console.log('[LOBBY-UI] handleCopyAddress called, walletAddress:', walletAddress);
     if (!walletAddress) return;
     navigator.clipboard.writeText(walletAddress).then(() => {
+      console.log('[LOBBY-UI] Address copied to clipboard:', walletAddress);
       setAddressCopied(true);
       setTimeout(() => setAddressCopied(false), 2000);
+    }).catch(err => {
+      console.error('[LOBBY-UI] Clipboard copy failed:', err);
     });
   };
 
@@ -409,16 +421,14 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
           <span className="back-arrow">←</span>
           <span className="back-text">BACK</span>
         </button>
-        <div className="header-right">
-          <div className="address-copy-badge" onClick={handleCopyAddress} title="Copy wallet address">
-            <span className="address-text">{multiplayerService.formatAddress(walletAddress)}</span>
-            <span className="copy-icon">{addressCopied ? <FaCheck /> : <FaCopy />}</span>
-          </div>
-          <div className="wallet-badge">
-            {isTelegram && telegramDisplayName
-              ? telegramDisplayName
-              : multiplayerService.formatAddress(walletAddress)}
-          </div>
+        <div className="address-copy-badge" onClick={handleCopyAddress} title="Copy wallet address">
+          <span className="address-text">{multiplayerService.formatAddress(walletAddress)}</span>
+          <span className="copy-icon">{addressCopied ? <FaCheck /> : <FaCopy />}</span>
+        </div>
+        <div className="wallet-badge">
+          {isTelegram && telegramDisplayName
+            ? telegramDisplayName
+            : multiplayerService.formatAddress(walletAddress)}
         </div>
       </div>
 
