@@ -7,6 +7,7 @@ import { GiCrossedSwords, GiTwoCoins, GiTrophyCup, GiLightningBow, GiDiamondHard
 import { FaChartLine, FaCopy, FaCheck } from 'react-icons/fa';
 import { IoMdRefresh } from 'react-icons/io';
 import LobbyChat from './LobbyChat';
+import { BUILD_VERSION, BUILD_FEATURES } from '../App';
 
 const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }) => {
   const [activeTab, setActiveTab] = useState('create'); // 'create', 'join', 'stats'
@@ -32,12 +33,13 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
   const isTelegram = auth?.isTelegram;
   const telegramDisplayName = auth?.user?.displayName || '';
 
-  console.log('[LOBBY-UI] render:', {
+  console.log('[LOBBY-UI] render (build=' + BUILD_VERSION + '):', {
     walletAddress,
     isTelegram,
     telegramDisplayName,
     authUser: auth?.user,
     playerNickname,
+    features: BUILD_FEATURES,
   });
 
   // Load nickname from localStorage on mount

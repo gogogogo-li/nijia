@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { BUILD_VERSION } from '../App';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
@@ -34,12 +35,13 @@ function detectTelegramEnvironment() {
   const platform = webApp?.platform;
   const isTgPlatform = !!(platform && platform !== 'unknown');
   const result = hasInitData || isTgPlatform;
-  console.log('[TG-AUTH] detectTelegramEnvironment:', result, {
+  console.log('[TG-AUTH] detectTelegramEnvironment (build=' + BUILD_VERSION + '):', result, {
     hasWebApp: !!webApp,
     hasInitData,
     initDataLength: webApp?.initData?.length || 0,
     platform: platform || 'N/A',
     isTgPlatform,
+    userName: webApp?.initDataUnsafe?.user?.first_name || 'N/A',
   });
   return result;
 }
@@ -121,7 +123,7 @@ export const useTelegram = () => {
         throw new Error(data.error || 'Telegram login failed');
       }
 
-      console.log('[TG-AUTH] login() success, user:', data.user?.displayName, 'walletAddress:', data.user?.walletAddress, 'isNewUser:', data.isNewUser);
+      console.log('[TG-AUTH] login() success (build=' + BUILD_VERSION + '), user:', data.user?.displayName, 'walletAddress:', data.user?.walletAddress, 'isNewUser:', data.isNewUser);
       saveAuth(data.token, data.refreshToken, data.user);
     } catch (err) {
       console.error('[TG-AUTH] login() exception:', err.message);

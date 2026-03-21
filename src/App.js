@@ -18,6 +18,9 @@ import { Analytics } from "@vercel/analytics/react"
 import MultiplayerLobby from './components/MultiplayerLobby';
 import multiplayerService from './services/multiplayerService';
 
+export const BUILD_VERSION = '2026-03-21-v2';
+export const BUILD_FEATURES = ['address-copy-button', 'telegram-nickname-display', 'lobby-ui-refine'];
+
 function AppInner() {
   const auth = useAuth();
   const onechain = auth.onechain;
@@ -413,6 +416,29 @@ function AppInner() {
 
 function App() {
   const onechain = useOneChain();
+
+  useEffect(() => {
+    console.log(
+      '%c[NINJA] App started — BUILD_VERSION: ' + BUILD_VERSION,
+      'color: #00ff88; font-size: 14px; font-weight: bold; background: #1a1a2e; padding: 4px 8px; border-radius: 4px;'
+    );
+    console.log('[NINJA] BUILD_FEATURES:', BUILD_FEATURES.join(', '));
+    console.log('[NINJA] Startup time:', new Date().toISOString());
+    console.log('[NINJA] User-Agent:', navigator.userAgent);
+    console.log('[NINJA] Telegram SDK available:', !!window.Telegram?.WebApp);
+    if (window.Telegram?.WebApp) {
+      const wa = window.Telegram.WebApp;
+      console.log('[NINJA] Telegram WebApp info:', {
+        platform: wa.platform,
+        version: wa.version,
+        initDataLength: wa.initData?.length || 0,
+        colorScheme: wa.colorScheme,
+        userId: wa.initDataUnsafe?.user?.id || 'N/A',
+        firstName: wa.initDataUnsafe?.user?.first_name || 'N/A',
+        lastName: wa.initDataUnsafe?.user?.last_name || 'N/A',
+      });
+    }
+  }, []);
 
   return (
     <AuthProvider onechain={onechain}>
