@@ -10,6 +10,24 @@ function getTelegramWebApp() {
   return window.Telegram?.WebApp;
 }
 
+function ensureTelegramReady() {
+  return new Promise((resolve) => {
+    if (window.Telegram?.WebApp) {
+      resolve();
+      return;
+    }
+    let attempts = 0;
+    const maxAttempts = 50;
+    const interval = setInterval(() => {
+      attempts++;
+      if (window.Telegram?.WebApp || attempts >= maxAttempts) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 100);
+  });
+}
+
 function detectTelegramEnvironment() {
   const webApp = getTelegramWebApp();
   const hasInitData = !!(webApp && webApp.initData && webApp.initData.length > 0);
@@ -165,17 +183,26 @@ export const useTelegram = () => {
       return;
     }
 
-    const webApp = getTelegramWebApp();
-    if (webApp) {
-      console.log('[TG-AUTH] useEffect: Telegram detected, calling webApp.ready() + expand(), platform:', webApp.platform);
-      webApp.ready();
-      webApp.expand();
-    } else {
-      console.warn('[TG-AUTH] useEffect: isTelegram=true but webApp is null');
-    }
+    const initTelegramView = async () => {
+      await ensureTelegramReady();
+      const webApp = getTelegramWebApp();
+      if (webApp) {
+        console.log('[TG-AUTH] initTelegramView: calling ready() + expand, platform:', webApp.platform);
+        webApp.ready();
+        webApp.expand();
+        if (window.Telegram?.WebView) {
+          window.Telegram.WebView.postEvent("web_app_expand");
+        }
+        webApp.disableVerticalSwipes?.();
+      } else {
+        console.warn('[TG-AUTH] initTelegramView: isTelegram=true but webApp is null after waiting');
+      }
+    };
+    initTelegramView();
 
+    const currentWebApp = getTelegramWebApp();
     if (!token && !loginAttempted.current) {
-      if (webApp?.initData) {
+      if (currentWebApp?.initData) {
         console.log('[TG-AUTH] useEffect: no stored token, starting auto-login...');
         loginAttempted.current = true;
         login();
