@@ -1,6 +1,6 @@
 import express from 'express';
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { supabase } from '../config/supabase.js';
+import { pool } from '../config/postgres.js';
 
 const router = express.Router();
 
@@ -46,23 +46,22 @@ router.get('/leaderboard', asyncHandler(async (req, res) => {
     // Fetch solo games if mode is 'solo' or 'all'
     if (mode === 'solo' || mode === 'all') {
       try {
-        let soloQuery = supabase
-          .from('solo_games')
-          .select('player_address, final_score, won, completed_at')
-          .eq('state', 'completed')
-          .not('final_score', 'is', null);
-
+        const soloParams = [];
+        let soloSql = `
+          select player_address, final_score, won, completed_at
+          from solo_games
+          where state = 'completed'
+            and final_score is not null
+        `;
         if (timeFilter) {
-          soloQuery = soloQuery.gte('completed_at', timeFilter);
+          soloParams.push(timeFilter);
+          soloSql += ' and completed_at >= $1';
         }
+        const { rows: soloGames } = await pool.query(soloSql, soloParams);
 
-        const { data: soloGames, error: soloError } = await soloQuery;
-
-        if (!soloError && soloGames) {
-          soloGames.forEach(game => {
-            addPlayerScore(game.player_address, game.final_score, game.won);
-          });
-        }
+        soloGames.forEach(game => {
+          addPlayerScore(game.player_address, game.final_score, game.won);
+        });
       } catch (soloErr) {
         // solo_games table might not exist - that's ok, continue without it
         console.log('Note: solo_games table not available, skipping');
@@ -71,19 +70,18 @@ router.get('/leaderboard', asyncHandler(async (req, res) => {
 
     // Fetch multiplayer games if mode is 'multiplayer' or 'all'
     if (mode === 'multiplayer' || mode === 'all') {
-      let mpQuery = supabase
-        .from('multiplayer_games')
-        .select('player1_address, player2_address, player1_score, player2_score, winner, completed_at')
-        .eq('status', 'completed')
-        .not('completed_at', 'is', null);
-
+      const mpParams = [];
+      let mpSql = `
+        select player1_address, player2_address, player1_score, player2_score, winner, completed_at
+        from multiplayer_games
+        where status = 'completed'
+          and completed_at is not null
+      `;
       if (timeFilter) {
-        mpQuery = mpQuery.gte('completed_at', timeFilter);
+        mpParams.push(timeFilter);
+        mpSql += ' and completed_at >= $1';
       }
-
-      const { data: mpGames, error: mpError } = await mpQuery;
-
-      if (mpError) throw mpError;
+      const { rows: mpGames } = await pool.query(mpSql, mpParams);
 
       mpGames?.forEach(game => {
         // Process player 1
@@ -141,27 +139,26 @@ router.get('/leaderboard/player/:address', asyncHandler(async (req, res) => {
   const timeFilter = getTimeFilter(period);
 
   // Simplified approach - get player stats directly
-  const { data: playerData, error } = await supabase
-    .from('players')
-    .select('*')
-    .eq('wallet_address', address)
-    .single();
-
-  if (error && error.code !== 'PGRST116') {
-    throw error;
-  }
+  const { rows: playerRows } = await pool.query(
+    'select * from players where wallet_address = $1 limit 1',
+    [address]
+  );
+  const playerData = playerRows[0] || null;
 
   // Get player's recent games count
   let recentGames = 0;
   if (timeFilter) {
-    const { count } = await supabase
-      .from('multiplayer_games')
-      .select('*', { count: 'exact', head: true })
-      .or(`player1_address.eq.${address},player2_address.eq.${address}`)
-      .eq('status', 'completed')
-      .gte('completed_at', timeFilter);
-
-    recentGames = count || 0;
+    const { rows } = await pool.query(
+      `
+        select count(*)::int as count
+        from multiplayer_games
+        where status = 'completed'
+          and completed_at >= $1
+          and (player1_address = $2 or player2_address = $2)
+      `,
+      [timeFilter, address]
+    );
+    recentGames = rows[0]?.count || 0;
   }
 
   res.json({
@@ -189,16 +186,16 @@ router.get('/leaderboard/player/:address', asyncHandler(async (req, res) => {
 router.get('/recent', asyncHandler(async (req, res) => {
   const { limit = 10 } = req.query;
 
-  const { data, error } = await supabase
-    .from('multiplayer_games')
-    .select('*')
-    .eq('status', 'completed')
-    .order('completed_at', { ascending: false })
-    .limit(parseInt(limit));
-
-  if (error) {
-    throw error;
-  }
+  const { rows: data } = await pool.query(
+    `
+      select *
+      from multiplayer_games
+      where status = 'completed'
+      order by completed_at desc
+      limit $1
+    `,
+    [parseInt(limit)]
+  );
 
   res.json({
     success: true,

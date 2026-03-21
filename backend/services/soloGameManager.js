@@ -164,20 +164,33 @@ class SoloGameManager {
         this.activeGames.set(gameId, game);
 
         // Store in database
-        const { error } = await this.supabase
-            .from('solo_games')
-            .insert({
-                game_id: gameId,
-                player_address: playerAddress,
-                difficulty,
-                stake_amount: config.stake,
-                target_score: config.target,
-                state: 'in_progress',
-                tx_hash: txHash,
-                created_at: new Date().toISOString(),
-            });
-
-        if (error) {
+        try {
+            await this.supabase.query(
+                `
+                  insert into solo_games (
+                    game_id,
+                    player_address,
+                    difficulty,
+                    stake_amount,
+                    target_score,
+                    state,
+                    tx_hash,
+                    created_at
+                  )
+                  values ($1,$2,$3,$4,$5,$6,$7,$8)
+                `,
+                [
+                    gameId,
+                    playerAddress,
+                    difficulty,
+                    config.stake,
+                    config.target,
+                    'in_progress',
+                    txHash,
+                    new Date().toISOString(),
+                ]
+            );
+        } catch (error) {
             logger.warn(`   Database error (continuing anyway): ${error.message}`);
         }
 
@@ -324,17 +337,26 @@ class SoloGameManager {
         }
 
         // Update database
-        await this.supabase
-            .from('solo_games')
-            .update({
-                final_score: game.final_score,
-                won: game.won,
-                payout: game.payout,
-                state: 'completed',
-                settlement_tx: game.settlement_tx,
-                completed_at: game.completed_at,
-            })
-            .eq('game_id', gameId);
+        await this.supabase.query(
+            `
+              update solo_games
+              set final_score = $1,
+                  won = $2,
+                  payout = $3,
+                  state = 'completed',
+                  settlement_tx = $4,
+                  completed_at = $5
+              where game_id = $6
+            `,
+            [
+                game.final_score,
+                game.won,
+                game.payout,
+                game.settlement_tx,
+                game.completed_at,
+                gameId,
+            ]
+        );
 
         // Schedule cleanup
         setTimeout(() => {

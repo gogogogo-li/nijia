@@ -3,15 +3,11 @@
  * Handles lobby chat messages with Supabase persistence
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { pool } from '../config/postgres.js';
 import logger from '../utils/logger.js';
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
 class ChatService {
     constructor() {
-        this.supabase = createClient(supabaseUrl, supabaseKey);
         this.io = null;
         this.messageCache = []; // Keep last 50 messages in memory for quick access
         this.maxCacheSize = 50;
@@ -52,16 +48,29 @@ class ChatService {
             };
 
             // Store in database
-            const { data, error } = await this.supabase
-                .from('chat_messages')
-                .insert(chatMessage)
-                .select()
-                .single();
-
-            if (error) {
-                logger.error('Chat message insert error:', error.message);
-                return { success: false, error: error.message };
-            }
+            const { rows } = await pool.query(
+                `
+                  insert into chat_messages (
+                    sender_address,
+                    sender_name,
+                    message,
+                    chat_type,
+                    game_id,
+                    created_at
+                  )
+                  values ($1,$2,$3,$4,$5,$6)
+                  returning *
+                `,
+                [
+                    chatMessage.sender_address,
+                    chatMessage.sender_name,
+                    chatMessage.message,
+                    chatMessage.chat_type,
+                    chatMessage.game_id,
+                    chatMessage.created_at,
+                ]
+            );
+            const data = rows[0];
 
             // Add to cache
             this.messageCache.push(data);
@@ -110,17 +119,17 @@ class ChatService {
             }
 
             // Fetch from database
-            const { data, error } = await this.supabase
-                .from('chat_messages')
-                .select('*')
-                .eq('chat_type', 'lobby')
-                .order('created_at', { ascending: false })
-                .limit(limit);
-
-            if (error) {
-                logger.error('Chat history fetch error:', error.message);
-                return { success: false, error: error.message };
-            }
+            const { rows } = await pool.query(
+                `
+                  select *
+                  from chat_messages
+                  where chat_type = $1
+                  order by created_at desc
+                  limit $2
+                `,
+                ['lobby', limit]
+            );
+            const data = rows;
 
             // Update cache
             this.messageCache = data.reverse();
@@ -159,15 +168,29 @@ class ChatService {
                 created_at: new Date().toISOString()
             };
 
-            const { data, error } = await this.supabase
-                .from('chat_messages')
-                .insert(chatMessage)
-                .select()
-                .single();
-
-            if (error) {
-                return { success: false, error: error.message };
-            }
+            const { rows } = await pool.query(
+                `
+                  insert into chat_messages (
+                    sender_address,
+                    sender_name,
+                    message,
+                    chat_type,
+                    game_id,
+                    created_at
+                  )
+                  values ($1,$2,$3,$4,$5,$6)
+                  returning *
+                `,
+                [
+                    chatMessage.sender_address,
+                    null,
+                    chatMessage.message,
+                    chatMessage.chat_type,
+                    chatMessage.game_id,
+                    chatMessage.created_at,
+                ]
+            );
+            const data = rows[0];
 
             // Broadcast to game room
             if (this.io) {
@@ -191,15 +214,16 @@ class ChatService {
      */
     async getGameHistory(gameId) {
         try {
-            const { data, error } = await this.supabase
-                .from('chat_messages')
-                .select('*')
-                .eq('game_id', gameId)
-                .order('created_at', { ascending: true });
-
-            if (error) {
-                return { success: false, error: error.message };
-            }
+            const { rows } = await pool.query(
+                `
+                  select *
+                  from chat_messages
+                  where game_id = $1
+                  order by created_at asc
+                `,
+                [gameId]
+            );
+            const data = rows;
 
             return {
                 success: true,
