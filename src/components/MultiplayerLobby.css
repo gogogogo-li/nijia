@@ -188,6 +188,57 @@
   transform: translateX(-5px);
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.address-copy-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-family: monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.address-copy-badge:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.address-copy-badge:active {
+  transform: scale(0.96);
+}
+
+.address-text {
+  white-space: nowrap;
+}
+
+.copy-icon {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.2s ease;
+}
+
+.address-copy-badge:hover .copy-icon {
+  color: #ffd700;
+}
+
+.address-copy-badge .copy-icon svg {
+  transition: transform 0.2s ease;
+}
+
 .wallet-badge {
   background: linear-gradient(135deg,
       rgba(255, 215, 0, 0.2),
@@ -195,12 +246,16 @@
   border: 2px solid rgba(255, 215, 0, 0.5);
   padding: 10px 20px;
   border-radius: 50px;
-  font-family: monospace;
+  font-family: 'Segoe UI', sans-serif;
   font-size: 14px;
   color: #ffd700;
   font-weight: 700;
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 16px rgba(255, 215, 0, 0.2);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Title Section */
@@ -1106,9 +1161,20 @@
     align-self: flex-start;
   }
 
+  .header-right {
+    gap: 6px;
+  }
+
+  .address-copy-badge {
+    padding: 6px 12px;
+    font-size: 11px;
+    gap: 6px;
+  }
+
   .wallet-badge {
-    font-size: 14px;
-    padding: 8px 16px;
+    font-size: 12px;
+    padding: 8px 12px;
+    max-width: 120px;
   }
 
   .lobby-title-container {
@@ -1207,6 +1273,17 @@
 }
 
 @media (max-width: 480px) {
+  .address-copy-badge {
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+
+  .wallet-badge {
+    font-size: 11px;
+    padding: 6px 10px;
+    max-width: 100px;
+  }
+
   .title-text {
     font-size: 24px;
     letter-spacing: 2px;

@@ -4,7 +4,7 @@ import onechainService from '../services/onechainService';
 import { createGameTransaction, joinGameTransaction } from '../services/multiplayerContract';
 import './MultiplayerLobby.css';
 import { GiCrossedSwords, GiTwoCoins, GiTrophyCup, GiLightningBow, GiDiamondHard, GiGamepad, GiCrossedSabres, GiTargetArrows, GiMagnifyingGlass } from 'react-icons/gi';
-import { FaChartLine } from 'react-icons/fa';
+import { FaChartLine, FaCopy, FaCheck } from 'react-icons/fa';
 import { IoMdRefresh } from 'react-icons/io';
 import LobbyChat from './LobbyChat';
 
@@ -27,6 +27,10 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
   // Player nickname - persisted per wallet
   const [playerNickname, setPlayerNickname] = useState('');
   const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [addressCopied, setAddressCopied] = useState(false);
+
+  const isTelegram = auth?.isTelegram;
+  const telegramDisplayName = auth?.user?.displayName || '';
 
   // Load nickname from localStorage on mount
   React.useEffect(() => {
@@ -46,6 +50,14 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
       localStorage.setItem(`ninja_nickname_${walletAddress}`, trimmed);
     }
     setIsEditingNickname(false);
+  };
+
+  const handleCopyAddress = () => {
+    if (!walletAddress) return;
+    navigator.clipboard.writeText(walletAddress).then(() => {
+      setAddressCopied(true);
+      setTimeout(() => setAddressCopied(false), 2000);
+    });
   };
 
   const fetchPlayerStats = React.useCallback(async () => {
@@ -397,8 +409,16 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
           <span className="back-arrow">←</span>
           <span className="back-text">BACK</span>
         </button>
-        <div className="wallet-badge">
-          {multiplayerService.formatAddress(walletAddress)}
+        <div className="header-right">
+          <div className="address-copy-badge" onClick={handleCopyAddress} title="Copy wallet address">
+            <span className="address-text">{multiplayerService.formatAddress(walletAddress)}</span>
+            <span className="copy-icon">{addressCopied ? <FaCheck /> : <FaCopy />}</span>
+          </div>
+          <div className="wallet-badge">
+            {isTelegram && telegramDisplayName
+              ? telegramDisplayName
+              : multiplayerService.formatAddress(walletAddress)}
+          </div>
         </div>
       </div>
 
@@ -437,7 +457,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
           <div className="nickname-display" onClick={() => setIsEditingNickname(true)}>
             <span className="nickname-label">Playing as:</span>
             <span className="nickname-value">
-              {playerNickname || multiplayerService.formatAddress(walletAddress)}
+              {playerNickname || (isTelegram && telegramDisplayName) || multiplayerService.formatAddress(walletAddress)}
             </span>
             <button className="nickname-edit-btn" title="Edit nickname">✏️</button>
           </div>
