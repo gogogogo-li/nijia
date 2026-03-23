@@ -24,10 +24,17 @@ class ZkLoginService {
     const backendUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
     this.suiClient = new SuiClient({ url: `${backendUrl}/api/rpc` });
     this.onStepChange = null;
+    this._stepStart = null;
+    this._flowStart = null;
   }
 
   _setStep(step) {
-    console.log('[zkLogin] step:', step);
+    const now = performance.now();
+    if (this._stepStart) {
+      console.log('[zkLogin] step completed in', Math.round(now - this._stepStart) + 'ms');
+    }
+    this._stepStart = now;
+    console.log('[zkLogin] ── step:', step);
     if (this.onStepChange) this.onStepChange(step);
   }
 
@@ -39,27 +46,27 @@ class ZkLoginService {
 
     const ephemeralKeypair = new Ed25519Keypair();
     const ephemeralPubKey = ephemeralKeypair.getPublicKey();
+    console.log('[zkLogin] ephemeral pubkey:', ephemeralPubKey.toBase64().substring(0, 16) + '...');
 
+    console.log('[zkLogin] fetching current epoch from RPC...');
     const { epoch } = await this.suiClient.getLatestSuiSystemState();
     const maxEpoch = Number(epoch) + EPOCH_OFFSET;
+    console.log('[zkLogin] current epoch:', epoch, '→ maxEpoch:', maxEpoch);
 
     const randomness = generateRandomness();
     const nonce = generateNonce(ephemeralPubKey, maxEpoch, randomness);
 
-    // Persist in sessionStorage so the keypair survives page state changes
     sessionStorage.setItem(STORAGE_KEYS.EPHEMERAL_KEYPAIR, ephemeralKeypair.getSecretKey());
     sessionStorage.setItem(STORAGE_KEYS.RANDOMNESS, randomness);
     sessionStorage.setItem(STORAGE_KEYS.MAX_EPOCH, String(maxEpoch));
 
-    console.log('[zkLogin] materials prepared', { maxEpoch, nonceLength: nonce.length });
-
-    return {
-      ephemeralKeypair,
-      ephemeralPubKey,
+    console.log('[zkLogin] materials ready:', {
       maxEpoch,
-      randomness,
-      nonce,
-    };
+      nonce: nonce.substring(0, 12) + '...',
+      randomness: randomness.substring(0, 12) + '...',
+    });
+
+    return { ephemeralKeypair, ephemeralPubKey, maxEpoch, randomness, nonce };
   }
 
   /**
@@ -67,6 +74,7 @@ class ZkLoginService {
    */
   async fetchZkLoginJwt(initData, nonce) {
     this._setStep('signing');
+    console.log('[zkLogin] POST /api/auth/telegram with nonce, initData length:', initData.length);
 
     const res = await fetch(`${API_BASE_URL}/api/auth/telegram`, {
       method: 'POST',
@@ -74,16 +82,20 @@ class ZkLoginService {
       body: JSON.stringify({ initData, nonce }),
     });
 
+    console.log('[zkLogin] /telegram response status:', res.status);
     const data = await res.json();
     if (!res.ok || !data.success) {
+      console.error('[zkLogin] /telegram failed:', data.error);
       throw new Error(data.error || 'Failed to get zkLogin JWT from backend');
     }
 
     if (!data.zkLoginJwt) {
+      console.error('[zkLogin] /telegram response missing zkLoginJwt field, keys:', Object.keys(data).join(','));
       throw new Error('Backend did not return zkLoginJwt (nonce may not have been accepted)');
     }
 
-    console.log('[zkLogin] JWT received', { hasZkLoginJwt: true });
+    console.log('[zkLogin] JWT received, length:', data.zkLoginJwt.length,
+      ', user:', data.user?.displayName, ', tgId:', data.user?.telegramUserId);
     return {
       zkLoginJwt: data.zkLoginJwt,
       sessionToken: data.token,
@@ -97,6 +109,7 @@ class ZkLoginService {
    */
   async fetchSalt(jwt) {
     this._setStep('salt');
+    console.log('[zkLogin] POST /api/auth/salt, jwt length:', jwt.length);
 
     const res = await fetch(`${API_BASE_URL}/api/auth/salt`, {
       method: 'POST',
@@ -104,12 +117,14 @@ class ZkLoginService {
       body: JSON.stringify({ jwt }),
     });
 
+    console.log('[zkLogin] /salt response status:', res.status);
     const data = await res.json();
     if (!res.ok || !data.success) {
+      console.error('[zkLogin] /salt failed:', data.error);
       throw new Error(data.error || 'Failed to fetch salt');
     }
 
-    console.log('[zkLogin] salt received');
+    console.log('[zkLogin] salt received, length:', data.salt.length, ', prefix:', data.salt.substring(0, 8) + '...');
     return data.salt;
   }
 
@@ -130,7 +145,15 @@ class ZkLoginService {
 
     const extendedEphemeralPublicKey = getExtendedEphemeralPublicKey(ephemeralPublicKey);
 
-    console.log('[zkLogin] requesting ZK proof from', PROVER_URL);
+    console.log('[zkLogin] POST ZK Prover:', PROVER_URL);
+    console.log('[zkLogin] prover request params:', {
+      jwtLength: jwt.length,
+      extEphPubKey: extendedEphemeralPublicKey.substring(0, 16) + '...',
+      maxEpoch,
+      saltPrefix: salt.substring(0, 8) + '...',
+    });
+
+    const proverStart = performance.now();
     const res = await fetch(PROVER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -144,13 +167,17 @@ class ZkLoginService {
       }),
     });
 
+    const proverMs = Math.round(performance.now() - proverStart);
+    console.log('[zkLogin] prover response status:', res.status, 'in', proverMs + 'ms');
+
     if (!res.ok) {
       const text = await res.text().catch(() => '');
+      console.error('[zkLogin] prover error body:', text.substring(0, 200));
       throw new Error(`ZK Prover returned ${res.status}: ${text}`);
     }
 
     const proof = await res.json();
-    console.log('[zkLogin] ZK proof received');
+    console.log('[zkLogin] ZK proof received, keys:', Object.keys(proof).join(','));
     return proof;
   }
 
@@ -159,6 +186,7 @@ class ZkLoginService {
    */
   async authenticate({ jwt, salt, zkLoginAddress, zkProof, ephemeralPublicKey, maxEpoch }) {
     this._setStep('authenticating');
+    console.log('[zkLogin] POST /api/auth/zklogin, address:', zkLoginAddress);
 
     const extendedEphemeralPublicKey = getExtendedEphemeralPublicKey(ephemeralPublicKey);
 
@@ -175,12 +203,18 @@ class ZkLoginService {
       }),
     });
 
+    console.log('[zkLogin] /zklogin response status:', res.status);
     const data = await res.json();
     if (!res.ok || !data.success) {
+      console.error('[zkLogin] /zklogin failed:', data.error);
       throw new Error(data.error || 'zkLogin authentication failed');
     }
 
-    console.log('[zkLogin] authentication complete', { walletAddress: data.user?.walletAddress });
+    console.log('[zkLogin] authentication complete:', {
+      walletAddress: data.user?.walletAddress,
+      displayName: data.user?.displayName,
+      isNewUser: data.isNewUser,
+    });
     return data;
   }
 
@@ -193,6 +227,8 @@ class ZkLoginService {
    */
   async fullFlow(initData, onStep) {
     if (onStep) this.onStepChange = onStep;
+    this._flowStart = performance.now();
+    console.log('[zkLogin] ══════ fullFlow START ══════');
 
     try {
       // 1. Prepare cryptographic materials
@@ -239,6 +275,8 @@ class ZkLoginService {
       sessionStorage.setItem(STORAGE_KEYS.ZK_LOGIN_DATA, JSON.stringify(zkLoginData));
 
       this._setStep('done');
+      const totalMs = Math.round(performance.now() - this._flowStart);
+      console.log('[zkLogin] ══════ fullFlow SUCCESS ══════ total:', totalMs + 'ms, address:', zkLoginAddress);
 
       return {
         token: authResult.token,
@@ -249,9 +287,13 @@ class ZkLoginService {
       };
     } catch (err) {
       this._setStep('error');
+      const totalMs = Math.round(performance.now() - this._flowStart);
+      console.error('[zkLogin] ══════ fullFlow FAILED ══════ total:', totalMs + 'ms, error:', err.message);
       throw err;
     } finally {
       this.onStepChange = null;
+      this._stepStart = null;
+      this._flowStart = null;
     }
   }
 }

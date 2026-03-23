@@ -62,12 +62,22 @@ export function signZkLoginJwt(telegramUserId, nonce) {
     nonce,
   };
 
-  return jwt.sign(payload, rsaPrivateKey, {
+  logger.info('[zkLoginJwt] signZkLoginJwt called', {
+    sub: payload.sub,
+    aud: payload.aud,
+    iss: getIssuer(),
+    noncePrefix: nonce?.substring(0, 12),
+  });
+
+  const token = jwt.sign(payload, rsaPrivateKey, {
     algorithm: 'RS256',
     issuer: getIssuer(),
     expiresIn: JWT_EXPIRY,
     keyid: 'zklogin-rsa-1',
   });
+
+  logger.info('[zkLoginJwt] JWT signed OK', { tokenLength: token.length });
+  return token;
 }
 
 /**
@@ -103,9 +113,16 @@ export function getJwks() {
  */
 export function verifyZkLoginJwt(token) {
   ensureKeypair();
-  return jwt.verify(token, rsaPublicKey, {
+  const decoded = jwt.verify(token, rsaPublicKey, {
     algorithms: ['RS256'],
     issuer: getIssuer(),
     audience: getAudience(),
   });
+  logger.info('[zkLoginJwt] verifyZkLoginJwt OK', {
+    sub: decoded.sub,
+    iss: decoded.iss,
+    aud: decoded.aud,
+    exp: decoded.exp,
+  });
+  return decoded;
 }

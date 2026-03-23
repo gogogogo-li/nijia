@@ -128,25 +128,40 @@ export const useTelegram = () => {
 
     try {
       let data;
+      let loginPath;
+      const loginStart = performance.now();
 
       if (ZKLOGIN_ENABLED) {
         try {
-          console.log('[TG-AUTH] Attempting zkLogin flow...');
+          console.log('[TG-AUTH] Attempting zkLogin flow (REACT_APP_ZKLOGIN_ENABLED=true)...');
           data = await zkLoginService.fullFlow(webApp.initData, (step) => {
             setZkLoginStep(step);
           });
-          console.log('[TG-AUTH] zkLogin success, walletAddress:', data.user?.walletAddress);
+          loginPath = 'zklogin';
+          console.log('[TG-AUTH] zkLogin SUCCESS, walletAddress:', data.user?.walletAddress, ', isNewUser:', data.isNewUser);
         } catch (zkErr) {
-          console.warn('[TG-AUTH] zkLogin failed, falling back to legacy:', zkErr.message);
+          console.warn('[TG-AUTH] zkLogin FAILED after', Math.round(performance.now() - loginStart) + 'ms, error:', zkErr.message);
+          console.warn('[TG-AUTH] Falling back to legacy login (tg_ address)...');
           setZkLoginStep(null);
           data = await loginLegacy(webApp.initData);
-          console.log('[TG-AUTH] Legacy login success, walletAddress:', data.user?.walletAddress);
+          loginPath = 'legacy-fallback';
+          console.log('[TG-AUTH] Legacy fallback SUCCESS, walletAddress:', data.user?.walletAddress);
         }
       } else {
+        console.log('[TG-AUTH] zkLogin disabled, using legacy login');
         data = await loginLegacy(webApp.initData);
+        loginPath = 'legacy';
       }
 
-      console.log('[TG-AUTH] login() complete (build=' + BUILD_VERSION + '), user:', data.user?.displayName, 'walletAddress:', data.user?.walletAddress, 'isNewUser:', data.isNewUser);
+      const loginMs = Math.round(performance.now() - loginStart);
+      console.log('[TG-AUTH] login() COMPLETE (build=' + BUILD_VERSION + '):', {
+        path: loginPath,
+        elapsed: loginMs + 'ms',
+        displayName: data.user?.displayName,
+        walletAddress: data.user?.walletAddress,
+        isNewUser: data.isNewUser,
+        addressIsZk: data.user?.walletAddress?.startsWith('0x'),
+      });
       saveAuth(data.token, data.refreshToken, data.user);
     } catch (err) {
       console.error('[TG-AUTH] login() exception:', err.message);

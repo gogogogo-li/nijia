@@ -19,8 +19,10 @@ const router = express.Router();
  * Serves the RSA public key in JWKS format so the ZK Prover can verify JWTs.
  */
 router.get('/.well-known/jwks.json', (req, res) => {
+  logger.info('[zkLogin] JWKS endpoint hit', { ip: req.ip, userAgent: req.get('user-agent')?.substring(0, 60) });
   try {
     const jwks = getJwks();
+    logger.info('[zkLogin] JWKS served OK', { keyCount: jwks.keys.length, kid: jwks.keys[0]?.kid });
     res.setHeader('Cache-Control', 'public, max-age=3600');
     res.json(jwks);
   } catch (err) {
@@ -235,14 +237,18 @@ router.post(
 router.post(
   '/salt',
   asyncHandler(async (req, res) => {
+    logger.info('[zkLogin] POST /api/auth/salt received', { hasJwt: !!req.body.jwt, jwtLength: req.body.jwt?.length || 0 });
+
     const { jwt } = req.body;
     if (!jwt) {
+      logger.warn('[zkLogin] salt: missing jwt in body');
       return res.status(400).json({ success: false, error: 'jwt is required' });
     }
 
     let decoded;
     try {
       decoded = verifyZkLoginJwt(jwt);
+      logger.info('[zkLogin] salt: JWT verified', { sub: decoded.sub, iss: decoded.iss });
     } catch (err) {
       logger.warn('[zkLogin] salt: JWT verification failed', { error: err.message });
       return res.status(401).json({ success: false, error: 'Invalid zkLogin JWT' });
@@ -257,10 +263,9 @@ router.post(
     const hmac = crypto.createHmac('sha256', Buffer.from(masterKey, 'hex'));
     hmac.update(decoded.sub);
     const hashBytes = hmac.digest();
-    // Use first 16 bytes (128 bits) as a BigInt decimal string
     const salt = BigInt('0x' + hashBytes.subarray(0, 16).toString('hex')).toString();
 
-    logger.info('[zkLogin] salt issued', { sub: decoded.sub });
+    logger.info('[zkLogin] salt issued OK', { sub: decoded.sub, saltLength: salt.length, saltPrefix: salt.substring(0, 8) });
     res.json({ success: true, salt });
   })
 );
@@ -273,35 +278,46 @@ router.post(
 router.post(
   '/zklogin',
   asyncHandler(async (req, res) => {
+    logger.info('[zkLogin] POST /api/auth/zklogin received', {
+      hasJwt: !!req.body.jwt,
+      hasSalt: !!req.body.salt,
+      hasAddress: !!req.body.zkLoginAddress,
+      hasProof: !!req.body.zkProof,
+      maxEpoch: req.body.maxEpoch,
+    });
+
     const { jwt, salt, zkLoginAddress, zkProof, ephemeralPublicKey, maxEpoch } = req.body;
 
     if (!jwt || !salt || !zkLoginAddress) {
+      logger.warn('[zkLogin] auth: missing required fields');
       return res.status(400).json({ success: false, error: 'jwt, salt, and zkLoginAddress are required' });
     }
 
     let decoded;
     try {
       decoded = verifyZkLoginJwt(jwt);
+      logger.info('[zkLogin] auth: JWT verified', { sub: decoded.sub, iss: decoded.iss, aud: decoded.aud });
     } catch (err) {
       logger.warn('[zkLogin] auth: JWT verification failed', { error: err.message });
       return res.status(401).json({ success: false, error: 'Invalid zkLogin JWT' });
     }
 
-    // Verify the address matches what jwtToAddress produces
     let expectedAddress;
     try {
       expectedAddress = jwtToAddress(jwt, salt);
+      logger.info('[zkLogin] auth: jwtToAddress result', { expectedAddress, receivedAddress: zkLoginAddress });
     } catch (err) {
       logger.error('[zkLogin] auth: jwtToAddress failed', { error: err.message });
       return res.status(400).json({ success: false, error: 'Failed to derive address from JWT + salt' });
     }
 
     if (expectedAddress !== zkLoginAddress) {
-      logger.warn('[zkLogin] auth: address mismatch', { expected: expectedAddress, received: zkLoginAddress });
+      logger.warn('[zkLogin] auth: ADDRESS MISMATCH', { expected: expectedAddress, received: zkLoginAddress });
       return res.status(400).json({ success: false, error: 'zkLogin address mismatch' });
     }
 
-    // Extract telegram user ID from sub (format: "tg_{userId}")
+    logger.info('[zkLogin] auth: address MATCH confirmed', { address: zkLoginAddress });
+
     const sub = decoded.sub;
     const telegramUserId = sub.startsWith('tg_') ? sub.slice(3) : sub;
     const displayName = `tg_${telegramUserId}`;
@@ -369,6 +385,14 @@ router.post(
 
     const token = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
+
+    logger.info('[zkLogin] auth: COMPLETE — session tokens issued', {
+      telegramUserId,
+      playerId: player.id,
+      walletAddress: player.wallet_address,
+      isNewUser,
+      authProvider: 'zklogin',
+    });
 
     res.json({
       success: true,
