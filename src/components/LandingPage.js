@@ -2,6 +2,7 @@ import React from 'react';
 import OneWallet from './OneWallet';
 import './LandingPage.css';
 import { GiCrossedSwords, GiTrophyCup } from 'react-icons/gi';
+import { BUILD_VERSION } from '../App';
 
 const ZK_STEP_LABELS = {
   preparing: 'Preparing keys...',
@@ -116,6 +117,8 @@ const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain, auth
           </div>
         </div>
       </main>
+
+      <div className="build-watermark">{BUILD_VERSION}</div>
 
       {showZkProgress && (
         <div className="zklogin-overlay">

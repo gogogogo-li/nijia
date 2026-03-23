@@ -285,16 +285,22 @@ app.use(errorHandler);
 
 // Start server
 httpServer.listen(PORT, () => {
-  logger.info('=====================================');
-  logger.info('🚀 OneChain Ninja Backend Server');
-  logger.info('=====================================');
+  logger.info('╔══════════════════════════════════════════════╗');
+  logger.info('║  NINJA BACKEND — 2026-03-23-v4-zklogin       ║');
+  logger.info('╚══════════════════════════════════════════════╝');
   logger.info(`📡 Server running on port ${PORT}`);
   logger.info(`🌐 API: http://localhost:${PORT}`);
   logger.info(`🔌 WebSocket: http://localhost:${PORT}`);
   logger.info(`🎯 Frontend: ${process.env.FRONTEND_URL}`);
   logger.info(`🔗 Network: ${process.env.ONECHAIN_NETWORK}`);
   logger.info(`📊 Environment: ${process.env.NODE_ENV}`);
-  logger.info('=====================================');
+  logger.info('--- zkLogin Config ---');
+  logger.info(`  ZKLOGIN_JWT_ISSUER:     ${process.env.ZKLOGIN_JWT_ISSUER || '(not set)'}`);
+  logger.info(`  ZKLOGIN_JWT_AUDIENCE:   ${process.env.ZKLOGIN_JWT_AUDIENCE || '(not set)'}`);
+  logger.info(`  ZKLOGIN_SALT_MASTER_KEY: ${process.env.ZKLOGIN_SALT_MASTER_KEY ? '****' + process.env.ZKLOGIN_SALT_MASTER_KEY.slice(-4) : '(not set)'}`);
+  logger.info(`  ZKLOGIN_PROVER_URL:     ${process.env.ZKLOGIN_PROVER_URL || '(not set)'}`);
+  logger.info(`  ZKLOGIN_RSA_PRIVATE_KEY: ${process.env.ZKLOGIN_RSA_PRIVATE_KEY ? 'SET (' + process.env.ZKLOGIN_RSA_PRIVATE_KEY.length + ' chars)' : '(not set — will auto-generate)'}`);
+  logger.info('══════════════════════════════════════════════');
 });
 
 // Graceful shutdown

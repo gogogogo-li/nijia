@@ -1810,6 +1810,18 @@
   white-space: nowrap;
 }
 
+.build-watermark {
+  position: fixed;
+  bottom: 4px;
+  right: 6px;
+  font-size: 9px;
+  font-family: monospace;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  z-index: 99999;
+  letter-spacing: 0.5px;
+}
+
 /* Prevent iOS Safari bounce */
 @supports (-webkit-touch-callout: none) {
   .landing-page {

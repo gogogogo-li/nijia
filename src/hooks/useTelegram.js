@@ -121,7 +121,13 @@ export const useTelegram = () => {
       return;
     }
 
-    console.log('[TG-AUTH] login() starting (build=' + BUILD_VERSION + '), zkLogin:', ZKLOGIN_ENABLED, ', retry:', retryCount);
+    console.log('%c[TG-AUTH] ▶ login() starting', 'color: #ffcc00; font-weight: bold;', {
+      build: BUILD_VERSION,
+      REACT_APP_ZKLOGIN_ENABLED: process.env.REACT_APP_ZKLOGIN_ENABLED || 'undefined',
+      zkLoginWillRun: ZKLOGIN_ENABLED,
+      retry: retryCount,
+      apiBase: API_BASE_URL,
+    });
     setIsAuthenticating(true);
     setError(null);
     setZkLoginStep(null);

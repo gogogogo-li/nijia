@@ -18,8 +18,8 @@ import { Analytics } from "@vercel/analytics/react"
 import MultiplayerLobby from './components/MultiplayerLobby';
 import multiplayerService from './services/multiplayerService';
 
-export const BUILD_VERSION = '2026-03-21-v3';
-export const BUILD_FEATURES = ['address-copy-button', 'telegram-nickname-display', 'lobby-ui-refine', 'hide-copy-for-tg-users', 'sdk-displayname-fallback'];
+export const BUILD_VERSION = '2026-03-23-v4-zklogin';
+export const BUILD_FEATURES = ['address-copy-button', 'telegram-nickname-display', 'lobby-ui-refine', 'hide-copy-for-tg-users', 'sdk-displayname-fallback', 'zklogin-sui-address'];
 
 function AppInner() {
   const auth = useAuth();
@@ -418,13 +418,27 @@ function App() {
   const onechain = useOneChain();
 
   useEffect(() => {
-    console.log(
-      '%c[NINJA] App started — BUILD_VERSION: ' + BUILD_VERSION,
-      'color: #00ff88; font-size: 14px; font-weight: bold; background: #1a1a2e; padding: 4px 8px; border-radius: 4px;'
-    );
+    document.title = 'OneNinja ' + BUILD_VERSION;
+
+    console.log('%c╔══════════════════════════════════════════════╗', 'color: #00ff88; font-size: 16px; font-weight: bold;');
+    console.log('%c║  NINJA BUILD: ' + BUILD_VERSION.padEnd(30) + '║', 'color: #00ff88; font-size: 16px; font-weight: bold;');
+    console.log('%c╚══════════════════════════════════════════════╝', 'color: #00ff88; font-size: 16px; font-weight: bold;');
     console.log('[NINJA] BUILD_FEATURES:', BUILD_FEATURES.join(', '));
     console.log('[NINJA] Startup time:', new Date().toISOString());
-    console.log('[NINJA] User-Agent:', navigator.userAgent);
+
+    const zkEnabled = process.env.REACT_APP_ZKLOGIN_ENABLED;
+    const apiBase = process.env.REACT_APP_API_BASE_URL || '(default localhost:3001)';
+    const rpc = process.env.REACT_APP_ONECHAIN_RPC || '(not set)';
+    const network = process.env.REACT_APP_ONECHAIN_NETWORK || '(not set)';
+    const proverUrl = process.env.REACT_APP_ZKLOGIN_PROVER_URL || '(not set)';
+
+    console.log('%c[NINJA-CONFIG] zkLogin enabled: ' + (zkEnabled !== 'false' ? 'YES ✓' : 'NO ✗') + ' (REACT_APP_ZKLOGIN_ENABLED=' + (zkEnabled || 'undefined') + ')', zkEnabled !== 'false' ? 'color: #00ff88; font-weight: bold;' : 'color: #ff4444; font-weight: bold;');
+    console.log('[NINJA-CONFIG] API_BASE_URL:', apiBase);
+    console.log('[NINJA-CONFIG] ONECHAIN_RPC:', rpc);
+    console.log('[NINJA-CONFIG] ONECHAIN_NETWORK:', network);
+    console.log('[NINJA-CONFIG] ZKLOGIN_PROVER_URL:', proverUrl);
+    console.log('[NINJA-CONFIG] User-Agent:', navigator.userAgent);
+
     console.log('[NINJA] Telegram SDK available:', !!window.Telegram?.WebApp);
     if (window.Telegram?.WebApp) {
       const wa = window.Telegram.WebApp;
