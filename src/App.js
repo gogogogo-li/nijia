@@ -18,8 +18,8 @@ import { Analytics } from "@vercel/analytics/react"
 import MultiplayerLobby from './components/MultiplayerLobby';
 import multiplayerService from './services/multiplayerService';
 
-export const BUILD_VERSION = '2026-03-21-v2';
-export const BUILD_FEATURES = ['address-copy-button', 'telegram-nickname-display', 'lobby-ui-refine'];
+export const BUILD_VERSION = '2026-03-21-v3';
+export const BUILD_FEATURES = ['address-copy-button', 'telegram-nickname-display', 'lobby-ui-refine', 'hide-copy-for-tg-users', 'sdk-displayname-fallback'];
 
 function AppInner() {
   const auth = useAuth();

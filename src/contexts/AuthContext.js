@@ -28,6 +28,7 @@ export function AuthProvider({ onechain, children }) {
         walletAddress: telegram.walletAddress,
         isConnected,
         isAuthenticating: telegram.isAuthenticating,
+        zkLoginStep: telegram.zkLoginStep,
         token: telegram.token,
         user: telegram.user,
         error: telegram.error,

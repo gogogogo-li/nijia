@@ -3,17 +3,22 @@ import OneWallet from './OneWallet';
 import './LandingPage.css';
 import { GiCrossedSwords, GiTrophyCup } from 'react-icons/gi';
 
+const ZK_STEP_LABELS = {
+  preparing: 'Preparing keys...',
+  signing: 'Verifying identity...',
+  salt: 'Generating address...',
+  proving: 'Creating ZK proof...',
+  authenticating: 'Authenticating...',
+  done: 'Ready!',
+  error: 'Login failed',
+};
+
+const ZK_STEP_ORDER = ['preparing', 'signing', 'salt', 'proving', 'authenticating', 'done'];
+
 const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain, auth }) => {
   const isTelegram = auth?.isTelegram || !!window.Telegram?.WebApp?.initDataUnsafe?.user;
-  console.log('[TG-AUTH] LandingPage render:', {
-    isTelegram,
-    'auth?.isTelegram': auth?.isTelegram,
-    'auth?.isConnected': auth?.isConnected,
-    'auth?.authProvider': auth?.authProvider,
-    'auth?.user': auth?.user?.displayName || null,
-    'onechain?.isConnected': onechain?.isConnected,
-    'window.Telegram?.WebApp?.platform': window.Telegram?.WebApp?.platform || 'N/A',
-  });
+  const zkLoginStep = auth?.zkLoginStep;
+  const showZkProgress = isTelegram && auth?.isAuthenticating && zkLoginStep && zkLoginStep !== 'done';
   const handlePlayClick = (e) => {
     e.preventDefault();
     onStartGame();
@@ -46,12 +51,6 @@ const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain, auth
         {!isTelegram && (
           <div className="wallet-container">
             <OneWallet onechain={onechain} />
-          </div>
-        )}
-        {isTelegram && auth?.user && (
-          <div className="wallet-container tg-user-badge">
-            {auth.user.avatarUrl && <img src={auth.user.avatarUrl} alt="" className="tg-avatar" />}
-            <span className="tg-name">{auth.user.displayName}</span>
           </div>
         )}
         <button onClick={handleLeaderboardClick} className="nav-link leaderboard-btn">
@@ -117,6 +116,31 @@ const LandingPage = ({ onStartGame, onMultiplayer, onLeaderboard, onechain, auth
           </div>
         </div>
       </main>
+
+      {showZkProgress && (
+        <div className="zklogin-overlay">
+          <div className="zklogin-progress">
+            <div className="zklogin-spinner" />
+            <div className="zklogin-steps">
+              {ZK_STEP_ORDER.map((step) => {
+                const currentIdx = ZK_STEP_ORDER.indexOf(zkLoginStep);
+                const stepIdx = ZK_STEP_ORDER.indexOf(step);
+                const isDone = stepIdx < currentIdx;
+                const isCurrent = step === zkLoginStep;
+                return (
+                  <div
+                    key={step}
+                    className={`zklogin-step${isDone ? ' done' : ''}${isCurrent ? ' active' : ''}`}
+                  >
+                    <span className="zklogin-step-dot">{isDone ? '\u2713' : isCurrent ? '\u25CF' : '\u25CB'}</span>
+                    <span className="zklogin-step-label">{ZK_STEP_LABELS[step]}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -65,6 +65,7 @@
   right: 0;
   left: 0;
   justify-content: center;
+  gap: 1.5rem;
 }
 
 .navbar-container {
@@ -167,6 +168,10 @@
   border-radius: 12px;
   font-size: 15.4px;
   white-space: nowrap;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-link.play-btn:hover {
@@ -192,7 +197,9 @@
   cursor: pointer !important;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 11px 22px;
+  white-space: nowrap;
 }
 
 .nav-link.leaderboard-btn::before {
@@ -1673,6 +1680,7 @@
   .floating-nav-buttons.tg-nav {
     right: 0;
     left: 0;
+    gap: 1rem;
   }
 
   /* Improve scroll containers */
@@ -1728,6 +1736,78 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 120px;
+}
+
+/* zkLogin progress overlay */
+.zklogin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+}
+
+.zklogin-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 32px 40px;
+  border-radius: 16px;
+  background: rgba(26, 26, 46, 0.95);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.zklogin-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 255, 136, 0.2);
+  border-top-color: #00ff88;
+  border-radius: 50%;
+  animation: zkSpin 0.8s linear infinite;
+}
+
+@keyframes zkSpin {
+  to { transform: rotate(360deg); }
+}
+
+.zklogin-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.zklogin-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 0.3s;
+}
+
+.zklogin-step.active {
+  color: #00ff88;
+  font-weight: 600;
+}
+
+.zklogin-step.done {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.zklogin-step-dot {
+  font-size: 10px;
+  width: 14px;
+  text-align: center;
+}
+
+.zklogin-step-label {
+  white-space: nowrap;
 }
 
 /* Prevent iOS Safari bounce */

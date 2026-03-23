@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import express from 'express';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { pool } from '../config/postgres.js';
@@ -8,12 +9,30 @@ import {
   verifyRefreshToken,
 } from '../utils/jwt.js';
 import logger from '../utils/logger.js';
+import { signZkLoginJwt, getJwks, verifyZkLoginJwt } from '../services/zkLoginJwt.js';
+import { jwtToAddress } from '@onelabs/sui/zklogin';
 
 const router = express.Router();
 
 /**
+ * GET /api/auth/.well-known/jwks.json
+ * Serves the RSA public key in JWKS format so the ZK Prover can verify JWTs.
+ */
+router.get('/.well-known/jwks.json', (req, res) => {
+  try {
+    const jwks = getJwks();
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.json(jwks);
+  } catch (err) {
+    logger.error('[zkLogin] JWKS endpoint error', { error: err.message });
+    res.status(500).json({ error: 'JWKS unavailable' });
+  }
+});
+
+/**
  * POST /api/auth/telegram
  * Authenticate a Telegram Mini App user via initData.
+ * If `nonce` is provided, also returns a zkLogin-compatible JWT (RS256).
  */
 router.post(
   '/telegram',
@@ -23,7 +42,7 @@ router.post(
       initDataLength: req.body.initData?.length || 0,
     });
 
-    const { initData } = req.body;
+    const { initData, nonce } = req.body;
 
     if (!initData) {
       logger.warn('[TG-AUTH] Missing initData in request body');
@@ -178,7 +197,178 @@ router.post(
       playerId: player.id,
       walletAddress: player.wallet_address,
       isNewUser,
+      hasNonce: !!nonce,
     });
+
+    const response = {
+      success: true,
+      token,
+      refreshToken,
+      user: {
+        id: player.id,
+        walletAddress: player.wallet_address,
+        displayName: player.display_name,
+        avatarUrl: player.avatar_url,
+        telegramUserId: tgUser.telegramUserId,
+      },
+      isNewUser,
+    };
+
+    if (nonce) {
+      try {
+        response.zkLoginJwt = signZkLoginJwt(tgUser.telegramUserId, nonce);
+        logger.info('[TG-AUTH] zkLogin JWT signed', { telegramUserId: tgUser.telegramUserId });
+      } catch (err) {
+        logger.error('[TG-AUTH] Failed to sign zkLogin JWT', { error: err.message });
+      }
+    }
+
+    res.json(response);
+  })
+);
+
+/**
+ * POST /api/auth/salt
+ * Return a deterministic salt for a given zkLogin JWT's subject.
+ * Same sub always produces the same salt, ensuring stable address derivation.
+ */
+router.post(
+  '/salt',
+  asyncHandler(async (req, res) => {
+    const { jwt } = req.body;
+    if (!jwt) {
+      return res.status(400).json({ success: false, error: 'jwt is required' });
+    }
+
+    let decoded;
+    try {
+      decoded = verifyZkLoginJwt(jwt);
+    } catch (err) {
+      logger.warn('[zkLogin] salt: JWT verification failed', { error: err.message });
+      return res.status(401).json({ success: false, error: 'Invalid zkLogin JWT' });
+    }
+
+    const masterKey = process.env.ZKLOGIN_SALT_MASTER_KEY;
+    if (!masterKey) {
+      logger.error('[zkLogin] ZKLOGIN_SALT_MASTER_KEY not configured');
+      return res.status(500).json({ success: false, error: 'Server misconfiguration' });
+    }
+
+    const hmac = crypto.createHmac('sha256', Buffer.from(masterKey, 'hex'));
+    hmac.update(decoded.sub);
+    const hashBytes = hmac.digest();
+    // Use first 16 bytes (128 bits) as a BigInt decimal string
+    const salt = BigInt('0x' + hashBytes.subarray(0, 16).toString('hex')).toString();
+
+    logger.info('[zkLogin] salt issued', { sub: decoded.sub });
+    res.json({ success: true, salt });
+  })
+);
+
+/**
+ * POST /api/auth/zklogin
+ * Final authentication step: verify the zkLogin address matches jwtToAddress(jwt, salt),
+ * upsert the player record with the real on-chain address, and issue session tokens.
+ */
+router.post(
+  '/zklogin',
+  asyncHandler(async (req, res) => {
+    const { jwt, salt, zkLoginAddress, zkProof, ephemeralPublicKey, maxEpoch } = req.body;
+
+    if (!jwt || !salt || !zkLoginAddress) {
+      return res.status(400).json({ success: false, error: 'jwt, salt, and zkLoginAddress are required' });
+    }
+
+    let decoded;
+    try {
+      decoded = verifyZkLoginJwt(jwt);
+    } catch (err) {
+      logger.warn('[zkLogin] auth: JWT verification failed', { error: err.message });
+      return res.status(401).json({ success: false, error: 'Invalid zkLogin JWT' });
+    }
+
+    // Verify the address matches what jwtToAddress produces
+    let expectedAddress;
+    try {
+      expectedAddress = jwtToAddress(jwt, salt);
+    } catch (err) {
+      logger.error('[zkLogin] auth: jwtToAddress failed', { error: err.message });
+      return res.status(400).json({ success: false, error: 'Failed to derive address from JWT + salt' });
+    }
+
+    if (expectedAddress !== zkLoginAddress) {
+      logger.warn('[zkLogin] auth: address mismatch', { expected: expectedAddress, received: zkLoginAddress });
+      return res.status(400).json({ success: false, error: 'zkLogin address mismatch' });
+    }
+
+    // Extract telegram user ID from sub (format: "tg_{userId}")
+    const sub = decoded.sub;
+    const telegramUserId = sub.startsWith('tg_') ? sub.slice(3) : sub;
+    const displayName = `tg_${telegramUserId}`;
+
+    logger.info('[zkLogin] auth: address verified, upserting player', {
+      sub,
+      telegramUserId,
+      zkLoginAddress,
+    });
+
+    // Upsert: find by telegram_user_id, update wallet_address if changed
+    let player;
+    let isNewUser = false;
+
+    const { rows: existingRows } = await pool.query(
+      'SELECT * FROM players WHERE telegram_user_id = $1 LIMIT 1',
+      [telegramUserId]
+    );
+    const existing = existingRows[0] || null;
+
+    if (existing) {
+      // Only update wallet_address if it actually changed
+      if (existing.wallet_address === zkLoginAddress) {
+        await pool.query(
+          `UPDATE players SET auth_provider = 'zklogin', last_active = $1 WHERE id = $2`,
+          [new Date().toISOString(), existing.id]
+        );
+        player = { ...existing, auth_provider: 'zklogin' };
+      } else {
+        const { rows: updatedRows } = await pool.query(
+          `UPDATE players
+           SET wallet_address = $1, auth_provider = 'zklogin', last_active = $2
+           WHERE id = $3
+           RETURNING *`,
+          [zkLoginAddress, new Date().toISOString(), existing.id]
+        );
+        player = updatedRows[0];
+      }
+      logger.info('[zkLogin] auth: existing player updated', {
+        playerId: player.id,
+        oldAddress: existing.wallet_address,
+        newAddress: zkLoginAddress,
+      });
+    } else {
+      const { rows: createdRows } = await pool.query(
+        `INSERT INTO players (wallet_address, display_name, telegram_user_id, auth_provider)
+         VALUES ($1, $2, $3, 'zklogin')
+         RETURNING *`,
+        [zkLoginAddress, displayName, telegramUserId]
+      );
+      player = createdRows[0];
+      isNewUser = true;
+      logger.info('[zkLogin] auth: new player created', {
+        playerId: player.id,
+        zkLoginAddress,
+      });
+    }
+
+    const tokenPayload = {
+      walletAddress: player.wallet_address,
+      playerId: player.id,
+      provider: 'zklogin',
+      telegramUserId,
+    };
+
+    const token = generateAccessToken(tokenPayload);
+    const refreshToken = generateRefreshToken(tokenPayload);
 
     res.json({
       success: true,
@@ -189,7 +379,7 @@ router.post(
         walletAddress: player.wallet_address,
         displayName: player.display_name,
         avatarUrl: player.avatar_url,
-        telegramUserId: tgUser.telegramUserId,
+        telegramUserId,
       },
       isNewUser,
     });

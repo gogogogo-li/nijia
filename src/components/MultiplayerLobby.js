@@ -31,10 +31,23 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
   const [addressCopied, setAddressCopied] = useState(false);
 
   const isTelegram = auth?.isTelegram;
-  const telegramDisplayName = auth?.user?.displayName || '';
+
+  const telegramDisplayName = React.useMemo(() => {
+    const fromAuth = auth?.user?.displayName;
+    if (fromAuth && !fromAuth.startsWith('tg_')) return fromAuth;
+    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    if (tgUser) {
+      const name = tgUser.username || [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ');
+      if (name) return name;
+    }
+    return fromAuth || '';
+  }, [auth?.user?.displayName]);
+
+  const hasRealWalletAddress = walletAddress && !walletAddress.startsWith('tg_');
 
   console.log('[LOBBY-UI] render (build=' + BUILD_VERSION + '):', {
     walletAddress,
+    hasRealWalletAddress,
     isTelegram,
     telegramDisplayName,
     authUser: auth?.user,
@@ -423,10 +436,12 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
           <span className="back-arrow">←</span>
           <span className="back-text">BACK</span>
         </button>
-        <div className="address-copy-badge" onClick={handleCopyAddress} title="Copy wallet address">
-          <span className="address-text">{multiplayerService.formatAddress(walletAddress)}</span>
-          <span className="copy-icon">{addressCopied ? <FaCheck /> : <FaCopy />}</span>
-        </div>
+        {hasRealWalletAddress && (
+          <div className="address-copy-badge" onClick={handleCopyAddress} title="Copy wallet address">
+            <span className="address-text">{multiplayerService.formatAddress(walletAddress)}</span>
+            <span className="copy-icon">{addressCopied ? <FaCheck /> : <FaCopy />}</span>
+          </div>
+        )}
         <div className="wallet-badge">
           {isTelegram && telegramDisplayName
             ? telegramDisplayName
@@ -469,7 +484,7 @@ const MultiplayerLobby = ({ walletAddress, onechain, auth, onStartGame, onBack }
           <div className="nickname-display" onClick={() => setIsEditingNickname(true)}>
             <span className="nickname-label">Playing as:</span>
             <span className="nickname-value">
-              {playerNickname || (isTelegram && telegramDisplayName) || multiplayerService.formatAddress(walletAddress)}
+              {playerNickname || telegramDisplayName || multiplayerService.formatAddress(walletAddress)}
             </span>
             <button className="nickname-edit-btn" title="Edit nickname">✏️</button>
           </div>

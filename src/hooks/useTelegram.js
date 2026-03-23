@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { BUILD_VERSION } from '../App';
+import zkLoginService from '../services/zkLoginService';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 
@@ -50,9 +51,12 @@ export function isTelegramEnvironment() {
   return detectTelegramEnvironment();
 }
 
+const ZKLOGIN_ENABLED = process.env.REACT_APP_ZKLOGIN_ENABLED !== 'false';
+
 export const useTelegram = () => {
   const [isTelegram, setIsTelegram] = useState(() => detectTelegramEnvironment());
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [zkLoginStep, setZkLoginStep] = useState(null);
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem(USER_KEY);
@@ -97,6 +101,19 @@ export const useTelegram = () => {
     setUser(null);
   }, []);
 
+  const loginLegacy = useCallback(async (initData) => {
+    const res = await fetch(`${API_BASE_URL}/api/auth/telegram`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Telegram login failed');
+    }
+    return data;
+  }, []);
+
   const login = useCallback(async (retryCount = 0) => {
     const webApp = getTelegramWebApp();
     if (!webApp?.initData) {
@@ -104,26 +121,32 @@ export const useTelegram = () => {
       return;
     }
 
-    console.log('[TG-AUTH] login() starting, initData length:', webApp.initData.length, 'retry:', retryCount);
+    console.log('[TG-AUTH] login() starting (build=' + BUILD_VERSION + '), zkLogin:', ZKLOGIN_ENABLED, ', retry:', retryCount);
     setIsAuthenticating(true);
     setError(null);
+    setZkLoginStep(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/telegram`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: webApp.initData }),
-      });
+      let data;
 
-      console.log('[TG-AUTH] login() response status:', res.status);
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        console.error('[TG-AUTH] login() failed:', data.error);
-        throw new Error(data.error || 'Telegram login failed');
+      if (ZKLOGIN_ENABLED) {
+        try {
+          console.log('[TG-AUTH] Attempting zkLogin flow...');
+          data = await zkLoginService.fullFlow(webApp.initData, (step) => {
+            setZkLoginStep(step);
+          });
+          console.log('[TG-AUTH] zkLogin success, walletAddress:', data.user?.walletAddress);
+        } catch (zkErr) {
+          console.warn('[TG-AUTH] zkLogin failed, falling back to legacy:', zkErr.message);
+          setZkLoginStep(null);
+          data = await loginLegacy(webApp.initData);
+          console.log('[TG-AUTH] Legacy login success, walletAddress:', data.user?.walletAddress);
+        }
+      } else {
+        data = await loginLegacy(webApp.initData);
       }
 
-      console.log('[TG-AUTH] login() success (build=' + BUILD_VERSION + '), user:', data.user?.displayName, 'walletAddress:', data.user?.walletAddress, 'isNewUser:', data.isNewUser);
+      console.log('[TG-AUTH] login() complete (build=' + BUILD_VERSION + '), user:', data.user?.displayName, 'walletAddress:', data.user?.walletAddress, 'isNewUser:', data.isNewUser);
       saveAuth(data.token, data.refreshToken, data.user);
     } catch (err) {
       console.error('[TG-AUTH] login() exception:', err.message);
@@ -138,8 +161,9 @@ export const useTelegram = () => {
       clearAuth();
     } finally {
       setIsAuthenticating(false);
+      setZkLoginStep(null);
     }
-  }, [saveAuth, clearAuth]);
+  }, [saveAuth, clearAuth, loginLegacy]);
 
   const refreshAccessToken = useCallback(async () => {
     const refreshToken = localStorage.getItem(REFRESH_KEY);
@@ -219,6 +243,7 @@ export const useTelegram = () => {
   return {
     isTelegram,
     isAuthenticating,
+    zkLoginStep,
     user,
     token,
     error,
